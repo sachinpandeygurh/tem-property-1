@@ -51,55 +51,21 @@ export const shadows = {
   inner: 'inset 0 2px 4px 0 rgba(0, 0, 0, 0.06)',
 };
 
+// Simplified animations - only spring drop effect
 export const animations = {
-  spring: {
-    type: "spring" as const,
-    stiffness: 300,
-    damping: 30,
-  },
-  ease: {
-    type: "tween" as const,
-    ease: "easeInOut" as const,
-    duration: 0.3,
-  },
-  bounce: {
-    type: "spring" as const,
-    stiffness: 400,
-    damping: 10,
-  },
-  slide: {
+  springDrop: {
     type: "spring" as const,
     stiffness: 100,
-    damping: 20,
+    damping: 15,
+    mass: 1,
   },
 };
 
+// Simple spring drop variant
 export const variants = {
-  fadeIn: {
-    initial: { opacity: 0 },
-    animate: { opacity: 1 },
-    exit: { opacity: 0 },
-  },
-  slideUp: {
-    initial: { y: 20, opacity: 0 },
+  springDrop: {
+    initial: { y: -100, opacity: 0 },
     animate: { y: 0, opacity: 1 },
-    exit: { y: -20, opacity: 0 },
-  },
-  slideDown: {
-    initial: { y: -20, opacity: 0 },
-    animate: { y: 0, opacity: 1 },
-    exit: { y: 20, opacity: 0 },
-  },
-  scale: {
-    initial: { scale: 0.9, opacity: 0 },
-    animate: { scale: 1, opacity: 1 },
-    exit: { scale: 0.9, opacity: 0 },
-  },
-  stagger: {
-    animate: {
-      transition: {
-        staggerChildren: 0.1,
-      },
-    },
+    exit: { y: -50, opacity: 0 },
   },
 }; 

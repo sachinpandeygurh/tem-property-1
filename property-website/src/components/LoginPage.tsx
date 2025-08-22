@@ -26,8 +26,6 @@ const LoginPage: React.FC = () => {
   const [otpTimer, setOtpTimer] = useState(0);
   const navigate = useNavigate();
 
- 
-
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({
@@ -62,7 +60,7 @@ const LoginPage: React.FC = () => {
     setSuccess('');
 
     try {
-      const response = await axios.post('http://localhost:5000/api/v1/temp/login/send-otp', {
+      const response = await axios.post('https://nextopson.com/api/v1/temp/login/send-otp', {
         mobileNumber: formData.mobileNumber
       });
 
@@ -84,7 +82,7 @@ const LoginPage: React.FC = () => {
     setSuccess('');
 
     try {
-      const response = await axios.post('http://localhost:5000/api/v1/temp/login/verify-otp', {
+      const response = await axios.post('https://nextopson.com/api/v1/temp/login/verify-otp', {
         mobileNumber: formData.mobileNumber,
         otp: otpData.otp
       });
@@ -104,7 +102,10 @@ const LoginPage: React.FC = () => {
       setError(err.response?.data?.message || 'Failed to verify OTP. Please try again.');
     } finally {
       setLoading(false);
-      window.location.reload();
+      setTimeout(() => {
+        navigate('/upload-property');
+        window.location.reload();
+      }, 1500);
     }
   };
 
@@ -116,7 +117,7 @@ const LoginPage: React.FC = () => {
     setSuccess('');
 
     try {
-      const response = await axios.post('http://localhost:5000/api/v1/temp/login/send-otp', {
+      const response = await axios.post('https://nextopson.com/api/v1/temp/login/send-otp', {
         mobileNumber: formData.mobileNumber
       });
 
@@ -135,70 +136,44 @@ const LoginPage: React.FC = () => {
     <motion.div 
       className="min-h-screen flex items-center justify-center py-8 px-4"
       style={{ backgroundColor: colors.GRAY_50 }}
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={animations.ease}
+      variants={variants.springDrop}
+      initial="initial"
+      animate="animate"
+      exit="exit"
+      transition={animations.springDrop}
     >
-      <motion.div 
-        className="w-full max-w-md"
-        variants={variants.scale}
-        initial="initial"
-        animate="animate"
-      >
-        <motion.div 
+      <div className="w-full max-w-md">
+        <div 
           className="card"
           style={{ 
             backgroundColor: colors.WHITE,
             boxShadow: shadows.xl
           }}
-          whileHover={{ 
-            scale: 1.02,
-            boxShadow: shadows['2xl']
-          }}
-          transition={animations.ease}
         >
           <div className="card-body">
-            <motion.div
-              variants={variants.fadeIn}
-              initial="initial"
-              animate="animate"
-              className="text-center mb-8"
-            >
-              <motion.h2 
+            <div className="text-center mb-8">
+              <h2 
                 className="text-3xl font-bold mb-2"
                 style={{ color: colors.TEXT_COLOR }}
-                initial={{ y: -20, opacity: 0 }}
-                animate={{ y: 0, opacity: 1 }}
-                transition={{ delay: 0.2, ...animations.spring }}
               >
                 {otpSent ? 'Verify OTP' : 'Welcome Back'}
-              </motion.h2>
-              <motion.p 
-                style={{ color: colors.GRAY_600 }}
-                initial={{ y: -20, opacity: 0 }}
-                animate={{ y: 0, opacity: 1 }}
-                transition={{ delay: 0.3, ...animations.spring }}
-              >
+              </h2>
+              <p style={{ color: colors.GRAY_600 }}>
                 {otpSent 
                   ? 'Enter the 4-digit OTP sent to your mobile'
                   : 'Login to access your account'
                 }
-              </motion.p>
-            </motion.div>
+              </p>
+            </div>
 
             {!otpSent ? (
               // Login Form
-              <motion.form 
-                onSubmit={(e) => { e.preventDefault(); handleSendOTP(); }}
-                variants={variants.slideUp}
-                initial="initial"
-                animate="animate"
-              >
+              <form onSubmit={(e) => { e.preventDefault(); handleSendOTP(); }}>
                 <div className="form-group">
                   <label htmlFor="mobileNumber" className="form-label">
                     Mobile Number *
                   </label>
-                  <motion.input
+                  <input
                     type="tel"
                     id="mobileNumber"
                     name="mobileNumber"
@@ -207,55 +182,32 @@ const LoginPage: React.FC = () => {
                     onChange={handleInputChange}
                     className="form-input"
                     placeholder="Enter mobile number"
-                    whileFocus={{ 
-                      borderColor: colors.PRIMARY_COLOR,
-                      scale: 1.02
-                    }}
                   />
                 </div>
 
-                <motion.button
+                <button
                   type="submit"
                   disabled={loading}
                   className="btn btn-primary w-full"
-                  whileHover={{ 
-                    scale: 1.02,
-                    boxShadow: shadows.lg
-                  }}
-                  whileTap={{ scale: 0.98 }}
-                  variants={variants.scale}
                 >
                   {loading ? (
-                    <motion.div 
-                      className="flex items-center justify-center"
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                    >
-                      <motion.div
-                        className="spinner mr-2"
-                        animate={{ rotate: 360 }}
-                        transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-                      />
+                    <div className="flex items-center justify-center">
+                      <div className="spinner mr-2" />
                       Sending OTP...
-                    </motion.div>
+                    </div>
                   ) : (
                     'Send OTP'
                   )}
-                </motion.button>
-              </motion.form>
+                </button>
+              </form>
             ) : (
               // OTP Verification Form
-              <motion.form 
-                onSubmit={(e) => { e.preventDefault(); handleVerifyOTP(); }}
-                variants={variants.slideUp}
-                initial="initial"
-                animate="animate"
-              >
+              <form onSubmit={(e) => { e.preventDefault(); handleVerifyOTP(); }}>
                 <div className="form-group">
                   <label htmlFor="otp" className="form-label">
                     Enter OTP *
                   </label>
-                  <motion.input
+                  <input
                     type="text"
                     id="otp"
                     name="otp"
@@ -265,122 +217,75 @@ const LoginPage: React.FC = () => {
                     className="form-input text-center text-2xl tracking-widest"
                     placeholder="0000"
                     maxLength={4}
-                    whileFocus={{ 
-                      borderColor: colors.PRIMARY_COLOR,
-                      scale: 1.02
-                    }}
                   />
                   <p className="text-sm text-gray-500 mt-2">
                     OTP sent to {formData.mobileNumber}
                   </p>
                 </div>
 
-                <motion.button
+                <button
                   type="submit"
                   disabled={loading || otpData.otp.length !== 4}
                   className="btn btn-primary w-full mb-4"
-                  whileHover={{ 
-                    scale: 1.02,
-                    boxShadow: shadows.lg
-                  }}
-                  whileTap={{ scale: 0.98 }}
-                  variants={variants.scale}
                 >
                   {loading ? (
-                    <motion.div 
-                      className="flex items-center justify-center"
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                    >
-                      <motion.div
-                        className="spinner mr-2"
-                        animate={{ rotate: 360 }}
-                        transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-                      />
+                    <div className="flex items-center justify-center">
+                      <div className="spinner mr-2" />
                       Verifying...
-                    </motion.div>
+                    </div>
                   ) : (
                     'Verify OTP'
                   )}
-                </motion.button>
+                </button>
 
-                <motion.button
+                <button
                   type="button"
                   onClick={handleResendOTP}
                   disabled={loading || otpTimer > 0}
                   className="btn btn-outline w-full"
-                  whileHover={{ 
-                    scale: 1.02,
-                    boxShadow: shadows.lg
-                  }}
-                  whileTap={{ scale: 0.98 }}
-                  variants={variants.scale}
                 >
                   {otpTimer > 0 ? `Resend OTP in ${otpTimer}s` : 'Resend OTP'}
-                </motion.button>
+                </button>
 
-                <motion.button
+                <button
                   type="button"
                   onClick={() => setOtpSent(false)}
                   className="btn btn-secondary w-full mt-4"
-                  whileHover={{ 
-                    scale: 1.02,
-                    boxShadow: shadows.lg
-                  }}
-                  whileTap={{ scale: 0.98 }}
-                  variants={variants.scale}
                 >
                   Back to Login
-                </motion.button>
-              </motion.form>
+                </button>
+              </form>
             )}
 
             {error && (
-              <motion.div 
-                className="alert alert-error mt-4"
-                initial={{ opacity: 0, y: -10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={animations.spring}
-              >
+              <div className="alert alert-error mt-4">
                 {error}
-              </motion.div>
+              </div>
             )}
 
             {success && (
-              <motion.div 
-                className="alert alert-success mt-4"
-                initial={{ opacity: 0, y: -10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={animations.spring}
-              >
+              <div className="alert alert-success mt-4">
                 {success}
-              </motion.div>
+              </div>
             )}
 
             {!otpSent && (
-              <motion.div 
-                className="text-center mt-6"
-                variants={variants.fadeIn}
-                initial="initial"
-                animate="animate"
-              >
+              <div className="text-center mt-6">
                 <p style={{ color: colors.GRAY_600 }}>
                   Don't have an account?{' '}
-                  <motion.button
+                  <button
                     onClick={() => navigate('/signup')}
                     className="text-primary hover:underline font-medium"
                     style={{ color: colors.PRIMARY_COLOR }}
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
                   >
                     Sign up here
-                  </motion.button>
+                  </button>
                 </p>
-              </motion.div>
+              </div>
             )}
           </div>
-        </motion.div>
-      </motion.div>
+        </div>
+      </div>
     </motion.div>
   );
 };

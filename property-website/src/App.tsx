@@ -5,7 +5,7 @@ import SignupPage from './components/SignupPage';
 import LoginPage from './components/LoginPage';
 import PropertyUploadPage from './components/PropertyUploadPage';
 import AdminPanel from './components/AdminPanel';
-import { colors, shadows, animations } from './theme';
+import { colors, shadows, animations, variants } from './theme';
 import './App.css';
 
 function NavigationHeader() {
@@ -46,18 +46,16 @@ function NavigationHeader() {
   return (
     <motion.nav 
       className="nav"
-      initial={{ y: -100, opacity: 0 }}
-      animate={{ y: 0, opacity: 1 }}
-      transition={animations.spring}
+      variants={variants.springDrop}
+      initial="initial"
+      animate="animate"
+      exit="exit"
+      transition={animations.springDrop}
     >
       <div className="nav-container">
-        <motion.div 
-          className="nav-brand"
-          whileHover={{ scale: 1.05 }}
-          transition={animations.ease}
-        >
+        <div className="nav-brand">
           Property Manager
-        </motion.div>
+        </div>
 
         {/* Mobile Menu Toggle */}
         <button
@@ -68,12 +66,11 @@ function NavigationHeader() {
           ☰
         </button>
 
-
         {/* Navigation Menu */}
         <div className={`nav-menu ${isMobileMenuOpen ? 'open' : ''}`}>
           {!user ? (
             <>
-              <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+              <div>
                 <Link 
                   to="/signup" 
                   className="btn btn-outline"
@@ -81,8 +78,8 @@ function NavigationHeader() {
                 >
                   Signup
                 </Link>
-              </motion.div>
-              <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+              </div>
+              <div>
                 <Link 
                   to="/login" 
                   className="btn btn-primary"
@@ -90,19 +87,14 @@ function NavigationHeader() {
                 >
                   Login
                 </Link>
-              </motion.div>
+              </div>
             </>
           ) : (
             <>
-              <motion.span 
-                className="text-primary bg-gray-100 px-3 py-1 rounded-full text-sm"
-                initial={{ opacity: 0, scale: 0.8 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={animations.spring}
-              >
+              <span className="text-primary bg-gray-100 px-3 py-1 rounded-full text-sm">
                 Welcome, {user.fullName}
-              </motion.span>
-              <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+              </span>
+              <div>
                 <Link 
                   to="/upload-property" 
                   className="btn btn-success"
@@ -110,18 +102,16 @@ function NavigationHeader() {
                 >
                   Upload Property
                 </Link>
-              </motion.div>
-              <motion.button
+              </div>
+              <button
                 onClick={handleLogout}
                 className="btn btn-danger"
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
               >
                 Logout
-              </motion.button>
+              </button>
             </>
           )}
-          <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+          <div>
             <Link 
               to="/admin" 
               className="btn btn-secondary hidden"
@@ -129,7 +119,7 @@ function NavigationHeader() {
             >
               Admin Panel
             </Link>
-          </motion.div>
+          </div>
         </div>
       </div>
     </motion.nav>
@@ -145,9 +135,11 @@ function App() {
         {/* Main Content */}
         <motion.main 
           className="container md:py-6"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={animations.ease}
+          variants={variants.springDrop}
+          initial="initial"
+          animate="animate"
+          exit="exit"
+          transition={animations.springDrop}
         >
           <AnimatePresence mode="wait">
             <Routes>

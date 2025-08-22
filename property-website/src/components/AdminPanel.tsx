@@ -56,7 +56,7 @@ const AdminPanel: React.FC = () => {
   const fetchTempUsers = async () => {
     try {
       setLoading(true);
-      const response = await axios.get('http://localhost:5000/api/v1/temp/users');
+      const response = await axios.get('https://nextopson.com/api/v1/temp/users');
       setTempUsers(response.data.users);
     } catch (error) {
       console.error('Error fetching temp users:', error);
@@ -68,7 +68,7 @@ const AdminPanel: React.FC = () => {
   const fetchTempProperties = async () => {
     try {
       setLoading(true);
-      const response = await axios.get('http://localhost:5000/api/v1/temp/properties');
+      const response = await axios.get('https://nextopson.com/api/v1/temp/properties');
       setTempProperties(response.data.properties);
     } catch (error) {
       console.error('Error fetching temp properties:', error);
@@ -81,7 +81,7 @@ const AdminPanel: React.FC = () => {
     e.preventDefault();
     try {
       setLoading(true);
-      await axios.post('http://localhost:5000/api/v1/temp/signup', userForm);
+      await axios.post('https://nextopson.com/api/v1/temp/signup', userForm);
       setUserForm({
         fullName: '',
         email: '',
@@ -100,7 +100,7 @@ const AdminPanel: React.FC = () => {
     e.preventDefault();
     try {
       setLoading(true);
-      await axios.post('http://localhost:5000/api/v1/temp/properties', propertyForm);
+      await axios.post('https://nextopson.com/api/v1/temp/properties', propertyForm);
       setPropertyForm({
         userId: '',
         title: '',
@@ -126,7 +126,7 @@ const AdminPanel: React.FC = () => {
     if (window.confirm('Are you sure you want to delete this temporary user?')) {
       try {
         setLoading(true);
-        await axios.delete(`http://localhost:5000/api/v1/temp/users/${userId}`);
+        await axios.delete(`https://nextopson.com/api/v1/temp/users/${userId}`);
         fetchTempUsers();
         alert('Temporary user deleted successfully!');
       } catch (error: any) {
@@ -141,7 +141,7 @@ const AdminPanel: React.FC = () => {
     if (window.confirm('Are you sure you want to delete this temporary property?')) {
       try {
         setLoading(true);
-        await axios.delete(`http://localhost:5000/api/v1/temp/properties/${propertyId}`);
+        await axios.delete(`https://nextopson.com/api/v1/temp/properties/${propertyId}`);
         fetchTempProperties();
         alert('Temporary property deleted successfully!');
       } catch (error: any) {
@@ -163,114 +163,72 @@ const AdminPanel: React.FC = () => {
   return (
     <motion.div 
       className="min-h-screen py-8 bg-gray-50"
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={animations.ease}
+      variants={variants.springDrop}
+      initial="initial"
+      animate="animate"
+      exit="exit"
+      transition={animations.springDrop}
     >
-      <motion.div 
-        className="container"
-        variants={variants.slideUp}
-        initial="initial"
-        animate="animate"
-      >
-        <motion.div 
-          className="card"
-          variants={variants.scale}
-          whileHover={{ 
-            scale: 1.01,
-            boxShadow: shadows['2xl']
-          }}
-          transition={animations.ease}
-        >
+      <div className="container">
+        <div className="card">
           {/* Header */}
-          <motion.div 
-            className="card-header"
-            variants={variants.fadeIn}
-          >
+          <div className="card-header">
             <h1 className="text-2xl font-bold text-gray-900">
               Admin Panel - Temporary Accounts
             </h1>
             <p className="text-gray-600">
               Manage temporary users and properties
             </p>
-          </motion.div>
+          </div>
 
           {/* Tabs */}
-          <motion.div 
-            className="border-b border-gray-200"
-            variants={variants.fadeIn}
-          >
+          <div className="border-b border-gray-200">
             <nav className="-mb-px flex space-x-8 px-6">
-              <motion.button
+              <button
                 onClick={() => setActiveTab('users')}
                 className={`py-2 px-1 border-b-2 font-medium text-sm transition-all duration-200 ${
                   activeTab === 'users'
                     ? 'border-indigo-500 text-indigo-600'
                     : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                 }`}
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
               >
                 Temporary Users ({tempUsers.length})
-              </motion.button>
-              <motion.button
+              </button>
+              <button
                 onClick={() => setActiveTab('properties')}
                 className={`py-2 px-1 border-b-2 font-medium text-sm transition-all duration-200 ${
                   activeTab === 'properties'
                     ? 'border-indigo-500 text-indigo-600'
                     : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                 }`}
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
               >
                 Temporary Properties ({tempProperties.length})
-              </motion.button>
-              <motion.button
+              </button>
+              <button
                 onClick={() => setActiveTab('create')}
                 className={`py-2 px-1 border-b-2 font-medium text-sm transition-all duration-200 ${
                   activeTab === 'create'
                     ? 'border-indigo-500 text-indigo-600'
                     : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                 }`}
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
               >
                 Create New
-              </motion.button>
+              </button>
             </nav>
-          </motion.div>
+          </div>
 
           {/* Content */}
-          <motion.div 
-            className="card-body"
-            variants={variants.fadeIn}
-            initial="initial"
-            animate="animate"
-          >
+          <div className="card-body">
             {loading && (
-              <motion.div 
-                className="text-center py-4"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-              >
-                <motion.div 
-                  className="spinner"
-                  animate={{ rotate: 360 }}
-                  transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-                />
-                <p className="mt-2 text-gray-600">
-                  Loading...
-                </p>
-              </motion.div>
+              <div className="text-center py-4">
+                <div className="spinner" />
+                <p className="mt-2 text-gray-600">Loading...</p>
+              </div>
             )}
 
             {/* Temporary Users Tab */}
             {activeTab === 'users' && !loading && (
-              <motion.div
-                variants={variants.slideUp}
-                initial="initial"
-                animate="animate"
-              >
+              <div>
                 <h2 className="text-lg font-semibold mb-4 text-gray-900">
                   Temporary Users
                 </h2>
@@ -288,17 +246,7 @@ const AdminPanel: React.FC = () => {
                     </thead>
                     <tbody>
                       {tempUsers.map((user) => (
-                        <motion.tr 
-                          key={user.id}
-                          variants={variants.fadeIn}
-                          initial="initial"
-                          animate="animate"
-                          whileHover={{ 
-                            backgroundColor: colors.GRAY_50,
-                            scale: 1.01
-                          }}
-                          transition={animations.ease}
-                        >
+                        <tr key={user.id}>
                           <td className="font-medium text-gray-900">
                             {user.fullName}
                           </td>
@@ -315,21 +263,19 @@ const AdminPanel: React.FC = () => {
                             {new Date(user.createdAt).toLocaleDateString()}
                           </td>
                           <td>
-                            <motion.button
+                            <button
                               onClick={() => handleDeleteTempUser(user.id)}
                               className="text-red-600 hover:text-red-900 transition-colors duration-200"
-                              whileHover={{ scale: 1.1 }}
-                              whileTap={{ scale: 0.9 }}
                             >
                               Delete
-                            </motion.button>
+                            </button>
                           </td>
-                        </motion.tr>
+                        </tr>
                       ))}
                     </tbody>
                   </table>
                 </div>
-              </motion.div>
+              </div>
             )}
 
             {/* Temporary Properties Tab */}
@@ -543,9 +489,9 @@ const AdminPanel: React.FC = () => {
                 </div>
               </div>
             )}
-          </motion.div>
-        </motion.div>
-      </motion.div>
+          </div>
+        </div>
+      </div>
     </motion.div>
   );
 };

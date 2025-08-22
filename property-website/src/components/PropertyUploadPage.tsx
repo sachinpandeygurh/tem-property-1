@@ -8,7 +8,7 @@ import { colors, shadows, animations, variants } from '../theme';
 // API functions for dropdowns
 const getStates = async () => {
   try {
-    const response = await axios.get('http://localhost:5000/api/v1/dropdown/states');
+    const response = await axios.get('https://nextopson.com/api/v1/dropdown/states');
     return response.data;
   } catch (error) {
     console.error('Error fetching states:', error);
@@ -18,7 +18,7 @@ const getStates = async () => {
 
 const getCities = async (state: string) => {
   try {
-    const response = await axios.post('http://localhost:5000/api/v1/dropdown/cities', { state });
+    const response = await axios.post('https://nextopson.com/api/v1/dropdown/cities', { state });
     return response.data;
   } catch (error) {
     console.error('Error fetching cities:', error);
@@ -28,7 +28,7 @@ const getCities = async (state: string) => {
 
 const getLocalities = async (city: string, state?: string) => {
   try {
-    const response = await axios.post('http://localhost:5000/api/v1/dropdown/localities', { state, city });
+    const response = await axios.post('https://nextopson.com/api/v1/dropdown/localities', { state, city });
     return response.data;
   } catch (error) {
     console.error('Error fetching localities:', error);
@@ -284,7 +284,7 @@ const PropertyUploadPage: React.FC = () => {
       // If no user is logged in, create a temporary user
       if (!userId || userId === 'temp-user') {
         try {
-          const tempUserResponse = await axios.post('http://localhost:5000/api/v1/temp/signup', {
+          const tempUserResponse = await axios.post('https://nextopson.com/api/v1/temp/signup', {
             fullName: 'Guest User',
             email: `guest-${Date.now()}@temp.com`,
             mobileNumber: '0000000000'
@@ -369,7 +369,7 @@ const PropertyUploadPage: React.FC = () => {
       console.log('formData object:', formData);
       console.log('FormData created successfully with all fields');
 
-      const response = await axios.post('http://localhost:5000/api/v1/temp/properties', formDataToSend, {
+      const response = await axios.post('https://nextopson.com/api/v1/temp/properties', formDataToSend, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
@@ -1213,19 +1213,18 @@ const PropertyUploadPage: React.FC = () => {
       <motion.div 
         className="min-h-screen flex items-center justify-center"
         style={{ backgroundColor: colors.GRAY_50 }}
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={animations.ease}
+        variants={variants.springDrop}
+        initial="initial"
+        animate="animate"
+        exit="exit"
+        transition={animations.springDrop}
       >
-        <motion.div 
+        <div 
           className="text-center p-8 rounded-xl"
           style={{ 
             backgroundColor: colors.WHITE,
             boxShadow: shadows.xl
           }}
-          variants={variants.scale}
-          initial="initial"
-          animate="animate"
         >
           <h2 
             className="text-2xl font-bold mb-4"
@@ -1239,7 +1238,7 @@ const PropertyUploadPage: React.FC = () => {
           >
             You can upload properties without logging in. Your data will be saved as a temporary account.
           </p>
-          <motion.button
+          <button
             onClick={() => setUser({ id: 'temp-user', fullName: 'Guest User' })}
             className="px-6 py-3 rounded-lg font-medium transition-all duration-200"
             style={{ 
@@ -1247,15 +1246,10 @@ const PropertyUploadPage: React.FC = () => {
               color: colors.WHITE,
               boxShadow: shadows.md
             }}
-            whileHover={{ 
-              scale: 1.05,
-              boxShadow: shadows.lg
-            }}
-            whileTap={{ scale: 0.95 }}
           >
             Continue as Guest
-          </motion.button>
-        </motion.div>
+          </button>
+        </div>
       </motion.div>
     );
   }
@@ -1263,65 +1257,36 @@ const PropertyUploadPage: React.FC = () => {
   return (
     <motion.div 
       className="min-h-screen md:py-12 px-4"
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={animations.ease}
+      variants={variants.springDrop}
+      initial="initial"
+      animate="animate"
+      exit="exit"
+      transition={animations.springDrop}
     >
-      <motion.div 
-        className="container max-w-4xl mx-auto"
-        variants={variants.slideUp}
-        initial="initial"
-        animate="animate"
-      >
-        <motion.div
-          variants={variants.fadeIn}
-          initial="initial"
-          animate="animate"
-          className="text-center mb-8"
-        >
-          <motion.h2 
-            className="text-3xl font-bold text-gray-900 mb-2"
-            initial={{ y: -20, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ delay: 0.2, ...animations.spring }}
-          >
+      <div className="container max-w-4xl mx-auto">
+        <div className="text-center mb-8">
+          <h2 className="text-3xl font-bold text-gray-900 mb-2">
             Upload Property
-          </motion.h2>
-          <motion.p 
-            className="text-gray-600"
-            initial={{ y: -20, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ delay: 0.3, ...animations.spring }}
-          >
+          </h2>
+          <p className="text-gray-600">
             List your property for sale or rent
-          </motion.p>
-        </motion.div>
+          </p>
+        </div>
 
-        <motion.form 
+        <form 
           onSubmit={handleSubmit} 
           className="card"
-          variants={variants.scale}
-          whileHover={{ 
-            scale: 1.01,
-            boxShadow: shadows['2xl']
-          }}
-          transition={animations.ease}
         >
           <div className="card-body">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {/* Address Fields */}
-              <motion.div 
-                className="md:col-span-2"
-                variants={variants.slideUp}
-                initial="initial"
-                animate="animate"
-              >
+              <div className="md:col-span-2">
                 <h3 className="text-lg font-medium text-gray-900 mb-4">
                   Property Address
                 </h3>
-              </motion.div>
+              </div>
 
-              <motion.div variants={variants.slideUp} className="form-group">
+              <div className="form-group">
                 <label htmlFor="addressState" className="form-label">
                   State *
                 </label>
@@ -1341,9 +1306,9 @@ const PropertyUploadPage: React.FC = () => {
                     </option>
                   ))}
                 </select>
-              </motion.div>
+              </div>
 
-              <motion.div variants={variants.slideUp} className="form-group">
+              <div className="form-group">
                 <label htmlFor="addressCity" className="form-label">
                   City *
                 </label>
@@ -1370,12 +1335,9 @@ const PropertyUploadPage: React.FC = () => {
                     </option>
                   ))}
                 </select>
-              </motion.div>
+              </div>
 
-              <motion.div 
-                className="md:col-span-2"
-                variants={variants.slideUp}
-              >
+              <div className="md:col-span-2">
                 <label htmlFor="addressLocality" className="form-label">
                   Locality *
                 </label>
@@ -1402,7 +1364,7 @@ const PropertyUploadPage: React.FC = () => {
                     </option>
                   ))}
                 </select>
-              </motion.div>
+              </div>
 
               {/* Property Type */}
               <div className="md:col-span-2">
@@ -1503,60 +1465,36 @@ const PropertyUploadPage: React.FC = () => {
             </div>
 
             {error && (
-              <motion.div 
-                className="alert alert-error mt-4"
-                initial={{ opacity: 0, y: -10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={animations.spring}
-              >
+              <div className="alert alert-error mt-4">
                 {error}
-              </motion.div>
+              </div>
             )}
 
             {success && (
-              <motion.div 
-                className="alert alert-success mt-4"
-                initial={{ opacity: 0, y: -10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={animations.spring}
-              >
+              <div className="alert alert-success mt-4">
                 {success}
-              </motion.div>
+              </div>
             )}
 
-            <motion.div className="mt-8">
-              <motion.button
+            <div className="mt-8">
+              <button
                 type="submit"
                 disabled={loading}
                 className="btn btn-primary w-full"
-                whileHover={{ 
-                  scale: 1.02,
-                  boxShadow: shadows.lg
-                }}
-                whileTap={{ scale: 0.98 }}
-                variants={variants.scale}
               >
                 {loading ? (
-                  <motion.div 
-                    className="flex items-center justify-center"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                  >
-                    <motion.div
-                      className="spinner mr-2"
-                      animate={{ rotate: 360 }}
-                      transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-                    />
+                  <div className="flex items-center justify-center">
+                    <div className="spinner mr-2" />
                     Uploading Property...
-                  </motion.div>
+                  </div>
                 ) : (
                   'Upload Property'
                 )}
-              </motion.button>
-            </motion.div>
+              </button>
+            </div>
           </div>
-        </motion.form>
-      </motion.div>
+        </form>
+      </div>
     </motion.div>
   );
 };
