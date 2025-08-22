@@ -109,6 +109,7 @@ const SignupPage: React.FC = () => {
       setError(err.response?.data?.message || 'Failed to verify OTP. Please try again.');
     } finally {
       setLoading(false);
+      window.location.reload();
     }
   };
 

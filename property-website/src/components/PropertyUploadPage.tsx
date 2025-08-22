@@ -99,8 +99,51 @@ const PropertyUploadPage: React.FC = () => {
     addressLocality: '',
     category: 'Residential',
     subCategory: 'Flats',
+    title: '',
+    isSale: 'Sell',
+    
+    // Property details
+    projectName: '',
+    propertyName: '',
+    totalBathrooms: 0,
+    totalRooms: 0,
     propertyPrice: 0,
-    images: []
+    carpetArea: 0,
+    buildupArea: 0,
+    bhks: '',
+    furnishing: '',
+    constructionStatus: '',
+    propertyFacing: '',
+    ageOfTheProperty: '',
+    reraApproved: false,
+    amenities: [],
+    fencing: '',
+    
+    // Dimensions
+    width: 0,
+    height: 0,
+    length: 0,
+    totalArea: 0,
+    plotArea: 0,
+    landArea: 0,
+    distFromOutRRoad: 0,
+    
+    // Additional fields
+    viewFromProperty: [],
+    soilType: '',
+    approachRoad: '',
+    totalfloors: '',
+    officefloor: '',
+    yourfloor: '',
+    cabins: '',
+    parking: '',
+    washroom: '',
+    availablefor: '',
+    agentNotes: '',
+    workingWithAgent: false,
+    
+    // Images
+    images: [],
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -115,6 +158,8 @@ const PropertyUploadPage: React.FC = () => {
   const [isLoadingStates, setIsLoadingStates] = useState(false);
   const [isLoadingCities, setIsLoadingCities] = useState(false);
   const [isLoadingLocalities, setIsLoadingLocalities] = useState(false);
+
+
 
   useEffect(() => {
     const userData = localStorage.getItem('user');
@@ -265,53 +310,51 @@ const PropertyUploadPage: React.FC = () => {
 
       const formDataToSend = new FormData();
       
-      // Add basic property data
+      // Add basic property data (always required)
       formDataToSend.append('userId', userId);
       formDataToSend.append('addressState', formData.addressState);
       formDataToSend.append('addressCity', formData.addressCity);
       formDataToSend.append('addressLocality', formData.addressLocality);
       formDataToSend.append('category', formData.category);
       formDataToSend.append('subCategory', formData.subCategory);
+      formDataToSend.append('isSale', formData.isSale || 'Sell');
+      formDataToSend.append('propertyPrice', formData.propertyPrice?.toString() || '0');
       
-      // Add required fields
-      if (formData.isSale) formDataToSend.append('isSale', formData.isSale);
-      if (formData.propertyPrice) formDataToSend.append('propertyPrice', formData.propertyPrice.toString());
-      
-      // Add optional fields if they exist
-      if (formData.title) formDataToSend.append('title', formData.title);
-      if (formData.projectName) formDataToSend.append('projectName', formData.projectName);
-      if (formData.propertyName) formDataToSend.append('propertyName', formData.propertyName);
-      if (formData.totalBathrooms) formDataToSend.append('totalBathrooms', formData.totalBathrooms.toString());
-      if (formData.totalRooms) formDataToSend.append('totalRooms', formData.totalRooms.toString());
-      if (formData.carpetArea) formDataToSend.append('carpetArea', formData.carpetArea.toString());
-      if (formData.buildupArea) formDataToSend.append('buildupArea', formData.buildupArea.toString());
-      if (formData.bhks) formDataToSend.append('bhks', formData.bhks);
-      if (formData.furnishing) formDataToSend.append('furnishing', formData.furnishing);
-      if (formData.constructionStatus) formDataToSend.append('constructionStatus', formData.constructionStatus);
-      if (formData.propertyFacing) formDataToSend.append('propertyFacing', formData.propertyFacing);
-      if (formData.ageOfTheProperty) formDataToSend.append('ageOfTheProperty', formData.ageOfTheProperty);
-      if (formData.reraApproved !== undefined) formDataToSend.append('reraApproved', formData.reraApproved.toString());
-      if (formData.amenities && formData.amenities.length > 0) formDataToSend.append('amenities', JSON.stringify(formData.amenities));
-      if (formData.fencing) formDataToSend.append('fencing', formData.fencing);
-      if (formData.width) formDataToSend.append('width', formData.width.toString());
-      if (formData.height) formDataToSend.append('height', formData.height.toString());
-      if (formData.length) formDataToSend.append('length', formData.length.toString());
-      if (formData.totalArea) formDataToSend.append('totalArea', formData.totalArea.toString());
-      if (formData.plotArea) formDataToSend.append('plotArea', formData.plotArea.toString());
-      if (formData.landArea) formDataToSend.append('landArea', formData.landArea.toString());
-      if (formData.distFromOutRRoad) formDataToSend.append('distFromOutRRoad', formData.distFromOutRRoad.toString());
-      if (formData.viewFromProperty && formData.viewFromProperty.length > 0) formDataToSend.append('viewFromProperty', JSON.stringify(formData.viewFromProperty));
-      if (formData.soilType) formDataToSend.append('soilType', formData.soilType);
-      if (formData.approachRoad) formDataToSend.append('approachRoad', formData.approachRoad);
-      if (formData.totalfloors) formDataToSend.append('totalfloors', formData.totalfloors);
-      if (formData.officefloor) formDataToSend.append('officefloor', formData.officefloor);
-      if (formData.yourfloor) formDataToSend.append('yourfloor', formData.yourfloor);
-      if (formData.cabins) formDataToSend.append('cabins', formData.cabins);
-      if (formData.parking) formDataToSend.append('parking', formData.parking);
-      if (formData.washroom) formDataToSend.append('washroom', formData.washroom);
-      if (formData.availablefor) formDataToSend.append('availablefor', formData.availablefor);
-      if (formData.agentNotes) formDataToSend.append('agentNotes', formData.agentNotes);
-      if (formData.workingWithAgent !== undefined) formDataToSend.append('workingWithAgent', formData.workingWithAgent.toString());
+      // Add all other fields (including empty ones for proper API handling)
+      formDataToSend.append('title', formData.title || '');
+      formDataToSend.append('projectName', formData.projectName || '');
+      formDataToSend.append('propertyName', formData.propertyName || '');
+      formDataToSend.append('totalBathrooms', formData.totalBathrooms?.toString() || '0');
+      formDataToSend.append('totalRooms', formData.totalRooms?.toString() || '0');
+      formDataToSend.append('carpetArea', formData.carpetArea?.toString() || '0');
+      formDataToSend.append('buildupArea', formData.buildupArea?.toString() || '0');
+      formDataToSend.append('bhks', formData.bhks || '');
+      formDataToSend.append('furnishing', formData.furnishing || '');
+      formDataToSend.append('constructionStatus', formData.constructionStatus || '');
+      formDataToSend.append('propertyFacing', formData.propertyFacing || '');
+      formDataToSend.append('ageOfTheProperty', formData.ageOfTheProperty || '');
+      formDataToSend.append('reraApproved', formData.reraApproved?.toString() || 'false');
+      formDataToSend.append('amenities', JSON.stringify(formData.amenities || []));
+      formDataToSend.append('fencing', formData.fencing || '');
+      formDataToSend.append('width', formData.width?.toString() || '0');
+      formDataToSend.append('height', formData.height?.toString() || '0');
+      formDataToSend.append('length', formData.length?.toString() || '0');
+      formDataToSend.append('totalArea', formData.totalArea?.toString() || '0');
+      formDataToSend.append('plotArea', formData.plotArea?.toString() || '0');
+      formDataToSend.append('landArea', formData.landArea?.toString() || '0');
+      formDataToSend.append('distFromOutRRoad', formData.distFromOutRRoad?.toString() || '0');
+      formDataToSend.append('viewFromProperty', JSON.stringify(formData.viewFromProperty || []));
+      formDataToSend.append('soilType', formData.soilType || '');
+      formDataToSend.append('approachRoad', formData.approachRoad || '');
+      formDataToSend.append('totalfloors', formData.totalfloors || '');
+      formDataToSend.append('officefloor', formData.officefloor || '');
+      formDataToSend.append('yourfloor', formData.yourfloor || '');
+      formDataToSend.append('cabins', formData.cabins || '');
+      formDataToSend.append('parking', formData.parking || '');
+      formDataToSend.append('washroom', formData.washroom || '');
+      formDataToSend.append('availablefor', formData.availablefor || '');
+      formDataToSend.append('agentNotes', formData.agentNotes || '');
+      formDataToSend.append('workingWithAgent', formData.workingWithAgent?.toString() || 'false');
 
       // Add images - only add successfully uploaded images
       const successfulImages = formData.images.filter(img => img.key && !img.uploading && !img.error);
@@ -320,6 +363,11 @@ const PropertyUploadPage: React.FC = () => {
           formDataToSend.append('imageKeys', image.key);
         }
       });
+
+      // Debug: Log all form data being sent
+      console.log('Form Data being sent to API:');
+      console.log('formData object:', formData);
+      console.log('FormData created successfully with all fields');
 
       const response = await axios.post('http://localhost:5000/api/v1/temp/properties', formDataToSend, {
         headers: {
@@ -337,8 +385,51 @@ const PropertyUploadPage: React.FC = () => {
           addressLocality: '',
           category: 'Residential',
           subCategory: 'Flats',
+          title: '',
+          isSale: 'Sell',
+          
+          // Property details
+          projectName: '',
+          propertyName: '',
+          totalBathrooms: 0,
+          totalRooms: 0,
           propertyPrice: 0,
-          images: []
+          carpetArea: 0,
+          buildupArea: 0,
+          bhks: '',
+          furnishing: '',
+          constructionStatus: '',
+          propertyFacing: '',
+          ageOfTheProperty: '',
+          reraApproved: false,
+          amenities: [],
+          fencing: '',
+          
+          // Dimensions
+          width: 0,
+          height: 0,
+          length: 0,
+          totalArea: 0,
+          plotArea: 0,
+          landArea: 0,
+          distFromOutRRoad: 0,
+          
+          // Additional fields
+          viewFromProperty: [],
+          soilType: '',
+          approachRoad: '',
+          totalfloors: '',
+          officefloor: '',
+          yourfloor: '',
+          cabins: '',
+          parking: '',
+          washroom: '',
+          availablefor: '',
+          agentNotes: '',
+          workingWithAgent: false,
+          
+          // Images
+          images: [],
         });
       }
     } catch (err: any) {
@@ -496,6 +587,24 @@ const PropertyUploadPage: React.FC = () => {
   // Function to render field based on field name
   const renderField = (fieldName: string) => {
     switch (fieldName) {
+      case 'title':
+        return (
+          <div key={fieldName}>
+            <label htmlFor={fieldName} className="form-label">
+              Property Title
+            </label>
+            <input
+              type="text"
+              id={fieldName}
+              name={fieldName}
+              value={formData.title || ''}
+              onChange={handleInputChange}
+              className="form-input"
+              placeholder="Enter property title"
+            />
+          </div>
+        );
+
       case 'projectName':
         return (
           <div key={fieldName}>
@@ -1356,6 +1465,21 @@ const PropertyUploadPage: React.FC = () => {
                   <option value="Sell">Sell</option>
                  {formData.subCategory === "Flats" || formData.subCategory === "Builder Floors" || formData.subCategory === "House Villas" || formData.subCategory === "Farmhouses" ? <option value="Rent">Rent</option> :<option value="Lease">Lease</option>}
                 </select>
+              </div>
+
+              <div className="form-group">
+                <label htmlFor="title" className="form-label">
+                  Property Title
+                </label>
+                <input
+                  type="text"
+                  id="title"
+                  name="title"
+                  value={formData.title || ''}
+                  onChange={handleInputChange}
+                  className="form-input"
+                  placeholder="Enter property title"
+                />
               </div>
 
               {/* Dynamic Fields based on SubCategory */}

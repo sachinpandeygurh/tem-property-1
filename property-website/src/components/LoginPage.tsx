@@ -26,6 +26,8 @@ const LoginPage: React.FC = () => {
   const [otpTimer, setOtpTimer] = useState(0);
   const navigate = useNavigate();
 
+ 
+
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({
@@ -102,6 +104,7 @@ const LoginPage: React.FC = () => {
       setError(err.response?.data?.message || 'Failed to verify OTP. Please try again.');
     } finally {
       setLoading(false);
+      window.location.reload();
     }
   };
 
