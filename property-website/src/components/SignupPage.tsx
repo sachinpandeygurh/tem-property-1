@@ -6,7 +6,6 @@ import { colors, shadows, animations, variants } from '../theme';
 
 interface SignupFormData {
   fullName: string;
-  email: string;
   mobileNumber: string;
 }
 
@@ -17,7 +16,6 @@ interface OTPFormData {
 const SignupPage: React.FC = () => {
   const [formData, setFormData] = useState<SignupFormData>({
     fullName: '',
-    email: '',
     mobileNumber: ''
   });
   const [otpData, setOtpData] = useState<OTPFormData>({
@@ -63,10 +61,10 @@ const SignupPage: React.FC = () => {
     setSuccess('');
 
     try {
-      const response = await axios.post('https://nextopson.com/api/v1/temp/signup/send-otp', {
+      const response = await axios.post('http://localhost:5000/api/v1/temp/signup/send-otp', {
         fullName: formData.fullName,
-        email: formData.email,
-        mobileNumber: formData.mobileNumber
+        mobileNumber: formData.mobileNumber,
+        userType: 'Owner'
       });
 
       if (response.status === 200) {
@@ -87,11 +85,11 @@ const SignupPage: React.FC = () => {
     setSuccess('');
 
     try {
-      const response = await axios.post('https://nextopson.com/api/v1/temp/signup/verify-otp', {
+      const response = await axios.post('http://localhost:5000/api/v1/temp/signup/verify-otp', {
         fullName: formData.fullName,
-        email: formData.email,
         mobileNumber: formData.mobileNumber,
-        otp: otpData.otp
+        otp: otpData.otp,
+        userType: 'Owner'
       });
 
       if (response.status === 201) {
@@ -109,11 +107,6 @@ const SignupPage: React.FC = () => {
       setError(err.response?.data?.message || 'Failed to verify OTP. Please try again.');
     } finally {
       setLoading(false);
-      window.location.reload();
-      setTimeout(() => {
-        navigate('/upload-property');
-        window.location.reload();
-      }, 1500);
     }
   };
 
@@ -125,10 +118,10 @@ const SignupPage: React.FC = () => {
     setSuccess('');
 
     try {
-      const response = await axios.post('https://nextopson.com/api/v1/temp/signup/send-otp', {
+      const response = await axios.post('http://localhost:5000/api/v1/temp/signup/send-otp', {
         fullName: formData.fullName,
-        email: formData.email,
-        mobileNumber: formData.mobileNumber
+        mobileNumber: formData.mobileNumber,
+        userType: 'Owner'
       });
 
       if (response.status === 200) {
@@ -136,7 +129,7 @@ const SignupPage: React.FC = () => {
         startOTPTimer();
       }
     } catch (err: any) {
-      setError(err.response?.data?.message || 'Failed to resend OTP. Please try again.');
+      setError(err.response?.data?.message);
     } finally {
       setLoading(false);
     }
@@ -194,23 +187,6 @@ const SignupPage: React.FC = () => {
                     placeholder="Enter your full name"
                   />
                 </div>
-
-                <div className="form-group">
-                  <label htmlFor="email" className="form-label">
-                    Email *
-                  </label>
-                  <input
-                    type="email"
-                    id="email"
-                    name="email"
-                    required
-                    value={formData.email}
-                    onChange={handleInputChange}
-                    className="form-input"
-                    placeholder="Enter your email"
-                  />
-                </div>
-
                 <div className="form-group">
                   <label htmlFor="mobileNumber" className="form-label">
                     Mobile Number *

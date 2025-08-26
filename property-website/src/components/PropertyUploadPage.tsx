@@ -8,7 +8,7 @@ import { colors, shadows, animations, variants } from '../theme';
 // API functions for dropdowns
 const getStates = async () => {
   try {
-    const response = await axios.get('https://nextopson.com/api/v1/dropdown/states');
+    const response = await axios.get('http://localhost:5000/api/v1/dropdown/states');
     return response.data;
   } catch (error) {
     console.error('Error fetching states:', error);
@@ -18,7 +18,7 @@ const getStates = async () => {
 
 const getCities = async (state: string) => {
   try {
-    const response = await axios.post('https://nextopson.com/api/v1/dropdown/cities', { state });
+    const response = await axios.post('http://localhost:5000/api/v1/dropdown/cities', { state });
     return response.data;
   } catch (error) {
     console.error('Error fetching cities:', error);
@@ -28,7 +28,7 @@ const getCities = async (state: string) => {
 
 const getLocalities = async (city: string, state?: string) => {
   try {
-    const response = await axios.post('https://nextopson.com/api/v1/dropdown/localities', { state, city });
+    const response = await axios.post('http://localhost:5000/api/v1/dropdown/localities', { state, city });
     return response.data;
   } catch (error) {
     console.error('Error fetching localities:', error);
@@ -103,43 +103,43 @@ const PropertyUploadPage: React.FC = () => {
     isSale: 'Sell',
     
     // Property details
-    projectName: '',
-    propertyName: '',
-    totalBathrooms: 0,
-    totalRooms: 0,
-    propertyPrice: 0,
-    carpetArea: 0,
-    buildupArea: 0,
-    bhks: '',
-    furnishing: '',
-    constructionStatus: '',
-    propertyFacing: '',
-    ageOfTheProperty: '',
+    projectName: undefined,
+    propertyName: undefined,
+    totalBathrooms: undefined,
+    totalRooms: undefined,
+    propertyPrice: undefined,
+    carpetArea: undefined,
+    buildupArea: undefined,
+    bhks: undefined,
+    furnishing: undefined,
+    constructionStatus: undefined,
+    propertyFacing: undefined,
+    ageOfTheProperty: undefined,
     reraApproved: false,
     amenities: [],
-    fencing: '',
+    fencing: undefined,
     
     // Dimensions
-    width: 0,
-    height: 0,
-    length: 0,
-    totalArea: 0,
-    plotArea: 0,
-    landArea: 0,
-    distFromOutRRoad: 0,
+    width: undefined,
+    height: undefined,
+    length: undefined,
+    totalArea: undefined,
+    plotArea: undefined,
+    landArea: undefined,
+    distFromOutRRoad: undefined,
     
     // Additional fields
     viewFromProperty: [],
-    soilType: '',
-    approachRoad: '',
-    totalfloors: '',
-    officefloor: '',
-    yourfloor: '',
-    cabins: '',
-    parking: '',
-    washroom: '',
-    availablefor: '',
-    agentNotes: '',
+    soilType: undefined,
+    approachRoad: undefined,
+    totalfloors: undefined,
+    officefloor: undefined,
+    yourfloor: undefined,
+    cabins: undefined,
+    parking: undefined,
+    washroom: undefined,
+    availablefor: undefined,
+    agentNotes: undefined,
     workingWithAgent: false,
     
     // Images
@@ -160,16 +160,17 @@ const PropertyUploadPage: React.FC = () => {
   const [isLoadingLocalities, setIsLoadingLocalities] = useState(false);
 
 
-
   useEffect(() => {
     const userData = localStorage.getItem('user');
     if (userData) {
       const parsedUser = JSON.parse(userData);
       setUser(parsedUser);
       setFormData(prev => ({ ...prev, userId: parsedUser.id }));
+    } else {
+      // Redirect to login if no user is found
+      navigate('/login');
     }
-    // Removed the redirect to login since after signin, login should not be required
-  }, []);
+  }, [navigate]);
 
   // Fetch states on component mount
   useEffect(() => {
@@ -279,26 +280,14 @@ const PropertyUploadPage: React.FC = () => {
     setSuccess('');
 
     try {
-      let userId = formData.userId;
+      const userId = formData.userId;
       
-      // If no user is logged in, create a temporary user
-      if (!userId || userId === 'temp-user') {
-        try {
-          const tempUserResponse = await axios.post('https://nextopson.com/api/v1/temp/signup', {
-            fullName: 'Guest User',
-            email: `guest-${Date.now()}@temp.com`,
-            mobileNumber: '0000000000'
-          });
-          
-          if (tempUserResponse.status === 201) {
-            userId = tempUserResponse.data.user.id;
-            setFormData(prev => ({ ...prev, userId }));
-            setUser(tempUserResponse.data.user);
-          }
-        } catch (err: any) {
-          console.error('Error creating temporary user:', err);
-          // Continue with temp-user ID if creation fails
-        }
+      // Ensure user is logged in
+      if (!userId) {
+        setError('Please login to upload properties');
+        setLoading(false);
+        navigate('/login');
+        return;
       }
 
       // Validate required fields
@@ -318,16 +307,16 @@ const PropertyUploadPage: React.FC = () => {
       formDataToSend.append('category', formData.category);
       formDataToSend.append('subCategory', formData.subCategory);
       formDataToSend.append('isSale', formData.isSale || 'Sell');
-      formDataToSend.append('propertyPrice', formData.propertyPrice?.toString() || '0');
+      formDataToSend.append('propertyPrice', formData.propertyPrice?.toString());
       
       // Add all other fields (including empty ones for proper API handling)
       formDataToSend.append('title', formData.title || '');
       formDataToSend.append('projectName', formData.projectName || '');
       formDataToSend.append('propertyName', formData.propertyName || '');
-      formDataToSend.append('totalBathrooms', formData.totalBathrooms?.toString() || '0');
-      formDataToSend.append('totalRooms', formData.totalRooms?.toString() || '0');
-      formDataToSend.append('carpetArea', formData.carpetArea?.toString() || '0');
-      formDataToSend.append('buildupArea', formData.buildupArea?.toString() || '0');
+      formDataToSend.append('totalBathrooms', formData.totalBathrooms?.toString() || '');
+      formDataToSend.append('totalRooms', formData.totalRooms?.toString() || '');
+      formDataToSend.append('carpetArea', formData.carpetArea?.toString() || '');
+      formDataToSend.append('buildupArea', formData.buildupArea?.toString() || '');
       formDataToSend.append('bhks', formData.bhks || '');
       formDataToSend.append('furnishing', formData.furnishing || '');
       formDataToSend.append('constructionStatus', formData.constructionStatus || '');
@@ -337,9 +326,9 @@ const PropertyUploadPage: React.FC = () => {
       formDataToSend.append('amenities', JSON.stringify(formData.amenities || []));
       formDataToSend.append('fencing', formData.fencing || '');
       formDataToSend.append('width', formData.width?.toString() || '0');
-      formDataToSend.append('height', formData.height?.toString() || '0');
-      formDataToSend.append('length', formData.length?.toString() || '0');
-      formDataToSend.append('totalArea', formData.totalArea?.toString() || '0');
+      formDataToSend.append('height', formData.height?.toString() || '');
+      formDataToSend.append('length', formData.length?.toString() || '');
+      formDataToSend.append('totalArea', formData.totalArea?.toString() || '');
       formDataToSend.append('plotArea', formData.plotArea?.toString() || '0');
       formDataToSend.append('landArea', formData.landArea?.toString() || '0');
       formDataToSend.append('distFromOutRRoad', formData.distFromOutRRoad?.toString() || '0');
@@ -369,7 +358,7 @@ const PropertyUploadPage: React.FC = () => {
       console.log('formData object:', formData);
       console.log('FormData created successfully with all fields');
 
-      const response = await axios.post('https://nextopson.com/api/v1/temp/properties', formDataToSend, {
+      const response = await axios.post('http://localhost:5000/api/v1/temp/properties', formDataToSend, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
@@ -391,41 +380,41 @@ const PropertyUploadPage: React.FC = () => {
           // Property details
           projectName: '',
           propertyName: '',
-          totalBathrooms: 0,
-          totalRooms: 0,
-          propertyPrice: 0,
-          carpetArea: 0,
-          buildupArea: 0,
-          bhks: '',
-          furnishing: '',
-          constructionStatus: '',
-          propertyFacing: '',
-          ageOfTheProperty: '',
+          totalBathrooms: undefined,
+          totalRooms: undefined,
+          propertyPrice: undefined,
+          carpetArea: undefined,
+          buildupArea: undefined,
+          bhks: undefined,
+          furnishing: undefined,
+          constructionStatus: undefined,
+          propertyFacing: undefined,
+          ageOfTheProperty: undefined,
           reraApproved: false,
           amenities: [],
-          fencing: '',
+          fencing: undefined,
           
           // Dimensions
-          width: 0,
-          height: 0,
-          length: 0,
-          totalArea: 0,
-          plotArea: 0,
-          landArea: 0,
-          distFromOutRRoad: 0,
+          width: undefined,
+          height: undefined,
+          length: undefined,
+          totalArea: undefined,
+          plotArea: undefined,
+          landArea: undefined,
+          distFromOutRRoad: undefined,
           
           // Additional fields
           viewFromProperty: [],
-          soilType: '',
-          approachRoad: '',
-          totalfloors: '',
-          officefloor: '',
-          yourfloor: '',
-          cabins: '',
-          parking: '',
-          washroom: '',
-          availablefor: '',
-          agentNotes: '',
+          soilType: undefined,
+          approachRoad: undefined,
+          totalfloors: undefined,
+          officefloor: undefined,
+          yourfloor: undefined,
+          cabins: undefined,
+          parking: undefined,
+          washroom: undefined,
+          availablefor: undefined,
+          agentNotes: undefined,
           workingWithAgent: false,
           
           // Images
@@ -475,6 +464,7 @@ const PropertyUploadPage: React.FC = () => {
   
       case 'House Villas':
         return [
+           "totalBathrooms",
           'propertyPrice',
           'carpetArea',
           'buildupArea',
@@ -484,6 +474,7 @@ const PropertyUploadPage: React.FC = () => {
           'constructionStatus',
           'ageOfTheProperty',
           'amenities',
+         
         ];
   
       case 'Plots':
@@ -1208,51 +1199,7 @@ const PropertyUploadPage: React.FC = () => {
     }
   };
 
-  if (!user) {
-    return (
-      <motion.div 
-        className="min-h-screen flex items-center justify-center"
-        style={{ backgroundColor: colors.GRAY_50 }}
-        variants={variants.springDrop}
-        initial="initial"
-        animate="animate"
-        exit="exit"
-        transition={animations.springDrop}
-      >
-        <div 
-          className="text-center p-8 rounded-xl"
-          style={{ 
-            backgroundColor: colors.WHITE,
-            boxShadow: shadows.xl
-          }}
-        >
-          <h2 
-            className="text-2xl font-bold mb-4"
-            style={{ color: colors.TEXT_COLOR }}
-          >
-            Welcome to Property Upload
-          </h2>
-          <p 
-            className="mb-6"
-            style={{ color: colors.GRAY_600 }}
-          >
-            You can upload properties without logging in. Your data will be saved as a temporary account.
-          </p>
-          <button
-            onClick={() => setUser({ id: 'temp-user', fullName: 'Guest User' })}
-            className="px-6 py-3 rounded-lg font-medium transition-all duration-200"
-            style={{ 
-              backgroundColor: colors.PRIMARY_COLOR,
-              color: colors.WHITE,
-              boxShadow: shadows.md
-            }}
-          >
-            Continue as Guest
-          </button>
-        </div>
-      </motion.div>
-    );
-  }
+
 
   return (
     <motion.div 
@@ -1425,7 +1372,7 @@ const PropertyUploadPage: React.FC = () => {
                 >
                   <option value="">Select Sale Type</option>
                   <option value="Sell">Sell</option>
-                 {formData.subCategory === "Flats" || formData.subCategory === "Builder Floors" || formData.subCategory === "House Villas" || formData.subCategory === "Farmhouses" ? <option value="Rent">Rent</option> :<option value="Lease">Lease</option>}
+                 {formData.subCategory === "Flats" || formData.subCategory === "Builder Floors" || formData.subCategory === "House Villas" || formData.subCategory === "Farmhouses" || formData.subCategory === 'Office Spaces' || formData.subCategory === 'Shops Showrooms' ? <option value="Rent">Rent</option> :<option value="Lease">Lease</option>}
                 </select>
               </div>
 

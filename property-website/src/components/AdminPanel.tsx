@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import axios from 'axios';
+import RealImg from './RealImg';
 import { colors, shadows, animations, variants } from '../theme';
 
 interface TempUser {
@@ -15,48 +16,99 @@ interface TempUser {
 interface TempProperty {
   id: string;
   title: string;
+  description?: string;
   category: string;
   subCategory: string;
   propertyPrice: number;
-  userId: string;
+  carpetArea?: number;
+  totalBathrooms?: number;
+  totalRooms?: number;
+  address?: {
+    state: string;
+    city: string;
+    locality: string;
+  };
+  images?: string[];
+  user?: {
+    id: string;
+    fullName: string;
+    userType: string;
+    accountType: string;
+  };
+  createdAt?: string;
 }
 
 const AdminPanel: React.FC = () => {
+  const userString = localStorage.getItem('user');
+  const user = userString ? JSON.parse(userString) : null;
+ 
   const [tempUsers, setTempUsers] = useState<TempUser[]>([]);
   const [tempProperties, setTempProperties] = useState<TempProperty[]>([]);
   const [loading, setLoading] = useState(false);
-  const [activeTab, setActiveTab] = useState<'users' | 'properties' | 'create'>('users');
-
-  // Form states for creating temp users
-  const [userForm, setUserForm] = useState({
-    fullName: '',
-    email: '',
+  const [activeTab, setActiveTab] = useState<'users' | 'properties'>('users');
+  
+  // Pagination and filter states for properties
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
+  const [showFilters, setShowFilters] = useState(false);
+  const [showScrollToTop, setShowScrollToTop] = useState(false);
+  const [scrollPosition, setScrollPosition] = useState(0);
+  const [filters, setFilters] = useState({
+    category: '',
+    subCategory: '',
+    minPrice: '',
+    maxPrice: '',
     mobileNumber: ''
   });
 
-  // Form states for creating temp properties
-  const [propertyForm, setPropertyForm] = useState({
-    userId: '',
-    title: '',
-    description: '',
-    category: 'Residential',
-    subCategory: 'Flats',
-    propertyPrice: 0,
-    carpetArea: 0,
-    totalBathrooms: 0,
-    totalRooms: 0,
-    address: ''
-  });
+
 
   useEffect(() => {
     fetchTempUsers();
-    fetchTempProperties();
+    fetchTempProperties(1, filters);
+  }, []); // Only run on component mount
+
+  // Scroll to top button effect
+  useEffect(() => {
+    const handleScroll = () => {
+      const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+      setShowScrollToTop(scrollTop > 300);
+      setScrollPosition(scrollTop);
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
   }, []);
+
+  const handleFilterChange = (filterType: string, value: string) => {
+    setFilters(prev => ({
+      ...prev,
+      [filterType]: value
+    }));
+  };
+
+  const handleFilterSubmit = () => {
+    fetchTempProperties(1, filters);
+  };
+
+  const handlePageChange = (page: number) => {
+    if (!loading) {
+      fetchTempProperties(page, filters);
+    }
+  };
+
+  const scrollToTop = () => {
+    window.scrollTo({
+      top: 0,
+      behavior: 'smooth'
+    });
+  };
 
   const fetchTempUsers = async () => {
     try {
       setLoading(true);
-      const response = await axios.get('https://nextopson.com/api/v1/temp/users');
+      const response = await axios.get('http://localhost:5000/api/v1/temp/users');
       setTempUsers(response.data.users);
     } catch (error) {
       console.error('Error fetching temp users:', error);
@@ -65,11 +117,25 @@ const AdminPanel: React.FC = () => {
     }
   };
 
-  const fetchTempProperties = async () => {
+  const fetchTempProperties = async (page = 1, filterParams = {}) => {
     try {
       setLoading(true);
-      const response = await axios.get('https://nextopson.com/api/v1/temp/properties');
-      setTempProperties(response.data.properties);
+      const response = await axios.get('http://localhost:5000/api/v1/temp/properties', {
+        params: {
+          page: page,
+          limit: 10,
+          ...filterParams
+        }
+      });
+      
+      // Handle response structure based on the API response
+      const properties = response.data.properties || [];
+      const pagination = response.data.pagination || {};
+      
+      setTempProperties(properties);
+      setTotalPages(pagination.totalPages || 1);
+      setCurrentPage(page);
+      setHasMore(pagination.hasMore);
     } catch (error) {
       console.error('Error fetching temp properties:', error);
     } finally {
@@ -77,56 +143,13 @@ const AdminPanel: React.FC = () => {
     }
   };
 
-  const handleCreateTempUser = async (e: React.FormEvent) => {
-    e.preventDefault();
-    try {
-      setLoading(true);
-      await axios.post('https://nextopson.com/api/v1/temp/signup', userForm);
-      setUserForm({
-        fullName: '',
-        email: '',
-        mobileNumber: ''
-      });
-      fetchTempUsers();
-      alert('Temporary user created successfully!');
-    } catch (error: any) {
-      alert(error.response?.data?.message || 'Error creating temporary user');
-    } finally {
-      setLoading(false);
-    }
-  };
 
-  const handleCreateTempProperty = async (e: React.FormEvent) => {
-    e.preventDefault();
-    try {
-      setLoading(true);
-      await axios.post('https://nextopson.com/api/v1/temp/properties', propertyForm);
-      setPropertyForm({
-        userId: '',
-        title: '',
-        description: '',
-        category: 'Residential',
-        subCategory: 'Flats',
-        propertyPrice: 0,
-        carpetArea: 0,
-        totalBathrooms: 0,
-        totalRooms: 0,
-        address: ''
-      });
-      fetchTempProperties();
-      alert('Temporary property created successfully!');
-    } catch (error: any) {
-      alert(error.response?.data?.message || 'Error creating temporary property');
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const handleDeleteTempUser = async (userId: string) => {
     if (window.confirm('Are you sure you want to delete this temporary user?')) {
       try {
         setLoading(true);
-        await axios.delete(`https://nextopson.com/api/v1/temp/users/${userId}`);
+        await axios.delete(`http://localhost:5000/api/v1/temp/users/${userId}`);
         fetchTempUsers();
         alert('Temporary user deleted successfully!');
       } catch (error: any) {
@@ -141,7 +164,7 @@ const AdminPanel: React.FC = () => {
     if (window.confirm('Are you sure you want to delete this temporary property?')) {
       try {
         setLoading(true);
-        await axios.delete(`https://nextopson.com/api/v1/temp/properties/${propertyId}`);
+        await axios.delete(`http://localhost:5000/api/v1/temp/properties/${propertyId}`);
         fetchTempProperties();
         alert('Temporary property deleted successfully!');
       } catch (error: any) {
@@ -152,13 +175,7 @@ const AdminPanel: React.FC = () => {
     }
   };
 
-  const residentialSubCategories = [
-    'Flats', 'Builder Floors', 'House Villas', 'Plots', 'Farmhouses'
-  ];
 
-  const commercialSubCategories = [
-    'Hotels', 'Lands', 'Office Spaces', 'Hostels', 'Shops Showrooms'
-  ];
 
   return (
     <motion.div 
@@ -203,16 +220,6 @@ const AdminPanel: React.FC = () => {
                 }`}
               >
                 Temporary Properties ({tempProperties.length})
-              </button>
-              <button
-                onClick={() => setActiveTab('create')}
-                className={`py-2 px-1 border-b-2 font-medium text-sm transition-all duration-200 ${
-                  activeTab === 'create'
-                    ? 'border-indigo-500 text-indigo-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                }`}
-              >
-                Create New
               </button>
             </nav>
           </div>
@@ -281,217 +288,322 @@ const AdminPanel: React.FC = () => {
             {/* Temporary Properties Tab */}
             {activeTab === 'properties' && !loading && (
               <div>
-                <h2 className="text-lg font-semibold mb-4 text-gray-900">Temporary Properties</h2>
-                <div className="overflow-x-auto">
-                  <table className="table">
-                    <thead>
-                      <tr>
-                        <th>Title</th>
-                        <th>Category</th>
-                        <th>Sub Category</th>
-                        <th>Price</th>
-                        <th>User ID</th>
-                        <th>Actions</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {tempProperties.map((property) => (
-                        <tr key={property.id}>
-                          <td className="font-medium text-gray-900">
-                            {property.title}
-                          </td>
-                          <td className="text-gray-500">
-                            {property.category}
-                          </td>
-                          <td className="text-gray-500">
-                            {property.subCategory}
-                          </td>
-                          <td className="text-gray-500">
-                            ₹{property.propertyPrice.toLocaleString()}
-                          </td>
-                          <td className="text-gray-500">
-                            {property.userId}
-                          </td>
-                          <td>
-                            <button
-                              onClick={() => handleDeleteTempProperty(property.id)}
-                              className="text-red-600 hover:text-red-900"
-                            >
-                              Delete
-                            </button>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                <div className="flex justify-between items-center mb-4">
+                  <h2 className="text-lg font-semibold text-gray-900">Temporary Properties</h2>
+                  <button
+                    onClick={() => setShowFilters(!showFilters)}
+                    className="btn btn-outline"
+                  >
+                    {showFilters ? 'Hide Filters' : 'Show Filters'}
+                  </button>
                 </div>
-              </div>
-            )}
-
-            {/* Create New Tab */}
-            {activeTab === 'create' && !loading && (
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                {/* Create Temporary User */}
-                <div>
-                  <h2 className="text-lg font-semibold mb-4 text-gray-900">Create Temporary User</h2>
-                  <form onSubmit={handleCreateTempUser} className="space-y-4">
-                    <div className="form-group">
-                      <label className="form-label">Full Name</label>
-                      <input
-                        type="text"
-                        required
-                        value={userForm.fullName}
-                        onChange={(e) => setUserForm({ ...userForm, fullName: e.target.value })}
-                        className="form-input"
-                      />
-                    </div>
-                    <div className="form-group">
-                      <label className="form-label">Email</label>
-                      <input
-                        type="email"
-                        required
-                        value={userForm.email}
-                        onChange={(e) => setUserForm({ ...userForm, email: e.target.value })}
-                        className="form-input"
-                      />
-                    </div>
-                    <div className="form-group">
-                      <label className="form-label">Mobile Number</label>
-                      <input
-                        type="tel"
-                        required
-                        value={userForm.mobileNumber}
-                        onChange={(e) => setUserForm({ ...userForm, mobileNumber: e.target.value })}
-                        className="form-input"
-                      />
-                    </div>
-                    <button
-                      type="submit"
-                      disabled={loading}
-                      className="btn btn-primary w-full"
-                    >
-                      Create Temporary User
-                    </button>
-                  </form>
-                </div>
-
-                {/* Create Temporary Property */}
-                <div>
-                  <h2 className="text-lg font-semibold mb-4 text-gray-900">Create Temporary Property</h2>
-                  <form onSubmit={handleCreateTempProperty} className="space-y-4">
-                    <div className="form-group">
-                      <label className="form-label">User ID</label>
-                      <input
-                        type="text"
-                        required
-                        value={propertyForm.userId}
-                        onChange={(e) => setPropertyForm({ ...propertyForm, userId: e.target.value })}
-                        className="form-input"
-                        placeholder="Enter temporary user ID"
-                      />
-                    </div>
-                    <div className="form-group">
-                      <label className="form-label">Title</label>
-                      <input
-                        type="text"
-                        required
-                        value={propertyForm.title}
-                        onChange={(e) => setPropertyForm({ ...propertyForm, title: e.target.value })}
-                        className="form-input"
-                      />
-                    </div>
-                    <div className="form-group">
-                      <label className="form-label">Description</label>
-                      <textarea
-                        required
-                        value={propertyForm.description}
-                        onChange={(e) => setPropertyForm({ ...propertyForm, description: e.target.value })}
-                        rows={3}
-                        className="form-input"
-                      />
-                    </div>
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="form-group">
-                        <label className="form-label">Category</label>
+                
+                                {/* Filters */}
+                {showFilters && (
+                  <div className="mb-6 p-4 bg-gray-50 rounded-lg">
+                    <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4 mb-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Category</label>
                         <select
-                          value={propertyForm.category}
-                          onChange={(e) => setPropertyForm({ 
-                            ...propertyForm, 
-                            category: e.target.value,
-                            subCategory: e.target.value === 'Residential' ? 'Flats' : 'Hotels'
-                          })}
+                          value={filters.category}
+                          onChange={(e) => handleFilterChange('category', e.target.value)}
                           className="form-input"
                         >
+                          <option value="">All Categories</option>
                           <option value="Residential">Residential</option>
                           <option value="Commercial">Commercial</option>
                         </select>
                       </div>
-                      <div className="form-group">
-                        <label className="form-label">Sub Category</label>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Min Price</label>
+                        <input
+                          type="number"
+                          value={filters.minPrice}
+                          onChange={(e) => handleFilterChange('minPrice', e.target.value)}
+                          placeholder="Min Price"
+                          className="form-input"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Max Price</label>
+                        <input
+                          type="number"
+                          value={filters.maxPrice}
+                          onChange={(e) => handleFilterChange('maxPrice', e.target.value)}
+                          placeholder="Max Price"
+                          className="form-input"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Mobile Number</label>
+                        <input
+                          type="tel"
+                          value={filters.mobileNumber}
+                          onChange={(e) => handleFilterChange('mobileNumber', e.target.value)}
+                          placeholder="Mobile Number"
+                          className="form-input"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Sub Category</label>
                         <select
-                          value={propertyForm.subCategory}
-                          onChange={(e) => setPropertyForm({ ...propertyForm, subCategory: e.target.value })}
+                          value={filters.subCategory}
+                          onChange={(e) => handleFilterChange('subCategory', e.target.value)}
                           className="form-input"
                         >
-                          {propertyForm.category === 'Residential' 
-                            ? residentialSubCategories.map(sub => (
-                                <option key={sub} value={sub}>{sub}</option>
-                              ))
-                            : commercialSubCategories.map(sub => (
-                                <option key={sub} value={sub}>{sub}</option>
-                              ))
-                          }
+                          <option value="">All Types</option>
+                          <option value="Flats">Flats</option>
+                          <option value="Builder Floors">Builder Floors</option>
+                          <option value="House Villas">House Villas</option>
+                          <option value="Plots">Plots</option>
+                          <option value="Farmhouses">Farmhouses</option>
+                          <option value="Hotels">Hotels</option>
+                          <option value="Lands">Lands</option>
+                          <option value="Office Spaces">Office Spaces</option>
+                          <option value="Hostels">Hostels</option>
+                          <option value="Shops Showrooms">Shops Showrooms</option>
                         </select>
                       </div>
                     </div>
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="form-group">
-                        <label className="form-label">Price (₹)</label>
-                        <input
-                          type="number"
-                          required
-                          min="0"
-                          value={propertyForm.propertyPrice}
-                          onChange={(e) => setPropertyForm({ ...propertyForm, propertyPrice: Number(e.target.value) })}
-                          className="form-input"
-                        />
-                      </div>
-                      <div className="form-group">
-                        <label className="form-label">Carpet Area (sq ft)</label>
-                        <input
-                          type="number"
-                          min="0"
-                          step="0.01"
-                          value={propertyForm.carpetArea}
-                          onChange={(e) => setPropertyForm({ ...propertyForm, carpetArea: Number(e.target.value) })}
-                          className="form-input"
-                        />
-                      </div>
+                    
+                    {/* Filter Action Buttons */}
+                    <div className="flex justify-center space-x-4">
+                      <button
+                        onClick={handleFilterSubmit}
+                        disabled={loading}
+                        className="px-6 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
+                      >
+                        {loading ? (
+                          <div className="flex items-center">
+                            <div className="spinner mr-2" />
+                            Applying...
+                          </div>
+                        ) : (
+                          'Apply Filters'
+                        )}
+                      </button>
+                      
+                      <button
+                        onClick={() => {
+                          setFilters({
+                            category: '',
+                            subCategory: '',
+                            minPrice: '',
+                            maxPrice: '',
+                            mobileNumber: ''
+                          });
+                        }}
+                        className="px-6 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600 transition-colors duration-200"
+                      >
+                        Clear Filters
+                      </button>
                     </div>
-                    <div className="form-group">
-                      <label className="form-label">Address</label>
-                      <textarea
-                        required
-                        value={propertyForm.address}
-                        onChange={(e) => setPropertyForm({ ...propertyForm, address: e.target.value })}
-                        rows={2}
-                        className="form-input"
-                      />
-                    </div>
-                    <button
-                      type="submit"
-                      disabled={loading}
-                      className="btn btn-success w-full"
-                    >
-                      Create Temporary Property
-                    </button>
-                  </form>
+                  </div>
+                )}
+                
+                <div className="overflow-x-auto">
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {tempProperties.map((property) => (
+                      <div key={property.id} className="bg-white rounded-lg shadow-md overflow-hidden">
+                        {/* Property Image */}
+                        <div className="h-48 bg-gray-200 relative">
+                          {property.images && property.images.length > 0 ? (
+                            <RealImg
+                              imageKey={property.images[0]}
+                              width="100%"
+                              height="100%"
+                              alt={property.title}
+                              className="w-full h-full object-cover"
+                              showSkeleton={true}
+                              loadingDelay={300}
+                            />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center text-gray-500">
+                              No Image
+                            </div>
+                          )}
+                        </div>
+                        
+                        {/* Property Details */}
+                        <div className="p-4">
+                          <h3 className="font-semibold text-lg text-gray-900 mb-2 line-clamp-2">
+                            {property.title}
+                          </h3>
+                          
+                          <div className="space-y-2 text-sm text-gray-600">
+                            <div className="flex justify-between">
+                              <span>Category:</span>
+                              <span className="font-medium">{property.category}</span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span>Type:</span>
+                              <span className="font-medium">{property.subCategory}</span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span>Price:</span>
+                              <span className="font-medium text-green-600">₹{property.propertyPrice?.toLocaleString()}</span>
+                            </div>
+                            {property.carpetArea && (
+                              <div className="flex justify-between">
+                                <span>Area:</span>
+                                <span className="font-medium">{property.carpetArea} sq ft</span>
+                              </div>
+                            )}
+                            {property.address && (
+                              <div className="flex justify-between">
+                                <span>Location:</span>
+                                <span className="font-medium">{property.address.city}, {property.address.state}</span>
+                              </div>
+                            )}
+                            {property.user && (
+                              <div className="flex justify-between">
+                                <span>Owner:</span>
+                                <span className="font-medium">{property.user.fullName}</span>
+                              </div>
+                            )}
+                          </div>
+                          
+                          {/* Actions */}
+                          <div className="mt-4 flex justify-end">
+                            <button
+                              onClick={() => handleDeleteTempProperty(property.id)}
+                              className="text-red-600 hover:text-red-900 text-sm font-medium"
+                            >
+                              Delete
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
                 </div>
+                
+                {/* Pagination */}
+                {tempProperties.length > 0 && (
+                  <div className="mt-8">
+                    <div className="flex items-center justify-between">
+                      <div className="text-sm text-gray-600">
+                        Showing page {currentPage} of {totalPages}
+                      </div>
+                      <div className="text-sm text-gray-600">
+                        Total: {tempProperties.length} properties
+                      </div>
+                    </div>
+                    
+                    <div className="mt-4 flex justify-center">
+                      <nav className="flex items-center space-x-1">
+                        {/* Previous Button */}
+                        <button
+                          onClick={() => handlePageChange(currentPage - 1)}
+                          disabled={currentPage === 1 || loading}
+                          className="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          Previous
+                        </button>
+                        
+                        {/* Page Numbers */}
+                        {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => {
+                          // Show first page, last page, current page, and pages around current
+                          const shouldShow = 
+                            page === 1 || 
+                            page === totalPages || 
+                            (page >= currentPage - 1 && page <= currentPage + 1);
+                          
+                          if (!shouldShow) {
+                            // Show ellipsis
+                            if (page === currentPage - 2 || page === currentPage + 2) {
+                              return (
+                                <span key={`ellipsis-${page}`} className="px-3 py-2 text-gray-500">
+                                  ...
+                                </span>
+                              );
+                            }
+                            return null;
+                          }
+                          
+                          return (
+                            <button
+                              key={page}
+                              onClick={() => handlePageChange(page)}
+                              disabled={loading}
+                              className={`px-3 py-2 text-sm font-medium rounded-md transition-colors duration-200 ${
+                                currentPage === page
+                                  ? 'bg-indigo-600 text-white'
+                                  : 'text-gray-500 bg-white border border-gray-300 hover:bg-gray-50'
+                              }`}
+                            >
+                              {page}
+                            </button>
+                          );
+                        })}
+                        
+                        {/* Next Button */}
+                        <button
+                          onClick={() => handlePageChange(currentPage + 1)}
+                          disabled={currentPage === totalPages || loading}
+                          className="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          Next
+                        </button>
+                      </nav>
+                    </div>
+                    
+                    {loading && (
+                      <div className="mt-4 flex justify-center">
+                        <div className="flex items-center space-x-2 text-gray-600">
+                          <div className="spinner" />
+                          <span>Loading properties...</span>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+                
+                {/* No Properties Message */}
+                {!loading && tempProperties.length === 0 && (
+                  <div className="mt-8 text-center">
+                    <div className="text-gray-500 text-lg font-medium mb-2">
+                      No properties found
+                    </div>
+                    <div className="text-gray-400 text-sm">
+                      Try adjusting your filters
+                    </div>
+                  </div>
+                )}
               </div>
             )}
+
+
           </div>
         </div>
       </div>
+
+      {/* Scroll to Top Button */}
+      {showScrollToTop && (
+        <motion.button
+          onClick={scrollToTop}
+          className="fixed bottom-6 right-6 z-50 p-3 bg-indigo-600 text-white rounded-full shadow-lg hover:bg-indigo-700 transition-colors duration-200"
+          initial={{ opacity: 0, scale: 0.8 }}
+          animate={{ opacity: 1, scale: 1 }}
+          exit={{ opacity: 0, scale: 0.8 }}
+          whileHover={{ scale: 1.1 }}
+          whileTap={{ scale: 0.9 }}
+        >
+          <svg 
+            className="w-6 h-6" 
+            fill="none" 
+            stroke="currentColor" 
+            viewBox="0 0 24 24"
+          >
+            <path 
+              strokeLinecap="round" 
+              strokeLinejoin="round" 
+              strokeWidth={2} 
+              d="M5 10l7-7m0 0l7 7m-7-7v18" 
+            />
+          </svg>
+        </motion.button>
+      )}
     </motion.div>
   );
 };

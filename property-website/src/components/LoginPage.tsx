@@ -60,7 +60,7 @@ const LoginPage: React.FC = () => {
     setSuccess('');
 
     try {
-      const response = await axios.post('https://nextopson.com/api/v1/temp/login/send-otp', {
+      const response = await axios.post('http://localhost:5000/api/v1/temp/login/send-otp', {
         mobileNumber: formData.mobileNumber
       });
 
@@ -82,7 +82,7 @@ const LoginPage: React.FC = () => {
     setSuccess('');
 
     try {
-      const response = await axios.post('https://nextopson.com/api/v1/temp/login/verify-otp', {
+      const response = await axios.post('http://localhost:5000/api/v1/temp/login/verify-otp', {
         mobileNumber: formData.mobileNumber,
         otp: otpData.otp
       });
@@ -99,13 +99,21 @@ const LoginPage: React.FC = () => {
         }, 1500);
       }
     } catch (err: any) {
-      setError(err.response?.data?.message || 'Failed to verify OTP. Please try again.');
+      if (err.code === 'ERR_HTTP_HEADERS_SENT' || err.message?.includes('headers')) {
+        if (err.response?.data?.user) {
+          setSuccess('Login successful!');
+          localStorage.setItem('user', JSON.stringify(err.response.data.user));
+          setTimeout(() => {
+            navigate('/upload-property');
+          }, 1500);
+        } else {
+          setError('Login verification completed but there was a server issue. Please try again.');
+        }
+      } else {
+        setError(err.response?.data?.message || 'Failed to verify OTP. Please try again.');
+      }
     } finally {
       setLoading(false);
-      setTimeout(() => {
-        navigate('/upload-property');
-        window.location.reload();
-      }, 1500);
     }
   };
 
@@ -117,7 +125,7 @@ const LoginPage: React.FC = () => {
     setSuccess('');
 
     try {
-      const response = await axios.post('https://nextopson.com/api/v1/temp/login/send-otp', {
+      const response = await axios.post('http://localhost:5000/api/v1/temp/login/send-otp', {
         mobileNumber: formData.mobileNumber
       });
 

@@ -58,13 +58,15 @@ function NavigationHeader() {
         </div>
 
         {/* Mobile Menu Toggle */}
+      {window.innerWidth < 768 && (
         <button
-          className="nav-toggle hidden"
+          className="nav-toggle "
           onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
           aria-label="Toggle navigation menu"
         >
           ☰
         </button>
+      )}
 
         {/* Navigation Menu */}
         <div className={`nav-menu ${isMobileMenuOpen ? 'open' : ''}`}>
@@ -111,7 +113,7 @@ function NavigationHeader() {
               </button>
             </>
           )}
-          <div>
+          {/* <div>
             <Link 
               to="/admin" 
               className="btn btn-secondary hidden"
@@ -119,7 +121,7 @@ function NavigationHeader() {
             >
               Admin Panel
             </Link>
-          </div>
+          </div> */}
         </div>
       </div>
     </motion.nav>

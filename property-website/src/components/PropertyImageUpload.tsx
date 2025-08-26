@@ -68,7 +68,7 @@ const PropertyImageUpload: React.FC<PropertyImageUploadProps> = ({
           formData.append('forClassify', 'true');
 
           const response = await axios.post(
-            'https://nextopson.com/api/v1/property/upload-property-images-with-rekognition',
+            'http://localhost:5000/api/v1/property/upload-property-images-with-rekognition',
             formData,
             {
               headers: {
