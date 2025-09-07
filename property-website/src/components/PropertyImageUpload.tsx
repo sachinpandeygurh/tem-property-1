@@ -1,9 +1,9 @@
 import React, { useState, useCallback, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import axios from 'axios';
 import { colors, shadows, animations, variants } from '../theme';
 
 export interface UploadedImage {
+  file: File;
   uri: string;
   uploading: boolean;
   error?: string;
@@ -29,7 +29,7 @@ const PropertyImageUpload: React.FC<PropertyImageUploadProps> = ({
   const [uploadedImages, setUploadedImages] = useState<UploadedImage[]>(images);
   const [isUploading, setIsUploading] = useState(false);
 
-  const handleImageUpload = useCallback(async (files: FileList) => {
+  const handleImageUpload = useCallback((files: FileList) => {
     if (!files || files.length === 0) return;
 
     const userData = localStorage.getItem('user');
@@ -38,97 +38,31 @@ const PropertyImageUpload: React.FC<PropertyImageUploadProps> = ({
       return;
     }
 
-    const user = JSON.parse(userData);
     setIsUploading(true);
 
-    const MAX_CONCURRENT_UPLOADS = 3;
-    let successfulUploads = 0;
-    let failedUploads = 0;
+    // Process all files and add them to the uploaded images list
+    Array.from(files).forEach(file => {
+      // Validate file type
+      if (!file.type.startsWith('image/')) {
+        alert(`${file.name} is not a valid image file`);
+        return;
+      }
 
-    // Process images in batches
-    for (let i = 0; i < files.length; i += MAX_CONCURRENT_UPLOADS) {
-      const batch = Array.from(files).slice(i, i + MAX_CONCURRENT_UPLOADS);
+      // Validate file size (10MB limit)
+      if (file.size > 10 * 1024 * 1024) {
+        alert(`${file.name} is too large. Please select an image smaller than 10MB`);
+        return;
+      }
 
-      // Add all images in batch to uploading state
-      batch.forEach(file => {
-        const imageUrl = URL.createObjectURL(file);
-        setUploadedImages(prev => [...prev, { 
-          uri: imageUrl, 
-          uploading: true,
-          key: file.name 
-        }]);
-      });
-
-      // Upload batch concurrently
-      const uploadPromises = batch.map(async (file) => {
-        try {
-          const formData = new FormData();
-          formData.append('file', file);
-          formData.append('userId', user.id);
-          formData.append('forClassify', 'true');
-
-          const response = await axios.post(
-            'https://nextopson.com/api/v1/property/upload-property-images-with-rekognition',
-            formData,
-            {
-              headers: {
-                'Content-Type': 'multipart/form-data',
-              },
-            }
-          );
-
-          const { url, key, imgClassifications, accurencyPercent } = response.data.data;
-          
-          setUploadedImages(prev => prev.map(img =>
-            img.key === file.name
-              ? { 
-                  ...img, 
-                  uploading: false, 
-                  error: undefined, 
-                  url, 
-                  key, 
-                  imgClassifications, 
-                  accurencyPercent 
-                }
-              : img
-          ));
-          
-          return { success: true, fileName: file.name };
-        } catch (err: any) {
-          setUploadedImages(prev => prev.map(img =>
-            img.key === file.name ? { ...img, uploading: false, error: 'Upload failed' } : img
-          ));
-
-          const errorMessage = err.response?.data?.message || err.message || 'Upload failed';
-          console.error(`Failed to upload ${file.name}:`, errorMessage);
-          return { success: false, fileName: file.name };
-        }
-      });
-
-      // Wait for current batch to complete before processing next batch
-      const results = await Promise.all(uploadPromises);
-      
-      // Count successes and failures
-      results.forEach(result => {
-        if (result.success) {
-          successfulUploads++;
-          console.log(`Image ${result.fileName} uploaded successfully!`);
-        } else {
-          failedUploads++;
-        }
-      });
-    }
+      const imageUrl = URL.createObjectURL(file);
+      setUploadedImages(prev => [...prev, { 
+        file: file,
+        uri: imageUrl, 
+        uploading: false
+      }]);
+    });
 
     setIsUploading(false);
-
-    // Show summary if multiple images were uploaded
-    if (files.length > 1) {
-      const message = failedUploads > 0
-        ? `${successfulUploads} out of ${files.length} images uploaded successfully. ${failedUploads} failed.`
-        : `All ${successfulUploads} images uploaded successfully!`;
-      
-      alert(message);
-    }
   }, []);
 
   const handleFileSelect = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
@@ -144,7 +78,6 @@ const PropertyImageUpload: React.FC<PropertyImageUploadProps> = ({
       onChange?.(updated);
       return updated;
     });
-    console.log('Image deleted successfully!');
   }, [onChange]);
 
   const handleDragOver = useCallback((e: React.DragEvent) => {
@@ -166,7 +99,7 @@ const PropertyImageUpload: React.FC<PropertyImageUploadProps> = ({
   );
 
   const successfulImages = useMemo(() =>
-    uploadedImages.filter(img => !img.uploading && !img.error && img.key),
+    uploadedImages.filter(img => !img.uploading && !img.error && img.file),
     [uploadedImages]
   );
 
@@ -221,15 +154,8 @@ const PropertyImageUpload: React.FC<PropertyImageUploadProps> = ({
               <img
                 src={image.uri}
                 alt={`Property ${index + 1}`}
-                className={`w-full h-full object-cover transition-opacity duration-200 ${
-                  image.uploading ? 'opacity-50' : ''
-                }`}
+                className="w-full h-full object-cover transition-opacity duration-200"
               />
-              {image.uploading && (
-                <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-30">
-                  <div className="spinner" />
-                </div>
-              )}
               {image.error && (
                 <div className="absolute inset-0 flex items-center justify-center bg-red-500 bg-opacity-30">
                   <span className="text-white text-xs text-center px-2 font-medium">
@@ -270,12 +196,12 @@ const PropertyImageUpload: React.FC<PropertyImageUploadProps> = ({
             <div className="text-center">
               {isUploading ? (
                 <span>
-                  Uploading images...
+                  Processing images...
                 </span>
               ) : (
                 <>
                   <span className="font-medium hover:underline transition-all duration-200 text-primary">
-                    Click to upload
+                    Click to select
                   </span>
                   {' '}or drag and drop
                 </>
@@ -308,7 +234,7 @@ const PropertyImageUpload: React.FC<PropertyImageUploadProps> = ({
       {hasValidImages && (
         <div className="alert alert-success text-center">
           <p className="text-sm font-medium">
-            ✓ {successfulImages.length} image{successfulImages.length > 1 ? 's' : ''} uploaded successfully
+            ✓ {successfulImages.length} image{successfulImages.length > 1 ? 's' : ''} selected successfully
           </p>
         </div>
       )}
@@ -316,7 +242,7 @@ const PropertyImageUpload: React.FC<PropertyImageUploadProps> = ({
       {uploadingCount > 0 && (
         <div className="alert alert-info text-center">
           <p className="text-sm">
-            Uploading {uploadingCount} image{uploadingCount > 1 ? 's' : ''}...
+            Processing {uploadingCount} image{uploadingCount > 1 ? 's' : ''}...
           </p>
         </div>
       )}
@@ -324,7 +250,7 @@ const PropertyImageUpload: React.FC<PropertyImageUploadProps> = ({
       {uploadedImages.length === 0 && !loading && (
         <div className="alert text-center bg-gray-100 border-gray-200">
           <p className="text-sm italic text-gray-500">
-            No images uploaded yet. Please add at least one image.
+            No images selected yet. Please add at least one image.
           </p>
         </div>
       )}

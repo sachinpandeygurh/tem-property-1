@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import axios from 'axios';
 import RealImg from './RealImg';
-import { colors, shadows, animations, variants } from '../theme';
+import { animations, variants } from '../theme';
 
 interface TempUser {
   id: string;
