@@ -128,12 +128,56 @@ REACT_APP_API_URL=http://localhost:3001
 
 ## Deployment
 
+### Vercel Deployment (Recommended)
+
+This project is configured for easy deployment on Vercel:
+
+1. **Install Vercel CLI** (optional but recommended):
+   ```bash
+   npm i -g vercel
+   ```
+
+2. **Deploy to Vercel**:
+   ```bash
+   # Login to Vercel (first time only)
+   vercel login
+   
+   # Deploy
+   vercel
+   
+   # For production deployment
+   vercel --prod
+   ```
+
+3. **Environment Variables**:
+   - The project is pre-configured with the production API URL
+   - If you need to override the API URL, set the `REACT_APP_API_URL` environment variable in your Vercel dashboard
+   - Go to your project settings → Environment Variables and add:
+     ```
+     REACT_APP_API_URL=https://your-api-url.com/api/v1
+     ```
+
+4. **Automatic Deployments**:
+   - Connect your GitHub repository to Vercel for automatic deployments
+   - Every push to your main branch will trigger a new deployment
+   - Preview deployments are created for pull requests
+
+### Manual Build Deployment
+
 1. Build the application:
    ```bash
    npm run build
    ```
 
 2. Deploy the `build` folder to your hosting service
+
+### Deployment Configuration
+
+The project includes:
+- `vercel.json` - Vercel configuration for proper routing and build settings
+- `.vercelignore` - Files to exclude from deployment
+- `.env.example` - Environment variables template
+- Optimized build scripts for Vercel
 
 ## Contributing
 
