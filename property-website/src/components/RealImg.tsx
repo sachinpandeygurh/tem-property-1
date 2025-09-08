@@ -69,7 +69,7 @@ const RealImg: React.FC<RealImgProps> = ({
 }) => {
   const [imageUrl, setImageUrl] = React.useState(defaultImage);
   const [isLoading, setIsLoading] = React.useState(true);
-  const [hasError, setHasError] = React.useState(false);
+  // const [hasError, setHasError] = React.useState(false);
   const [retryCount, setRetryCount] = React.useState(0);
   const [isImageReady, setIsImageReady] = React.useState(false);
   const maxRetries = 2;
@@ -94,13 +94,13 @@ const RealImg: React.FC<RealImgProps> = ({
       }
 
       setIsLoading(true);
-      setHasError(false);
+      // setHasError(false);
       setIsImageReady(false);
 
       try {
         const result = await keyToImg(imageKey);
         if (result === DEFAULT_IMAGE_URL) {
-          setHasError(true);
+          // setHasError(true);
           onError?.(new Error('Invalid image key or failed to load'));
         }
         setImageUrl(result);
@@ -113,7 +113,7 @@ const RealImg: React.FC<RealImgProps> = ({
 
       } catch (error) {
         console.error('Error loading image:', error);
-        setHasError(true);
+        // setHasError(true);
         onError?.(error instanceof Error ? error : new Error('Failed to load image'));
 
         if (retryCount < maxRetries) {
@@ -182,7 +182,7 @@ const RealImg: React.FC<RealImgProps> = ({
             }
           }}
           onError={() => {
-            setHasError(true);
+            // setHasError(true);
             onError?.(new Error('Failed to load image'));
             setImageUrl(defaultImage);
             setIsImageReady(true);

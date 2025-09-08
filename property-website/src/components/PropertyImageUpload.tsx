@@ -1,6 +1,6 @@
 import React, { useState, useCallback, useMemo } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { colors, shadows, animations, variants } from '../theme';
+import { motion } from 'framer-motion';
+import { animations, variants } from '../theme';
 
 export interface UploadedImage {
   file: File;
@@ -65,12 +65,6 @@ const PropertyImageUpload: React.FC<PropertyImageUploadProps> = ({
     setIsUploading(false);
   }, []);
 
-  const handleFileSelect = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
-    const files = event.target.files;
-    if (files) {
-      handleImageUpload(files);
-    }
-  }, [handleImageUpload]);
 
   const handleDelete = useCallback((uri: string, key?: string) => {
     setUploadedImages(prev => {
@@ -80,17 +74,7 @@ const PropertyImageUpload: React.FC<PropertyImageUploadProps> = ({
     });
   }, [onChange]);
 
-  const handleDragOver = useCallback((e: React.DragEvent) => {
-    e.preventDefault();
-  }, []);
 
-  const handleDrop = useCallback((e: React.DragEvent) => {
-    e.preventDefault();
-    const files = e.dataTransfer.files;
-    if (files) {
-      handleImageUpload(files);
-    }
-  }, [handleImageUpload]);
 
   // Memoized values
   const uploadingCount = useMemo(() =>

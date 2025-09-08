@@ -5,7 +5,7 @@ import SignupPage from './components/SignupPage';
 import LoginPage from './components/LoginPage';
 import PropertyUploadPage from './components/PropertyUploadPage';
 import AdminPanel from './components/AdminPanel';
-import { colors, shadows, animations, variants } from './theme';
+import { animations, variants } from './theme';
 import './App.css';
 
 function NavigationHeader() {

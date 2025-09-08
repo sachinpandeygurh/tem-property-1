@@ -39,8 +39,8 @@ interface TempProperty {
 }
 
 const AdminPanel: React.FC = () => {
-  const userString = localStorage.getItem('user');
-  const user = userString ? JSON.parse(userString) : null;
+  // const userString = localStorage.getItem('user');
+  // const user = userString ? JSON.parse(userString) : null;
  
   const [tempUsers, setTempUsers] = useState<TempUser[]>([]);
   const [tempProperties, setTempProperties] = useState<TempProperty[]>([]);
@@ -50,10 +50,10 @@ const AdminPanel: React.FC = () => {
   // Pagination and filter states for properties
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
-  const [hasMore, setHasMore] = useState(true);
+  // const [hasMore, setHasMore] = useState(true);
   const [showFilters, setShowFilters] = useState(false);
   const [showScrollToTop, setShowScrollToTop] = useState(false);
-  const [scrollPosition, setScrollPosition] = useState(0);
+  // const [scrollPosition, setScrollPosition] = useState(0);
   const [filters, setFilters] = useState({
     category: '',
     subCategory: '',
@@ -67,14 +67,14 @@ const AdminPanel: React.FC = () => {
   useEffect(() => {
     fetchTempUsers();
     fetchTempProperties(1, filters);
-  }, []); // Only run on component mount
+  }, [filters]); // Run when filters change
 
   // Scroll to top button effect
   useEffect(() => {
     const handleScroll = () => {
       const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
       setShowScrollToTop(scrollTop > 300);
-      setScrollPosition(scrollTop);
+      // setScrollPosition(scrollTop);
     };
 
     window.addEventListener('scroll', handleScroll, { passive: true });
@@ -135,7 +135,7 @@ const AdminPanel: React.FC = () => {
       setTempProperties(properties);
       setTotalPages(pagination.totalPages || 1);
       setCurrentPage(page);
-      setHasMore(pagination.hasMore);
+      // setHasMore(pagination.hasMore);
     } catch (error) {
       console.error('Error fetching temp properties:', error);
     } finally {

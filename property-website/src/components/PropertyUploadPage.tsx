@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import PropertyImageUpload, { UploadedImage } from './PropertyImageUpload';
-import { colors, shadows, animations, variants } from '../theme';
+import { animations, variants } from '../theme';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { 
   faHome, 
@@ -44,9 +44,7 @@ import {
   faExclamationTriangle, 
   faSpinner,
   faUpload,
-  faImage,
-  faPlus,
-  faTimes
+  faImage
 } from '@fortawesome/free-solid-svg-icons';
 
 // API functions for dropdowns
@@ -198,7 +196,7 @@ const PropertyUploadPage: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
-  const [user, setUser] = useState<any>(null);
+  const [, setUser] = useState<any>(null);
   const navigate = useNavigate();
 
   // Dropdown data states
