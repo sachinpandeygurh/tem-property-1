@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
@@ -354,9 +354,9 @@ const PropertyUploadPage: React.FC = () => {
     }
   };
 
-  const handleImagesChange = (newImages: UploadedImage[]) => {
+  const handleImagesChange = useCallback((newImages: UploadedImage[]) => {
     setFormData(prev => ({ ...prev, images: newImages }));
-  };
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

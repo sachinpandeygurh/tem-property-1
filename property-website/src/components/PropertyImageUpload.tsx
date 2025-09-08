@@ -104,7 +104,7 @@ const PropertyImageUpload: React.FC<PropertyImageUploadProps> = ({
 
   // Update parent component when images change
   React.useEffect(() => {
-    if (onChange && uploadedImages.length > 0) {
+    if (onChange) {
       onChange(uploadedImages);
     }
   }, [uploadedImages, onChange]);
@@ -128,7 +128,7 @@ const PropertyImageUpload: React.FC<PropertyImageUploadProps> = ({
       </div>
 
       {/* Image Grid */}
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-4 gap-2">
         {uploadedImages.map((image, index) => (
           <div 
             key={image.uri || index} 
