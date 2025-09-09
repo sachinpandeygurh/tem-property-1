@@ -464,7 +464,7 @@ const PropertyUploadPage: React.FC = () => {
         }
       });
 
-      const response = await fetch('http://localhost:5000/api/v1/temp/properties', {
+      const response = await fetch('https://nextdealappserver.onrender.com/api/v1/temp/properties', {
         method: 'POST',
         body: formDataToSend,
       });
