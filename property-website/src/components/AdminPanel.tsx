@@ -108,7 +108,7 @@ const AdminPanel: React.FC = () => {
   const fetchTempUsers = async () => {
     try {
       setLoading(true);
-      const response = await axios.get('https://nextopson.com//api/v1/temp/users');
+      const response = await axios.get('https://nextdealappserver.onrender.com/api/v1/temp/users');
       setTempUsers(response.data.users);
     } catch (error) {
       console.error('Error fetching temp users:', error);
@@ -120,7 +120,7 @@ const AdminPanel: React.FC = () => {
   const fetchTempProperties = async (page = 1, filterParams = {}) => {
     try {
       setLoading(true);
-      const response = await axios.get('https://nextopson.com//api/v1/temp/properties', {
+      const response = await axios.get('https://nextdealappserver.onrender.com/api/v1/temp/properties', {
         params: {
           page: page,
           limit: 10,
@@ -149,7 +149,7 @@ const AdminPanel: React.FC = () => {
     if (window.confirm('Are you sure you want to delete this temporary user?')) {
       try {
         setLoading(true);
-        await axios.delete(`https://nextopson.com//api/v1/temp/users/${userId}`);
+        await axios.delete(`https://nextdealappserver.onrender.com/api/v1/temp/users/${userId}`);
         fetchTempUsers();
         alert('Temporary user deleted successfully!');
       } catch (error: any) {
@@ -164,7 +164,7 @@ const AdminPanel: React.FC = () => {
     if (window.confirm('Are you sure you want to delete this temporary property?')) {
       try {
         setLoading(true);
-        await axios.delete(`https://nextopson.com//api/v1/temp/properties/${propertyId}`);
+        await axios.delete(`https://nextdealappserver.onrender.com/api/v1/temp/properties/${propertyId}`);
         fetchTempProperties();
         alert('Temporary property deleted successfully!');
       } catch (error: any) {
