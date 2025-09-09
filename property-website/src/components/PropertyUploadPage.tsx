@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import PropertyImageUpload, { UploadedImage } from './PropertyImageUpload';
 import { animations, variants } from '../theme';
