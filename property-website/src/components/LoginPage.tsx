@@ -60,7 +60,7 @@ const LoginPage: React.FC = () => {
     setSuccess('');
 
     try {
-      const response = await axios.post('http://65.0.109.54:5000/api/v1/temp/login/send-otp', {
+      const response = await axios.post('https://nextopson.com/api/v1/temp/login/send-otp', {
         mobileNumber: formData.mobileNumber
       });
 
@@ -82,7 +82,7 @@ const LoginPage: React.FC = () => {
     setSuccess('');
 
     try {
-      const response = await axios.post('http://65.0.109.54:5000/api/v1/temp/login/verify-otp', {
+      const response = await axios.post('https://nextopson.com/api/v1/temp/login/verify-otp', {
         mobileNumber: formData.mobileNumber,
         otp: otpData.otp
       });
@@ -125,7 +125,7 @@ const LoginPage: React.FC = () => {
     setSuccess('');
 
     try {
-      const response = await axios.post('http://65.0.109.54:5000/api/v1/temp/login/send-otp', {
+      const response = await axios.post('https://nextopson.com/api/v1/temp/login/send-otp', {
         mobileNumber: formData.mobileNumber
       });
 

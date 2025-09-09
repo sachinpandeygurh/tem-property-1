@@ -11,7 +11,7 @@ export const keyToImg = async (key: string, retryCount = 0): Promise<string> => 
   }
 
   try {
-    const response = await axios.post("http://65.0.109.54:5000/api/v1/s3/keytoimg", { key });
+    const response = await axios.post("https://nextopson.com/api/v1/s3/keytoimg", { key });
     if (!response?.data?.data?.url) {
       console.warn('Invalid image URL response:', response);
       return DEFAULT_IMAGE_URL;
