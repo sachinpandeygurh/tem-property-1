@@ -49,7 +49,7 @@ import {
 // API functions for dropdowns
 const getStates = async () => {
   try {
-    const response = await fetch('https://nextdealappserver.onrender.comapi/v1/dropdown/states');
+    const response = await fetch('https://nextopson.com/api/v1/dropdown/states');
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
@@ -63,7 +63,7 @@ const getStates = async () => {
 
 const getCities = async (state: string) => {
   try {
-    const response = await fetch('https://nextdealappserver.onrender.comapi/v1/dropdown/cities', {
+    const response = await fetch('https://nextopson.com/api/v1/dropdown/cities', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -83,7 +83,7 @@ const getCities = async (state: string) => {
 
 const getLocalities = async (city: string, state?: string) => {
   try {
-    const response = await fetch('https://nextdealappserver.onrender.comapi/v1/dropdown/localities', {
+    const response = await fetch('https://nextopson.com/api/v1/dropdown/localities', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -464,12 +464,9 @@ const PropertyUploadPage: React.FC = () => {
         }
       });
 
-      const response = await fetch('https://nextdealappserver.onrender.comapi/v1/temp/properties', {
+      const response = await fetch('http://localhost:5000/api/v1/temp/properties', {
         method: 'POST',
         body: formDataToSend,
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
       });
 
       if (response.status === 201 || response.status === 200) {

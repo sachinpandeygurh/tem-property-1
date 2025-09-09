@@ -61,7 +61,7 @@ const SignupPage: React.FC = () => {
     setSuccess('');
 
     try {
-      const response = await axios.post('https://nextdealappserver.onrender.comapi/v1/temp/signup/send-otp', {
+      const response = await axios.post('https://nextdealappserver.onrender.com/api/v1/temp/signup/send-otp', {
         fullName: formData.fullName,
         mobileNumber: formData.mobileNumber,
         userType: 'Owner'
@@ -85,7 +85,7 @@ const SignupPage: React.FC = () => {
     setSuccess('');
 
     try {
-      const response = await axios.post('https://nextdealappserver.onrender.comapi/v1/temp/signup/verify-otp', {
+      const response = await axios.post('https://nextdealappserver.onrender.com/api/v1/temp/signup/verify-otp', {
         fullName: formData.fullName,
         mobileNumber: formData.mobileNumber,
         otp: otpData.otp,
@@ -118,7 +118,7 @@ const SignupPage: React.FC = () => {
     setSuccess('');
 
     try {
-      const response = await axios.post('https://nextdealappserver.onrender.comapi/v1/temp/signup/send-otp', {
+      const response = await axios.post('https://nextdealappserver.onrender.com/api/v1/temp/signup/send-otp', {
         fullName: formData.fullName,
         mobileNumber: formData.mobileNumber,
         userType: 'Owner'
