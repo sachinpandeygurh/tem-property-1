@@ -50,8 +50,12 @@ import {
 // API functions for dropdowns
 const getStates = async () => {
   try {
-    const response = await axios.get('http://65.0.109.54:5000/api/v1/dropdown/states');
-    return response.data;
+    const response = await fetch('http://65.0.109.54:5000/api/v1/dropdown/states');
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    const data = await response.json();
+    return data;
   } catch (error) {
     console.error('Error fetching states:', error);
     return [];
@@ -60,8 +64,18 @@ const getStates = async () => {
 
 const getCities = async (state: string) => {
   try {
-    const response = await axios.post('http://65.0.109.54:5000/api/v1/dropdown/cities', { state });
-    return response.data;
+    const response = await fetch('http://65.0.109.54:5000/api/v1/dropdown/cities', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ state }),
+    });
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    const data = await response.json();
+    return data;
   } catch (error) {
     console.error('Error fetching cities:', error);
     return [];
@@ -70,8 +84,18 @@ const getCities = async (state: string) => {
 
 const getLocalities = async (city: string, state?: string) => {
   try {
-    const response = await axios.post('http://65.0.109.54:5000/api/v1/dropdown/localities', { state, city });
-    return response.data;
+    const response = await fetch('http://65.0.109.54:5000/api/v1/dropdown/localities', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ state, city }),
+    });
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    const data = await response.json();
+    return data;
   } catch (error) {
     console.error('Error fetching localities:', error);
     return [];
@@ -441,7 +465,9 @@ const PropertyUploadPage: React.FC = () => {
         }
       });
 
-      const response = await axios.post('http://65.0.109.54:5000/api/v1/temp/properties', formDataToSend, {
+      const response = await fetch('http://65.0.109.54:5000/api/v1/temp/properties', {
+        method: 'POST',
+        body: formDataToSend,
         headers: {
           'Content-Type': 'multipart/form-data',
         },
