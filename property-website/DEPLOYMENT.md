@@ -27,7 +27,7 @@
 
 ## Environment Variables
 
-The app is pre-configured to use `https://nextopson.com/api/v1` as the API URL.
+The app is pre-configured to use `http://65.0.109.54:5000/api/v1` as the API URL.
 
 To override, add in Vercel dashboard:
 - `REACT_APP_API_URL` = `https://your-api-url.com/api/v1`

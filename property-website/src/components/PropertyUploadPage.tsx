@@ -50,7 +50,7 @@ import {
 // API functions for dropdowns
 const getStates = async () => {
   try {
-    const response = await axios.get('https://nextopson.com/api/v1/dropdown/states');
+    const response = await axios.get('http://65.0.109.54:5000/api/v1/dropdown/states');
     return response.data;
   } catch (error) {
     console.error('Error fetching states:', error);
@@ -60,7 +60,7 @@ const getStates = async () => {
 
 const getCities = async (state: string) => {
   try {
-    const response = await axios.post('https://nextopson.com/api/v1/dropdown/cities', { state });
+    const response = await axios.post('http://65.0.109.54:5000/api/v1/dropdown/cities', { state });
     return response.data;
   } catch (error) {
     console.error('Error fetching cities:', error);
@@ -70,7 +70,7 @@ const getCities = async (state: string) => {
 
 const getLocalities = async (city: string, state?: string) => {
   try {
-    const response = await axios.post('https://nextopson.com/api/v1/dropdown/localities', { state, city });
+    const response = await axios.post('http://65.0.109.54:5000/api/v1/dropdown/localities', { state, city });
     return response.data;
   } catch (error) {
     console.error('Error fetching localities:', error);
@@ -441,7 +441,7 @@ const PropertyUploadPage: React.FC = () => {
         }
       });
 
-      const response = await axios.post('https://nextopson.com/api/v1/temp/properties', formDataToSend, {
+      const response = await axios.post('http://65.0.109.54:5000/api/v1/temp/properties', formDataToSend, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
