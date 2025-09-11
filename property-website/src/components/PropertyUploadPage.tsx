@@ -529,12 +529,12 @@ const PropertyUploadPage: React.FC = () => {
           images: [],
         });
       }
+      window.location.reload();
     } catch (err: any) {
       console.error('Error uploading property:', err);
       setError(err.response?.data?.message || 'Property upload failed. Please try again.');
     } finally {
       setLoading(false);
-      window.location.reload();
     }
   };
 
