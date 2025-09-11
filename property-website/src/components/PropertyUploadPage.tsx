@@ -534,6 +534,7 @@ const PropertyUploadPage: React.FC = () => {
       setError(err.response?.data?.message || 'Property upload failed. Please try again.');
     } finally {
       setLoading(false);
+      window.location.reload();
     }
   };
 
