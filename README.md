@@ -1,2 +1,2 @@
-tem propperty
+nextdeal propperty
  
