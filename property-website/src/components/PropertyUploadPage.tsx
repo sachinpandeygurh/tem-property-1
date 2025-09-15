@@ -1,102 +1,110 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { useNavigate } from 'react-router-dom';
-import PropertyImageUpload, { UploadedImage } from './PropertyImageUpload';
-import { animations, variants } from '../theme';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { 
-  faHome, 
-  faBuilding, 
-  faMapMarkerAlt, 
-  faTag, 
-  faBed, 
-  faBath, 
-  faRuler, 
-  faCar, 
-  faShieldAlt, 
-  faTree, 
-  faWifi, 
-  faWheelchair, 
-  faSwimmingPool, 
-  faVideo, 
-  faChargingStation, 
-  faUsers, 
-  faRunning, 
-  faBolt, 
-  faPhone, 
-  faTint, 
-  faUtensils, 
-  faTv, 
-  faWind, 
-  faCouch, 
-  faChair, 
-  faUtensilSpoon, 
-  faSnowflake, 
-  faEye, 
-  faMountain, 
-  faWater, 
-  faRoad, 
-  faSeedling, 
-  faCity, 
-  faUmbrellaBeach, 
-  faCheckCircle, 
-  faExclamationTriangle, 
+import React, { useState, useEffect, useCallback } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { useLocation, useNavigate } from "react-router-dom";
+import PropertyImageUpload, { UploadedImage } from "./PropertyImageUpload";
+import { animations, variants } from "../theme";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import {
+  faHome,
+  faBuilding,
+  faMapMarkerAlt,
+  faTag,
+  faBed,
+  faBath,
+  faRuler,
+  faCar,
+  faShieldAlt,
+  faTree,
+  faWifi,
+  faWheelchair,
+  faSwimmingPool,
+  faVideo,
+  faChargingStation,
+  faUsers,
+  faRunning,
+  faBolt,
+  faPhone,
+  faTint,
+  faUtensils,
+  faTv,
+  faWind,
+  faCouch,
+  faChair,
+  faUtensilSpoon,
+  faSnowflake,
+  faEye,
+  faMountain,
+  faWater,
+  faRoad,
+  faSeedling,
+  faCity,
+  faUmbrellaBeach,
+  faCheckCircle,
+  faExclamationTriangle,
   faSpinner,
   faUpload,
-  faImage
-} from '@fortawesome/free-solid-svg-icons';
+  faImage,
+} from "@fortawesome/free-solid-svg-icons";
 
 // API functions for dropdowns
 const getStates = async () => {
   try {
-    const response = await fetch('https://nextopson.com/api/v1/dropdown/states');
+    const response = await fetch(
+      "https://nextopson.com/api/v1/dropdown/states"
+    );
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
     const data = await response.json();
     return data;
   } catch (error) {
-    console.error('Error fetching states:', error);
+    console.error("Error fetching states:", error);
     return [];
   }
 };
 
 const getCities = async (state: string) => {
   try {
-    const response = await fetch('https://nextopson.com/api/v1/dropdown/cities', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ state }),
-    });
+    const response = await fetch(
+      "https://nextopson.com/api/v1/dropdown/cities",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ state }),
+      }
+    );
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
     const data = await response.json();
     return data;
   } catch (error) {
-    console.error('Error fetching cities:', error);
+    console.error("Error fetching cities:", error);
     return [];
   }
 };
 
 const getLocalities = async (city: string, state?: string) => {
   try {
-    const response = await fetch('https://nextopson.com/api/v1/dropdown/localities', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ state, city }),
-    });
+    const response = await fetch(
+      "https://nextopson.com/api/v1/dropdown/localities",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ state, city }),
+      }
+    );
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
     const data = await response.json();
     return data;
   } catch (error) {
-    console.error('Error fetching localities:', error);
+    console.error("Error fetching localities:", error);
     return [];
   }
 };
@@ -107,12 +115,22 @@ interface PropertyFormData {
   addressState: string;
   addressCity: string;
   addressLocality: string;
-  category: 'Residential' | 'Commercial';
-  subCategory: 'Flats' | 'Builder Floors' | 'House Villas' | 'Plots' | 'Farmhouses' | 'Hotels' | 'Lands' | 'Office Spaces' | 'Hostels' | 'Shops Showrooms';
+  category: "Residential" | "Commercial";
+  subCategory:
+    | "Flats"
+    | "Builder Floors"
+    | "House Villas"
+    | "Plots"
+    | "Farmhouses"
+    | "Hotels"
+    | "Lands"
+    | "Office Spaces"
+    | "Hostels"
+    | "Shops Showrooms";
   title?: string;
   description?: string;
-  isSale?: 'Sell' | 'Rent' | 'Lease';
-  
+  isSale?: "Sell" | "Rent" | "Lease";
+
   // Property details
   projectName?: string;
   propertyName?: string;
@@ -129,7 +147,7 @@ interface PropertyFormData {
   reraApproved?: boolean;
   amenities?: string[];
   fencing?: string;
-  
+
   // Dimensions
   width?: number;
   height?: number;
@@ -139,7 +157,7 @@ interface PropertyFormData {
   landArea?: number;
   distFromOutRRoad?: number;
   unit?: string;
-  
+
   // Additional fields
   viewFromProperty?: string[];
   soilType?: string;
@@ -154,23 +172,23 @@ interface PropertyFormData {
   agentNotes?: string;
   workingWithAgent?: boolean;
   furnishingAmenities?: string[];
-  
+
   // Images
   images: UploadedImage[];
 }
 
 const PropertyUploadPage: React.FC = () => {
   const [formData, setFormData] = useState<PropertyFormData>({
-    userId: '',
-    addressState: '',
-    addressCity: '',
-    addressLocality: '',
-    category: 'Residential',
-    subCategory: 'Flats',
-    title: '',
-    description: '',
-    isSale: 'Sell',
-    
+    userId: "",
+    addressState: "",
+    addressCity: "",
+    addressLocality: "",
+    category: "Residential",
+    subCategory: "Flats",
+    title: "",
+    description: "",
+    isSale: "Sell",
+
     // Property details
     projectName: undefined,
     propertyName: undefined,
@@ -187,7 +205,7 @@ const PropertyUploadPage: React.FC = () => {
     reraApproved: false,
     amenities: [],
     fencing: undefined,
-    
+
     // Dimensions
     width: undefined,
     height: undefined,
@@ -197,7 +215,7 @@ const PropertyUploadPage: React.FC = () => {
     landArea: undefined,
     distFromOutRRoad: undefined,
     unit: undefined,
-    
+
     // Additional fields
     viewFromProperty: [],
     soilType: undefined,
@@ -212,13 +230,13 @@ const PropertyUploadPage: React.FC = () => {
     agentNotes: undefined,
     workingWithAgent: false,
     furnishingAmenities: [],
-    
+
     // Images
     images: [],
   });
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
   const [, setUser] = useState<any>(null);
   const navigate = useNavigate();
 
@@ -230,16 +248,110 @@ const PropertyUploadPage: React.FC = () => {
   const [isLoadingCities, setIsLoadingCities] = useState(false);
   const [isLoadingLocalities, setIsLoadingLocalities] = useState(false);
 
+  // run after clicked on edit button start here
+  const location = useLocation();
+  const { propertyId } = location.state || {};
 
   useEffect(() => {
-    const userData = localStorage.getItem('user');
+    const fetchProperty = async () => {
+      try {
+        const res = await fetch(
+          "https://nextopson.com/api/v1/property/get-property-by-id",
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ propertyId }),
+          }
+        );
+
+        const data = await res.json();
+  
+        if (data) {
+          const p = data.property;
+          console.log("propertyData : ", p);
+          setFormData({
+            userId: p.userId || "",
+            addressState: p.address?.state || "",
+            addressCity: p.address?.city || "",
+            addressLocality: p.address?.locality || "",
+            category: p.category || "Residential",
+            subCategory: p.subCategory || "Flats",
+            title: p.title || "",
+            description: p.description || "",
+            isSale: p.isSale || "Sell",
+        
+            // Property details
+            projectName: p.projectName || undefined,
+            propertyName: p.title || undefined,
+            totalBathrooms: p.totalBathrooms || undefined,
+            totalRooms: p.totalRooms || undefined,
+            propertyPrice: p.propertyPrice || undefined,
+            carpetArea: p.carpetArea || undefined,
+            buildupArea: p.buildupArea || undefined,
+            bhks: p.bhks || undefined,
+            furnishing: p.furnishing || undefined,
+            constructionStatus: p.constructionStatus || undefined,
+            propertyFacing: p.propertyFacing || undefined,
+            ageOfTheProperty: p.ageOfTheProperty || undefined,
+            reraApproved: p.reraApproved || false,
+            amenities: p.amenities || [],
+            fencing: p.fencing || undefined,
+        
+            // Dimensions
+            width: p.width || undefined,
+            height: p.height || undefined,
+            length: p.length || undefined,
+            totalArea: p.totalArea || undefined,
+            plotArea: p.plotArea || undefined,
+            landArea: p.landArea || undefined,
+            distFromOutRRoad: p.distFromOutRRoad || undefined,
+            unit: p.unit || undefined,
+        
+            // Additional fields
+            viewFromProperty: p.viewFromProperty || [],
+            soilType: p.soilType || undefined,
+            approachRoad: p.approachRoad || undefined,
+            totalfloors: p.totalfloors || undefined,
+            officefloor: p.officefloor || undefined,
+            yourfloor: p.yourfloor || undefined,
+            cabins: p.cabins || undefined,
+            parking: p.parking || undefined,
+            washroom: p.washroom || undefined,
+            availablefor: p.availablefor || undefined,
+            agentNotes: p.agentNotes || undefined,
+            workingWithAgent: p.workingWithAgent || false,
+            furnishingAmenities: p.furnishingAmenities || [],
+        
+            // Images
+            images: p.propertyImages?.map((img: any) => img.presignedUrl) || [],
+          });
+        }
+      } catch (err) {
+        console.error("Error fetching property:", err);
+      }
+    };
+
+    if (propertyId) {
+      fetchProperty();
+    }else{
+      console.log("property id not found")
+    }
+  }, [propertyId]);
+
+  
+  // run after clicked on edit button end here
+
+  useEffect(() => {
+    const userData = localStorage.getItem("user");
     if (userData) {
       const parsedUser = JSON.parse(userData);
       setUser(parsedUser);
-      setFormData(prev => ({ ...prev, userId: parsedUser.id }));
+      setFormData((prev) => ({ ...prev, userId: parsedUser.id }));
     } else {
       // Redirect to login if no user is found
-      navigate('/login');
+      navigate("/login");
     }
   }, [navigate]);
 
@@ -251,7 +363,7 @@ const PropertyUploadPage: React.FC = () => {
         const statesList = await getStates();
         setStates(statesList);
       } catch (error) {
-        console.error('Error fetching states:', error);
+        console.error("Error fetching states:", error);
       } finally {
         setIsLoadingStates(false);
       }
@@ -273,10 +385,14 @@ const PropertyUploadPage: React.FC = () => {
         const citiesList = await getCities(formData.addressState);
         setCities(citiesList);
         // Reset city and locality when state changes
-        setFormData(prev => ({ ...prev, addressCity: '', addressLocality: '' }));
+        setFormData((prev) => ({
+          ...prev,
+          addressCity: "",
+          addressLocality: "",
+        }));
         setLocalities([]);
       } catch (error) {
-        console.error('Error fetching cities:', error);
+        console.error("Error fetching cities:", error);
       } finally {
         setIsLoadingCities(false);
       }
@@ -294,12 +410,15 @@ const PropertyUploadPage: React.FC = () => {
     const fetchLocalities = async () => {
       setIsLoadingLocalities(true);
       try {
-        const localitiesList = await getLocalities(formData.addressCity, formData.addressState);
+        const localitiesList = await getLocalities(
+          formData.addressCity,
+          formData.addressState
+        );
         setLocalities(localitiesList);
         // Reset locality when city changes
-        setFormData(prev => ({ ...prev, addressLocality: '' }));
+        setFormData((prev) => ({ ...prev, addressLocality: "" }));
       } catch (error) {
-        console.error('Error fetching localities:', error);
+        console.error("Error fetching localities:", error);
       } finally {
         setIsLoadingLocalities(false);
       }
@@ -308,184 +427,249 @@ const PropertyUploadPage: React.FC = () => {
   }, [formData.addressState, formData.addressCity]);
 
   const residentialSubCategories = [
-    'Flats', 'Builder Floors', 'House Villas', 'Plots', 'Farmhouses'
+    "Flats",
+    "Builder Floors",
+    "House Villas",
+    "Plots",
+    "Farmhouses",
   ];
 
   const commercialSubCategories = [
-    'Hotels', 'Lands', 'Office Spaces', 'Hostels', 'Shops Showrooms'
+    "Hotels",
+    "Lands",
+    "Office Spaces",
+    "Hostels",
+    "Shops Showrooms",
   ];
 
   const furnishingAmenitiesIcons = [
-    { id: 'dining-table', label: 'Dining Table', icon: faUtensils },
-    { id: 'washing-machine', label: 'Washing Machine', icon: faWind },
-    { id: 'sofa', label: 'Sofa', icon: faCouch },
-    { id: 'microwave', label: 'Microwave', icon: faUtensilSpoon },
-    { id: 'tv', label: 'TV', icon: faTv },
-    { id: 'gas-pipeline', label: 'Gas Pipeline', icon: faTint },
-    { id: 'gas-stove', label: 'Gas Stove', icon: faUtensilSpoon },
-    { id: 'refrigerator', label: 'Refrigerator', icon: faSnowflake },
-    { id: 'water-purifier', label: 'Water Purifier', icon: faTint },
-    { id: 'beds', label: 'Beds', icon: faBed },
-    { id: 'geyser', label: 'Geyser', icon: faTint },
-    { id: 'air-conditioner', label: 'Air-conditioner', icon: faWind },
-    { id: 'almirah', label: 'Almirah', icon: faChair },
+    { id: "dining-table", label: "Dining Table", icon: faUtensils },
+    { id: "washing-machine", label: "Washing Machine", icon: faWind },
+    { id: "sofa", label: "Sofa", icon: faCouch },
+    { id: "microwave", label: "Microwave", icon: faUtensilSpoon },
+    { id: "tv", label: "TV", icon: faTv },
+    { id: "gas-pipeline", label: "Gas Pipeline", icon: faTint },
+    { id: "gas-stove", label: "Gas Stove", icon: faUtensilSpoon },
+    { id: "refrigerator", label: "Refrigerator", icon: faSnowflake },
+    { id: "water-purifier", label: "Water Purifier", icon: faTint },
+    { id: "beds", label: "Beds", icon: faBed },
+    { id: "geyser", label: "Geyser", icon: faTint },
+    { id: "air-conditioner", label: "Air-conditioner", icon: faWind },
+    { id: "almirah", label: "Almirah", icon: faChair },
   ];
 
   const viewFromPropertyOptions = [
-    { id: 'sea', label: 'Sea', icon: faWater },
-    { id: 'lake', label: 'Lake', icon: faWater },
-    { id: 'park', label: 'Park', icon: faTree },
-    { id: 'river', label: 'River', icon: faWater },
-    { id: 'mountain', label: 'Mountain', icon: faMountain },
-    { id: 'road', label: 'Road', icon: faRoad },
-    { id: 'garden', label: 'Garden', icon: faSeedling },
-    { id: 'skyline', label: 'Skyline', icon: faCity },
-    { id: 'beach', label: 'Beach', icon: faUmbrellaBeach },
-    { id: 'forest', label: 'Forest', icon: faTree },
+    { id: "sea", label: "Sea", icon: faWater },
+    { id: "lake", label: "Lake", icon: faWater },
+    { id: "park", label: "Park", icon: faTree },
+    { id: "river", label: "River", icon: faWater },
+    { id: "mountain", label: "Mountain", icon: faMountain },
+    { id: "road", label: "Road", icon: faRoad },
+    { id: "garden", label: "Garden", icon: faSeedling },
+    { id: "skyline", label: "Skyline", icon: faCity },
+    { id: "beach", label: "Beach", icon: faUmbrellaBeach },
+    { id: "forest", label: "Forest", icon: faTree },
   ];
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
+  const handleInputChange = (
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
+    >
+  ) => {
     const { name, value, type } = e.target;
-    
-    setFormData(prev => ({
+
+    setFormData((prev) => ({
       ...prev,
-      [name]: type === 'checkbox' 
-        ? (e.target as HTMLInputElement).checked
-        : name === 'propertyPrice' || name === 'totalBathrooms' || name === 'totalRooms' || 
-          name === 'carpetArea' || name === 'buildupArea' || name === 'width' || name === 'height' || 
-          name === 'length' || name === 'totalArea' || name === 'plotArea' || name === 'landArea' || 
-          name === 'distFromOutRRoad'
-          ? Number(value) 
-          : value
+      [name]:
+        type === "checkbox"
+          ? (e.target as HTMLInputElement).checked
+          : name === "propertyPrice" ||
+            name === "totalBathrooms" ||
+            name === "totalRooms" ||
+            name === "carpetArea" ||
+            name === "buildupArea" ||
+            name === "width" ||
+            name === "height" ||
+            name === "length" ||
+            name === "totalArea" ||
+            name === "plotArea" ||
+            name === "landArea" ||
+            name === "distFromOutRRoad"
+          ? Number(value)
+          : value,
     }));
 
     // Reset subcategory when category changes
-    if (name === 'category') {
-      setFormData(prev => ({
+    if (name === "category") {
+      setFormData((prev) => ({
         ...prev,
-        category: value as 'Residential' | 'Commercial',
-        subCategory: value === 'Residential' ? 'Flats' : 'Hotels'
+        category: value as "Residential" | "Commercial",
+        subCategory: value === "Residential" ? "Flats" : "Hotels",
       }));
     }
 
     // Clear furnishing amenities when furnishing type is changed to Unfurnished
-    if (name === 'furnishing' && value === 'Unfurnished') {
-      setFormData(prev => ({
+    if (name === "furnishing" && value === "Unfurnished") {
+      setFormData((prev) => ({
         ...prev,
-        furnishingAmenities: []
+        furnishingAmenities: [],
       }));
     }
   };
 
   const handleImagesChange = useCallback((newImages: UploadedImage[]) => {
-    setFormData(prev => ({ ...prev, images: newImages }));
+    setFormData((prev) => ({ ...prev, images: newImages }));
   }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    setError('');
-    setSuccess('');
+    setError("");
+    setSuccess("");
 
     try {
       const userId = formData.userId;
-      
+
       // Ensure user is logged in
       if (!userId) {
-        setError('Please login to upload properties');
+        setError("Please login to upload properties");
         setLoading(false);
-        navigate('/login');
+        navigate("/login");
         return;
       }
 
       // Validate required fields
       if (!formData.propertyPrice || formData.propertyPrice <= 0) {
-        setError('Property price is required and must be greater than 0');
+        setError("Property price is required and must be greater than 0");
         setLoading(false);
         return;
       }
 
       const formDataToSend = new FormData();
-      
+
       // Add basic property data (always required)
-      formDataToSend.append('userId', userId);
-      formDataToSend.append('addressState', formData.addressState);
-      formDataToSend.append('addressCity', formData.addressCity);
-      formDataToSend.append('addressLocality', formData.addressLocality);
-      formDataToSend.append('category', formData.category);
-      formDataToSend.append('subCategory', formData.subCategory);
-      formDataToSend.append('isSale', formData.isSale || 'Sell');
-      formDataToSend.append('propertyPrice', formData.propertyPrice?.toString());
-      
+      formDataToSend.append("userId", userId);
+      formDataToSend.append("addressState", formData.addressState);
+      formDataToSend.append("addressCity", formData.addressCity);
+      formDataToSend.append("addressLocality", formData.addressLocality);
+      formDataToSend.append("category", formData.category);
+      formDataToSend.append("subCategory", formData.subCategory);
+      formDataToSend.append("isSale", formData.isSale || "Sell");
+      formDataToSend.append(
+        "propertyPrice",
+        formData.propertyPrice?.toString()
+      );
+
       // Add all other fields (including empty ones for proper API handling)
-      formDataToSend.append('title', formData.title || '');
-      formDataToSend.append('description', formData.description || '');
-      formDataToSend.append('projectName', formData.projectName || '');
-      formDataToSend.append('propertyName', formData.propertyName || '');
-      formDataToSend.append('totalBathrooms', formData.totalBathrooms?.toString() || '');
-      formDataToSend.append('totalRooms', formData.totalRooms?.toString() || '');
-      formDataToSend.append('carpetArea', formData.carpetArea?.toString() || '');
-      formDataToSend.append('buildupArea', formData.buildupArea?.toString() || '');
-      formDataToSend.append('bhks', formData.bhks || '');
-      formDataToSend.append('furnishing', formData.furnishing || '');
-      formDataToSend.append('constructionStatus', formData.constructionStatus || '');
-      formDataToSend.append('propertyFacing', formData.propertyFacing || '');
-      formDataToSend.append('ageOfTheProperty', formData.ageOfTheProperty || '');
-      formDataToSend.append('reraApproved', formData.reraApproved?.toString() || 'false');
-      formDataToSend.append('amenities', JSON.stringify(formData.amenities || []));
-      formDataToSend.append('fencing', formData.fencing || '');
-      formDataToSend.append('width', formData.width?.toString() || '0');
-      formDataToSend.append('height', formData.height?.toString() || '');
-      formDataToSend.append('length', formData.length?.toString() || '');
-      formDataToSend.append('totalArea', formData.totalArea?.toString() || '');
-      formDataToSend.append('plotArea', formData.plotArea?.toString() || '0');
-      formDataToSend.append('landArea', formData.landArea?.toString() || '0');
-      formDataToSend.append('distFromOutRRoad', formData.distFromOutRRoad?.toString() || '0');
-      formDataToSend.append('viewFromProperty', JSON.stringify(formData.viewFromProperty || []));
-      formDataToSend.append('soilType', formData.soilType || '');
-      formDataToSend.append('approachRoad', formData.approachRoad || '');
-      formDataToSend.append('totalfloors', formData.totalfloors || '');
-      formDataToSend.append('officefloor', formData.officefloor || '');
-      formDataToSend.append('yourfloor', formData.yourfloor || '');
-      formDataToSend.append('cabins', formData.cabins || '');
-      formDataToSend.append('parking', formData.parking || '');
-      formDataToSend.append('washroom', formData.washroom || '');
-      formDataToSend.append('availablefor', formData.availablefor || '');
-      formDataToSend.append('agentNotes', formData.agentNotes || '');
-      formDataToSend.append('workingWithAgent', formData.workingWithAgent?.toString() || 'false');
-      formDataToSend.append('furnishingAmenities', JSON.stringify(formData.furnishingAmenities || []));
-      formDataToSend.append('unit', formData.unit || '');
+      formDataToSend.append("title", formData.title || "");
+      formDataToSend.append("description", formData.description || "");
+      formDataToSend.append("projectName", formData.projectName || "");
+      formDataToSend.append("propertyName", formData.propertyName || "");
+      formDataToSend.append(
+        "totalBathrooms",
+        formData.totalBathrooms?.toString() || ""
+      );
+      formDataToSend.append(
+        "totalRooms",
+        formData.totalRooms?.toString() || ""
+      );
+      formDataToSend.append(
+        "carpetArea",
+        formData.carpetArea?.toString() || ""
+      );
+      formDataToSend.append(
+        "buildupArea",
+        formData.buildupArea?.toString() || ""
+      );
+      formDataToSend.append("bhks", formData.bhks || "");
+      formDataToSend.append("furnishing", formData.furnishing || "");
+      formDataToSend.append(
+        "constructionStatus",
+        formData.constructionStatus || ""
+      );
+      formDataToSend.append("propertyFacing", formData.propertyFacing || "");
+      formDataToSend.append(
+        "ageOfTheProperty",
+        formData.ageOfTheProperty || ""
+      );
+      formDataToSend.append(
+        "reraApproved",
+        formData.reraApproved?.toString() || "false"
+      );
+      formDataToSend.append(
+        "amenities",
+        JSON.stringify(formData.amenities || [])
+      );
+      formDataToSend.append("fencing", formData.fencing || "");
+      formDataToSend.append("width", formData.width?.toString() || "0");
+      formDataToSend.append("height", formData.height?.toString() || "");
+      formDataToSend.append("length", formData.length?.toString() || "");
+      formDataToSend.append("totalArea", formData.totalArea?.toString() || "");
+      formDataToSend.append("plotArea", formData.plotArea?.toString() || "0");
+      formDataToSend.append("landArea", formData.landArea?.toString() || "0");
+      formDataToSend.append(
+        "distFromOutRRoad",
+        formData.distFromOutRRoad?.toString() || "0"
+      );
+      formDataToSend.append(
+        "viewFromProperty",
+        JSON.stringify(formData.viewFromProperty || [])
+      );
+      formDataToSend.append("soilType", formData.soilType || "");
+      formDataToSend.append("approachRoad", formData.approachRoad || "");
+      formDataToSend.append("totalfloors", formData.totalfloors || "");
+      formDataToSend.append("officefloor", formData.officefloor || "");
+      formDataToSend.append("yourfloor", formData.yourfloor || "");
+      formDataToSend.append("cabins", formData.cabins || "");
+      formDataToSend.append("parking", formData.parking || "");
+      formDataToSend.append("washroom", formData.washroom || "");
+      formDataToSend.append("availablefor", formData.availablefor || "");
+      formDataToSend.append("agentNotes", formData.agentNotes || "");
+      formDataToSend.append(
+        "workingWithAgent",
+        formData.workingWithAgent?.toString() || "false"
+      );
+      formDataToSend.append(
+        "furnishingAmenities",
+        JSON.stringify(formData.furnishingAmenities || [])
+      );
+      formDataToSend.append("unit", formData.unit || "");
 
       // Add images - send actual File objects for upload
-      const successfulImages = formData.images.filter(img => img.file && !img.uploading && !img.error);
+      const successfulImages = formData.images.filter(
+        (img) => img.file && !img.uploading && !img.error
+      );
       successfulImages.forEach((image) => {
         if (image.file) {
-          formDataToSend.append('images', image.file);
+          formDataToSend.append("images", image.file);
         }
       });
 
-      const response = await fetch('https://nextdealappserver.onrender.com/api/v1/temp/properties', {
-        method: 'POST',
-        body: formDataToSend,
-      });
+      const response = await fetch(
+        "https://nextdealappserver.onrender.com/api/v1/temp/properties",
+        {
+          method: "POST",
+          body: formDataToSend,
+        }
+      );
 
       if (response.status === 201 || response.status === 200) {
-        setSuccess('Property uploaded successfully!');
+        setSuccess("Property uploaded successfully!");
         // Reset form
         setFormData({
           userId: formData.userId,
-          addressState: '',
-          addressCity: '',
-          addressLocality: '',
-          category: 'Residential',
-          subCategory: 'Flats',
-          title: '',
-          description: '',
-          isSale: 'Sell',
-          
+          addressState: "",
+          addressCity: "",
+          addressLocality: "",
+          category: "Residential",
+          subCategory: "Flats",
+          title: "",
+          description: "",
+          isSale: "Sell",
+
           // Property details
-          projectName: '',
-          propertyName: '',
+          projectName: "",
+          propertyName: "",
           totalBathrooms: undefined,
           totalRooms: undefined,
           propertyPrice: undefined,
@@ -499,7 +683,7 @@ const PropertyUploadPage: React.FC = () => {
           reraApproved: false,
           amenities: [],
           fencing: undefined,
-          
+
           // Dimensions
           width: undefined,
           height: undefined,
@@ -509,7 +693,7 @@ const PropertyUploadPage: React.FC = () => {
           landArea: undefined,
           distFromOutRRoad: undefined,
           unit: undefined,
-          
+
           // Additional fields
           viewFromProperty: [],
           soilType: undefined,
@@ -524,15 +708,18 @@ const PropertyUploadPage: React.FC = () => {
           agentNotes: undefined,
           workingWithAgent: false,
           furnishingAmenities: [],
-          
+
           // Images
           images: [],
         });
       }
       window.location.reload();
     } catch (err: any) {
-      console.error('Error uploading property:', err);
-      setError(err.response?.data?.message || 'Property upload failed. Please try again.');
+      console.error("Error uploading property:", err);
+      setError(
+        err.response?.data?.message ||
+          "Property upload failed. Please try again."
+      );
     } finally {
       setLoading(false);
     }
@@ -541,172 +728,195 @@ const PropertyUploadPage: React.FC = () => {
   // Function to get required fields based on subcategory (excluding amenities)
   const getRequiredFields = (subCategory: string): string[] => {
     switch (subCategory) {
-      case 'Flats':
+      case "Flats":
         return [
-          'projectName',
-          'propertyPrice',
-          'totalBathrooms',
-          'totalfloors',
-          'yourfloor',
-          'carpetArea',
-          'buildupArea',
-          'unit',
-          'constructionStatus',
-          'furnishing',
-          'bhks',
+          "projectName",
+          "propertyPrice",
+          "totalBathrooms",
+          "totalfloors",
+          "yourfloor",
+          "carpetArea",
+          "buildupArea",
+          "unit",
+          "constructionStatus",
+          "furnishing",
+          "bhks",
         ];
-  
-      case 'Builder Floors':
+
+      case "Builder Floors":
         return [
-          'projectName',
-          'propertyPrice',
-          'totalfloors',
-          'yourfloor',
-          'reraApproved',
-          'ageOfTheProperty',
-          'propertyFacing',
-          'constructionStatus',
-          'furnishing',
-          'bhks',
+          "projectName",
+          "propertyPrice",
+          "totalfloors",
+          "yourfloor",
+          "reraApproved",
+          "ageOfTheProperty",
+          "propertyFacing",
+          "constructionStatus",
+          "furnishing",
+          "bhks",
         ];
-  
-      case 'House Villas':
+
+      case "House Villas":
         return [
-           "totalBathrooms",
-          'propertyPrice',
-          'carpetArea',
-          'buildupArea',
-          'unit',
-          'bhks',
-          'propertyFacing',
-          'furnishing',
-          'constructionStatus',
-          'ageOfTheProperty',
+          "totalBathrooms",
+          "propertyPrice",
+          "carpetArea",
+          "buildupArea",
+          "unit",
+          "bhks",
+          "propertyFacing",
+          "furnishing",
+          "constructionStatus",
+          "ageOfTheProperty",
         ];
-  
-      case 'Plots':
+
+      case "Plots":
         return [
-          'propertyPrice',
-          'length',
-          'width',
-          'propertyFacing',
-          'reraApproved',
+          "propertyPrice",
+          "length",
+          "width",
+          "propertyFacing",
+          "reraApproved",
         ];
-  
-      case 'Farmhouses':
+
+      case "Farmhouses":
         return [
-          'totalBathrooms',
-          'length',
-          'width',
-          'bhks',
-          'furnishing',
-          'propertyFacing',
-          'ageOfTheProperty',
-          'reraApproved',
+          "totalBathrooms",
+          "length",
+          "width",
+          "bhks",
+          "furnishing",
+          "propertyFacing",
+          "ageOfTheProperty",
+          "reraApproved",
         ];
-  
-      case 'Hotels':
+
+      case "Hotels":
         return [
-          'propertyName',
-          'propertyPrice',
-          'totalRooms',
-          'propertyFacing',
-          'furnishing',
-          'constructionStatus',
-          'ageOfTheProperty',
+          "propertyName",
+          "propertyPrice",
+          "totalRooms",
+          "propertyFacing",
+          "furnishing",
+          "constructionStatus",
+          "ageOfTheProperty",
         ];
-  
-      case 'Lands':
+
+      case "Lands":
         return [
-          'landArea',
-          'distFromOutRRoad',
-          'propertyPrice',
-          'soilType',
-          'approachRoad',
-          'fencing',
+          "landArea",
+          "distFromOutRRoad",
+          "propertyPrice",
+          "soilType",
+          "approachRoad",
+          "fencing",
         ];
-  
-      case 'Office Spaces':
+
+      case "Office Spaces":
         return [
-          'projectName',
-          'propertyPrice',
-          'carpetArea',
-          'buildupArea',
-          'unit',
-          'totalfloors',
-          'yourfloor',
-          'furnishing',
-          'constructionStatus',
-          'propertyFacing',
-          'washroom',
-          'reraApproved',
-          'ageOfTheProperty',
+          "projectName",
+          "propertyPrice",
+          "carpetArea",
+          "buildupArea",
+          "unit",
+          "totalfloors",
+          "yourfloor",
+          "furnishing",
+          "constructionStatus",
+          "propertyFacing",
+          "washroom",
+          "reraApproved",
+          "ageOfTheProperty",
         ];
-  
-      case 'Hostels':
+
+      case "Hostels":
         return [
-          'propertyName',
-          'propertyPrice',
-          'totalRooms',
-          'totalArea',
-          'plotArea',
-          'totalfloors',
-          'furnishing',
-          'constructionStatus',
-          'propertyFacing',
-          'ageOfTheProperty',
+          "propertyName",
+          "propertyPrice",
+          "totalRooms",
+          "totalArea",
+          "plotArea",
+          "totalfloors",
+          "furnishing",
+          "constructionStatus",
+          "propertyFacing",
+          "ageOfTheProperty",
         ];
-  
-      case 'Shops Showrooms':
+
+      case "Shops Showrooms":
         return [
-          'propertyPrice',
-          'length',
-          'width',
-          'totalfloors',
-          'yourfloor',
-          'furnishing',
-          'constructionStatus',
-          'propertyFacing',
-          'ageOfTheProperty',
-          'parking',
-          'reraApproved',
-          'washroom',
+          "propertyPrice",
+          "length",
+          "width",
+          "totalfloors",
+          "yourfloor",
+          "furnishing",
+          "constructionStatus",
+          "propertyFacing",
+          "ageOfTheProperty",
+          "parking",
+          "reraApproved",
+          "washroom",
         ];
-  
+
       default:
-        return ['propertyName', 'propertyPrice'];
+        return ["propertyName", "propertyPrice"];
     }
   };
 
   // Function to get amenities fields based on subcategory
   const getAmenitiesFields = (subCategory: string): string[] => {
     const amenitiesFields = [];
-    
+
     // Add amenities based on subcategory
-    if (['Flats', 'Builder Floors', 'House Villas', 'Farmhouses', 'Hotels', 'Office Spaces'].includes(subCategory)) {
-      amenitiesFields.push('amenities');
+    if (
+      [
+        "Flats",
+        "Builder Floors",
+        "House Villas",
+        "Farmhouses",
+        "Hotels",
+        "Office Spaces",
+      ].includes(subCategory)
+    ) {
+      amenitiesFields.push("amenities");
     }
-    
+
     // Add furnishing amenities for furnished properties
-    if (['Flats', 'Builder Floors', 'House Villas', 'Farmhouses', 'Hotels', 'Office Spaces', 'Hostels', 'Shops Showrooms'].includes(subCategory)) {
-      amenitiesFields.push('furnishingAmenities');
+    if (
+      [
+        "Flats",
+        "Builder Floors",
+        "House Villas",
+        "Farmhouses",
+        "Hotels",
+        "Office Spaces",
+        "Hostels",
+        "Shops Showrooms",
+      ].includes(subCategory)
+    ) {
+      amenitiesFields.push("furnishingAmenities");
     }
-    
+
     // Add view from property for specific categories
-    if (['Farmhouses', 'Hotels'].includes(subCategory)) {
-      amenitiesFields.push('viewFromProperty');
+    if (["Farmhouses", "Hotels"].includes(subCategory)) {
+      amenitiesFields.push("viewFromProperty");
     }
-    
+
     return amenitiesFields;
   };
 
   // Function to render field based on field name
   const renderField = (fieldName: string) => {
     switch (fieldName) {
-      case 'title':
+      case "title":
         return (
           <div key={fieldName}>
-            <label htmlFor={fieldName} className="form-label flex items-center gap-2">
+            <label
+              htmlFor={fieldName}
+              className="form-label flex items-center gap-2"
+            >
               <FontAwesomeIcon icon={faTag} className="text-blue-600" />
               Property Title
             </label>
@@ -714,7 +924,7 @@ const PropertyUploadPage: React.FC = () => {
               type="text"
               id={fieldName}
               name={fieldName}
-              value={formData.title || ''}
+              value={formData.title || ""}
               onChange={handleInputChange}
               className="form-input focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
               placeholder="Enter property title"
@@ -722,10 +932,13 @@ const PropertyUploadPage: React.FC = () => {
           </div>
         );
 
-      case 'description':
+      case "description":
         return (
           <div key={fieldName}>
-            <label htmlFor={fieldName} className="form-label flex items-center gap-2">
+            <label
+              htmlFor={fieldName}
+              className="form-label flex items-center gap-2"
+            >
               <FontAwesomeIcon icon={faTag} className="text-blue-600" />
               Property Description
             </label>
@@ -733,7 +946,7 @@ const PropertyUploadPage: React.FC = () => {
               id={fieldName}
               name={fieldName}
               rows={4}
-              value={formData.description || ''}
+              value={formData.description || ""}
               onChange={handleInputChange}
               className="form-input focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
               placeholder="Enter property description"
@@ -741,10 +954,13 @@ const PropertyUploadPage: React.FC = () => {
           </div>
         );
 
-      case 'projectName':
+      case "projectName":
         return (
           <div key={fieldName}>
-            <label htmlFor={fieldName} className="form-label flex items-center gap-2">
+            <label
+              htmlFor={fieldName}
+              className="form-label flex items-center gap-2"
+            >
               <FontAwesomeIcon icon={faBuilding} className="text-blue-600" />
               Project Name
             </label>
@@ -752,7 +968,7 @@ const PropertyUploadPage: React.FC = () => {
               type="text"
               id={fieldName}
               name={fieldName}
-              value={formData.projectName || ''}
+              value={formData.projectName || ""}
               onChange={handleInputChange}
               className="form-input focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
               placeholder="Enter project name"
@@ -760,10 +976,13 @@ const PropertyUploadPage: React.FC = () => {
           </div>
         );
 
-      case 'propertyName':
+      case "propertyName":
         return (
           <div key={fieldName}>
-            <label htmlFor={fieldName} className="form-label flex items-center gap-2">
+            <label
+              htmlFor={fieldName}
+              className="form-label flex items-center gap-2"
+            >
               <FontAwesomeIcon icon={faHome} className="text-blue-600" />
               Property Name
             </label>
@@ -771,7 +990,7 @@ const PropertyUploadPage: React.FC = () => {
               type="text"
               id={fieldName}
               name={fieldName}
-              value={formData.propertyName || ''}
+              value={formData.propertyName || ""}
               onChange={handleInputChange}
               className="form-input focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
               placeholder="Enter property name"
@@ -779,10 +998,13 @@ const PropertyUploadPage: React.FC = () => {
           </div>
         );
 
-      case 'propertyPrice':
+      case "propertyPrice":
         return (
           <div key={fieldName}>
-            <label htmlFor={fieldName} className="form-label flex items-center gap-2">
+            <label
+              htmlFor={fieldName}
+              className="form-label flex items-center gap-2"
+            >
               <FontAwesomeIcon icon={faTag} className="text-blue-600" />
               Price (₹) *
             </label>
@@ -792,7 +1014,7 @@ const PropertyUploadPage: React.FC = () => {
               name={fieldName}
               required
               min="1"
-              value={formData.propertyPrice || ''}
+              value={formData.propertyPrice || ""}
               onChange={handleInputChange}
               className="form-input focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
               placeholder="Enter price"
@@ -800,10 +1022,13 @@ const PropertyUploadPage: React.FC = () => {
           </div>
         );
 
-      case 'totalBathrooms':
+      case "totalBathrooms":
         return (
           <div key={fieldName}>
-            <label htmlFor={fieldName} className="form-label flex items-center gap-2">
+            <label
+              htmlFor={fieldName}
+              className="form-label flex items-center gap-2"
+            >
               <FontAwesomeIcon icon={faBath} className="text-blue-600" />
               Bathrooms
             </label>
@@ -812,7 +1037,7 @@ const PropertyUploadPage: React.FC = () => {
               id={fieldName}
               name={fieldName}
               min="0"
-              value={formData.totalBathrooms || ''}
+              value={formData.totalBathrooms || ""}
               onChange={handleInputChange}
               className="form-input focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
               placeholder="Number of bathrooms"
@@ -820,10 +1045,13 @@ const PropertyUploadPage: React.FC = () => {
           </div>
         );
 
-      case 'totalRooms':
+      case "totalRooms":
         return (
           <div key={fieldName}>
-            <label htmlFor={fieldName} className="form-label flex items-center gap-2">
+            <label
+              htmlFor={fieldName}
+              className="form-label flex items-center gap-2"
+            >
               <FontAwesomeIcon icon={faBed} className="text-blue-600" />
               Rooms
             </label>
@@ -832,7 +1060,7 @@ const PropertyUploadPage: React.FC = () => {
               id={fieldName}
               name={fieldName}
               min="0"
-              value={formData.totalRooms || ''}
+              value={formData.totalRooms || ""}
               onChange={handleInputChange}
               className="form-input focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
               placeholder="Number of rooms"
@@ -840,10 +1068,13 @@ const PropertyUploadPage: React.FC = () => {
           </div>
         );
 
-      case 'carpetArea':
+      case "carpetArea":
         return (
           <div key={fieldName}>
-            <label htmlFor={fieldName} className="form-label flex items-center gap-2">
+            <label
+              htmlFor={fieldName}
+              className="form-label flex items-center gap-2"
+            >
               <FontAwesomeIcon icon={faRuler} className="text-blue-600" />
               Carpet Area (sq ft)
             </label>
@@ -853,7 +1084,7 @@ const PropertyUploadPage: React.FC = () => {
               name={fieldName}
               min="0"
               step="0.01"
-              value={formData.carpetArea || ''}
+              value={formData.carpetArea || ""}
               onChange={handleInputChange}
               className="form-input focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
               placeholder="Enter carpet area"
@@ -861,10 +1092,13 @@ const PropertyUploadPage: React.FC = () => {
           </div>
         );
 
-      case 'buildupArea':
+      case "buildupArea":
         return (
           <div key={fieldName}>
-            <label htmlFor={fieldName} className="form-label flex items-center gap-2">
+            <label
+              htmlFor={fieldName}
+              className="form-label flex items-center gap-2"
+            >
               <FontAwesomeIcon icon={faRuler} className="text-blue-600" />
               Built-up Area (sq ft)
             </label>
@@ -874,7 +1108,7 @@ const PropertyUploadPage: React.FC = () => {
               name={fieldName}
               min="0"
               step="0.01"
-              value={formData.buildupArea || ''}
+              value={formData.buildupArea || ""}
               onChange={handleInputChange}
               className="form-input focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
               placeholder="Enter built-up area"
@@ -882,7 +1116,7 @@ const PropertyUploadPage: React.FC = () => {
           </div>
         );
 
-      case 'bhks':
+      case "bhks":
         return (
           <div key={fieldName}>
             <label htmlFor={fieldName} className="form-label">
@@ -891,7 +1125,7 @@ const PropertyUploadPage: React.FC = () => {
             <select
               id={fieldName}
               name={fieldName}
-              value={formData.bhks || ''}
+              value={formData.bhks || ""}
               onChange={handleInputChange}
               className="form-input"
             >
@@ -905,7 +1139,7 @@ const PropertyUploadPage: React.FC = () => {
           </div>
         );
 
-      case 'furnishing':
+      case "furnishing":
         return (
           <div key={fieldName}>
             <label htmlFor={fieldName} className="form-label">
@@ -914,7 +1148,7 @@ const PropertyUploadPage: React.FC = () => {
             <select
               id={fieldName}
               name={fieldName}
-              value={formData.furnishing || ''}
+              value={formData.furnishing || ""}
               onChange={handleInputChange}
               className="form-input"
             >
@@ -926,7 +1160,7 @@ const PropertyUploadPage: React.FC = () => {
           </div>
         );
 
-      case 'constructionStatus':
+      case "constructionStatus":
         return (
           <div key={fieldName}>
             <label htmlFor={fieldName} className="form-label">
@@ -935,7 +1169,7 @@ const PropertyUploadPage: React.FC = () => {
             <select
               id={fieldName}
               name={fieldName}
-              value={formData.constructionStatus || ''}
+              value={formData.constructionStatus || ""}
               onChange={handleInputChange}
               className="form-input"
             >
@@ -947,7 +1181,7 @@ const PropertyUploadPage: React.FC = () => {
           </div>
         );
 
-      case 'propertyFacing':
+      case "propertyFacing":
         return (
           <div key={fieldName}>
             <label htmlFor={fieldName} className="form-label">
@@ -956,7 +1190,7 @@ const PropertyUploadPage: React.FC = () => {
             <select
               id={fieldName}
               name={fieldName}
-              value={formData.propertyFacing || ''}
+              value={formData.propertyFacing || ""}
               onChange={handleInputChange}
               className="form-input"
             >
@@ -973,7 +1207,7 @@ const PropertyUploadPage: React.FC = () => {
           </div>
         );
 
-      case 'ageOfTheProperty':
+      case "ageOfTheProperty":
         return (
           <div key={fieldName}>
             <label htmlFor={fieldName} className="form-label">
@@ -982,7 +1216,7 @@ const PropertyUploadPage: React.FC = () => {
             <select
               id={fieldName}
               name={fieldName}
-              value={formData.ageOfTheProperty || ''}
+              value={formData.ageOfTheProperty || ""}
               onChange={handleInputChange}
               className="form-input"
             >
@@ -996,52 +1230,75 @@ const PropertyUploadPage: React.FC = () => {
           </div>
         );
 
-      case 'amenities':
+      case "amenities":
         return (
           <div key={fieldName}>
-            <label htmlFor={fieldName} className="form-label flex items-center gap-2">
+            <label
+              htmlFor={fieldName}
+              className="form-label flex items-center gap-2"
+            >
               <FontAwesomeIcon icon={faShieldAlt} className="text-blue-600" />
               Amenities
             </label>
             <div className="grid grid-cols-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7 gap-2 mt-4">
               {[
-                { id: 'parking', label: 'Parking', icon: faCar },
-                { id: 'cctv', label: 'CCTV', icon: faVideo },
-                { id: 'security', label: 'Security', icon: faShieldAlt },
-                { id: 'garden', label: 'Garden', icon: faTree },
-                { id: 'wifi', label: 'Free WiFi', icon: faWifi },
-                { id: 'wheelchair', label: 'Wheelchair', icon: faWheelchair },
-                { id: 'pool', label: 'Infinity Pool', icon: faSwimmingPool },
-                { id: 'theater', label: 'Private Theater', icon: faVideo },
-                { id: 'ev-charging', label: 'EV Charging', icon: faChargingStation },
-                { id: 'clubhouse', label: 'Club House', icon: faUsers },
-                { id: 'jogging-track', label: 'Jogging Track', icon: faRunning },
-                { id: 'power-backup', label: 'Power Backup', icon: faBolt },
-                { id: '24x7-security', label: '24x7 Security', icon: faShieldAlt },
-                { id: 'intercom', label: 'Intercom Facility', icon: faPhone },
-                { id: 'rain-harvesting', label: 'Rain Water Harvesting', icon: faTint },
+                { id: "parking", label: "Parking", icon: faCar },
+                { id: "cctv", label: "CCTV", icon: faVideo },
+                { id: "security", label: "Security", icon: faShieldAlt },
+                { id: "garden", label: "Garden", icon: faTree },
+                { id: "wifi", label: "Free WiFi", icon: faWifi },
+                { id: "wheelchair", label: "Wheelchair", icon: faWheelchair },
+                { id: "pool", label: "Infinity Pool", icon: faSwimmingPool },
+                { id: "theater", label: "Private Theater", icon: faVideo },
+                {
+                  id: "ev-charging",
+                  label: "EV Charging",
+                  icon: faChargingStation,
+                },
+                { id: "clubhouse", label: "Club House", icon: faUsers },
+                {
+                  id: "jogging-track",
+                  label: "Jogging Track",
+                  icon: faRunning,
+                },
+                { id: "power-backup", label: "Power Backup", icon: faBolt },
+                {
+                  id: "24x7-security",
+                  label: "24x7 Security",
+                  icon: faShieldAlt,
+                },
+                { id: "intercom", label: "Intercom Facility", icon: faPhone },
+                {
+                  id: "rain-harvesting",
+                  label: "Rain Water Harvesting",
+                  icon: faTint,
+                },
               ].map((amenity) => (
-                <motion.label 
-                key={amenity.id} 
-                className="flex flex-col items-center justify-center cursor-pointer p-4 rounded-xl border-2 border-gray-200 hover:border-blue-400 hover:bg-blue-50 transition-all duration-300 group min-h-[100px] relative"
-                whileHover={{ scale: 1.05, y: -2 }}
-                whileTap={{ scale: 0.95 }}
-              >
+                <motion.label
+                  key={amenity.id}
+                  className="flex flex-col items-center justify-center cursor-pointer p-4 rounded-xl border-2 border-gray-200 hover:border-blue-400 hover:bg-blue-50 transition-all duration-300 group min-h-[100px] relative"
+                  whileHover={{ scale: 1.05, y: -2 }}
+                  whileTap={{ scale: 0.95 }}
+                >
                   <input
                     type="checkbox"
                     value={amenity.label}
-                    checked={formData.amenities?.includes(amenity.label) || false}
+                    checked={
+                      formData.amenities?.includes(amenity.label) || false
+                    }
                     onChange={(e) => {
                       const currentAmenities = formData.amenities || [];
                       if (e.target.checked) {
-                        setFormData(prev => ({
+                        setFormData((prev) => ({
                           ...prev,
-                          amenities: [...currentAmenities, amenity.label]
+                          amenities: [...currentAmenities, amenity.label],
                         }));
                       } else {
-                        setFormData(prev => ({
+                        setFormData((prev) => ({
                           ...prev,
-                          amenities: currentAmenities.filter(a => a !== amenity.label)
+                          amenities: currentAmenities.filter(
+                            (a) => a !== amenity.label
+                          ),
                         }));
                       }
                     }}
@@ -1049,9 +1306,9 @@ const PropertyUploadPage: React.FC = () => {
                   />
                   <div className="flex flex-col items-center space-y-1">
                     <div className="w-5 h-5 flex items-center justify-center">
-                      <FontAwesomeIcon 
-                        icon={amenity.icon} 
-                        className="text-sm text-gray-500 group-hover:text-blue-600 transition-colors duration-300" 
+                      <FontAwesomeIcon
+                        icon={amenity.icon}
+                        className="text-sm text-gray-500 group-hover:text-blue-600 transition-colors duration-300"
                       />
                     </div>
                     <span className="text-xs text-center text-gray-700 group-hover:text-gray-900 transition-colors duration-300 font-medium leading-tight px-1">
@@ -1060,9 +1317,9 @@ const PropertyUploadPage: React.FC = () => {
                   </div>
                   <div className="absolute top-1.5 right-1.5 w-4 h-4 bg-white rounded-full border-2 border-gray-300 group-hover:border-blue-500 transition-colors duration-300 flex items-center justify-center">
                     {formData.amenities?.includes(amenity.label) && (
-                      <FontAwesomeIcon 
-                        icon={faCheckCircle} 
-                        className="text-blue-600 text-xs" 
+                      <FontAwesomeIcon
+                        icon={faCheckCircle}
+                        className="text-blue-600 text-xs"
                       />
                     )}
                   </div>
@@ -1072,7 +1329,7 @@ const PropertyUploadPage: React.FC = () => {
           </div>
         );
 
-      case 'reraApproved':
+      case "reraApproved":
         return (
           <div key={fieldName} className="flex items-center">
             <input
@@ -1083,13 +1340,16 @@ const PropertyUploadPage: React.FC = () => {
               onChange={handleInputChange}
               className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
             />
-            <label htmlFor={fieldName} className="ml-2 block text-sm text-gray-900">
+            <label
+              htmlFor={fieldName}
+              className="ml-2 block text-sm text-gray-900"
+            >
               RERA Approved
             </label>
           </div>
         );
 
-      case 'length':
+      case "length":
         return (
           <div key={fieldName}>
             <label htmlFor={fieldName} className="form-label">
@@ -1101,7 +1361,7 @@ const PropertyUploadPage: React.FC = () => {
               name={fieldName}
               min="0"
               step="0.01"
-              value={formData.length || ''}
+              value={formData.length || ""}
               onChange={handleInputChange}
               className="form-input"
               placeholder="Enter length"
@@ -1109,7 +1369,7 @@ const PropertyUploadPage: React.FC = () => {
           </div>
         );
 
-      case 'width':
+      case "width":
         return (
           <div key={fieldName}>
             <label htmlFor={fieldName} className="form-label">
@@ -1121,7 +1381,7 @@ const PropertyUploadPage: React.FC = () => {
               name={fieldName}
               min="0"
               step="0.01"
-              value={formData.width || ''}
+              value={formData.width || ""}
               onChange={handleInputChange}
               className="form-input"
               placeholder="Enter width"
@@ -1129,7 +1389,7 @@ const PropertyUploadPage: React.FC = () => {
           </div>
         );
 
-      case 'totalfloors':
+      case "totalfloors":
         return (
           <div key={fieldName}>
             <label htmlFor={fieldName} className="form-label">
@@ -1139,7 +1399,7 @@ const PropertyUploadPage: React.FC = () => {
               type="text"
               id={fieldName}
               name={fieldName}
-              value={formData.totalfloors || ''}
+              value={formData.totalfloors || ""}
               onChange={handleInputChange}
               className="form-input"
               placeholder="Enter total floors"
@@ -1147,7 +1407,7 @@ const PropertyUploadPage: React.FC = () => {
           </div>
         );
 
-      case 'yourfloor':
+      case "yourfloor":
         return (
           <div key={fieldName}>
             <label htmlFor={fieldName} className="form-label">
@@ -1157,7 +1417,7 @@ const PropertyUploadPage: React.FC = () => {
               type="text"
               id={fieldName}
               name={fieldName}
-              value={formData.yourfloor || ''}
+              value={formData.yourfloor || ""}
               onChange={handleInputChange}
               className="form-input"
               placeholder="Enter your floor"
@@ -1165,17 +1425,20 @@ const PropertyUploadPage: React.FC = () => {
           </div>
         );
 
-      case 'viewFromProperty':
+      case "viewFromProperty":
         return (
           <div key={fieldName}>
-            <label htmlFor={fieldName} className="form-label flex items-center gap-2">
+            <label
+              htmlFor={fieldName}
+              className="form-label flex items-center gap-2"
+            >
               <FontAwesomeIcon icon={faEye} className="text-blue-600" />
               Views from Property
             </label>
             <div className="grid grid-cols-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7 gap-2 mt-4">
               {viewFromPropertyOptions.map((view) => (
-                <motion.label 
-                  key={view.id} 
+                <motion.label
+                  key={view.id}
                   className="flex flex-col items-center justify-center cursor-pointer p-4 rounded-xl border-2 border-gray-200 hover:border-blue-400 hover:bg-blue-50 transition-all duration-300 group min-h-[100px] relative"
                   whileHover={{ scale: 1.05, y: -2 }}
                   whileTap={{ scale: 0.95 }}
@@ -1183,18 +1446,22 @@ const PropertyUploadPage: React.FC = () => {
                   <input
                     type="checkbox"
                     value={view.label}
-                    checked={formData.viewFromProperty?.includes(view.label) || false}
+                    checked={
+                      formData.viewFromProperty?.includes(view.label) || false
+                    }
                     onChange={(e) => {
                       const currentViews = formData.viewFromProperty || [];
                       if (e.target.checked) {
-                        setFormData(prev => ({
+                        setFormData((prev) => ({
                           ...prev,
-                          viewFromProperty: [...currentViews, view.label]
+                          viewFromProperty: [...currentViews, view.label],
                         }));
                       } else {
-                        setFormData(prev => ({
+                        setFormData((prev) => ({
                           ...prev,
-                          viewFromProperty: currentViews.filter(v => v !== view.label)
+                          viewFromProperty: currentViews.filter(
+                            (v) => v !== view.label
+                          ),
                         }));
                       }
                     }}
@@ -1202,9 +1469,9 @@ const PropertyUploadPage: React.FC = () => {
                   />
                   <div className="flex flex-col items-center space-y-1">
                     <div className="w-8 h-8 flex items-center justify-center">
-                      <FontAwesomeIcon 
-                        icon={view.icon} 
-                        className="text-2xl text-gray-500 group-hover:text-blue-600 transition-colors duration-300" 
+                      <FontAwesomeIcon
+                        icon={view.icon}
+                        className="text-2xl text-gray-500 group-hover:text-blue-600 transition-colors duration-300"
                       />
                     </div>
                     <span className="text-xs text-center text-gray-700 group-hover:text-gray-900 transition-colors duration-300 font-medium leading-tight px-1">
@@ -1213,9 +1480,9 @@ const PropertyUploadPage: React.FC = () => {
                   </div>
                   <div className="absolute top-1.5 right-1.5 w-4 h-4 bg-white rounded-full border-2 border-gray-300 group-hover:border-blue-500 transition-colors duration-300 flex items-center justify-center">
                     {formData.viewFromProperty?.includes(view.label) && (
-                      <FontAwesomeIcon 
-                        icon={faCheckCircle} 
-                        className="text-blue-600 text-xs" 
+                      <FontAwesomeIcon
+                        icon={faCheckCircle}
+                        className="text-blue-600 text-xs"
                       />
                     )}
                   </div>
@@ -1225,7 +1492,7 @@ const PropertyUploadPage: React.FC = () => {
           </div>
         );
 
-      case 'landArea':
+      case "landArea":
         return (
           <div key={fieldName}>
             <label htmlFor={fieldName} className="form-label">
@@ -1237,7 +1504,7 @@ const PropertyUploadPage: React.FC = () => {
               name={fieldName}
               min="0"
               step="0.01"
-              value={formData.landArea || ''}
+              value={formData.landArea || ""}
               onChange={handleInputChange}
               className="form-input"
               placeholder="Enter land area"
@@ -1245,7 +1512,7 @@ const PropertyUploadPage: React.FC = () => {
           </div>
         );
 
-      case 'distFromOutRRoad':
+      case "distFromOutRRoad":
         return (
           <div key={fieldName}>
             <label htmlFor={fieldName} className="form-label">
@@ -1257,7 +1524,7 @@ const PropertyUploadPage: React.FC = () => {
               name={fieldName}
               min="0"
               step="0.01"
-              value={formData.distFromOutRRoad || ''}
+              value={formData.distFromOutRRoad || ""}
               onChange={handleInputChange}
               className="form-input"
               placeholder="Enter distance"
@@ -1265,7 +1532,7 @@ const PropertyUploadPage: React.FC = () => {
           </div>
         );
 
-      case 'soilType':
+      case "soilType":
         return (
           <div key={fieldName}>
             <label htmlFor={fieldName} className="form-label">
@@ -1274,7 +1541,7 @@ const PropertyUploadPage: React.FC = () => {
             <select
               id={fieldName}
               name={fieldName}
-              value={formData.soilType || ''}
+              value={formData.soilType || ""}
               onChange={handleInputChange}
               className="form-input"
             >
@@ -1287,7 +1554,7 @@ const PropertyUploadPage: React.FC = () => {
           </div>
         );
 
-      case 'approachRoad':
+      case "approachRoad":
         return (
           <div key={fieldName}>
             <label htmlFor={fieldName} className="form-label">
@@ -1296,7 +1563,7 @@ const PropertyUploadPage: React.FC = () => {
             <select
               id={fieldName}
               name={fieldName}
-              value={formData.approachRoad || ''}
+              value={formData.approachRoad || ""}
               onChange={handleInputChange}
               className="form-input"
             >
@@ -1308,7 +1575,7 @@ const PropertyUploadPage: React.FC = () => {
           </div>
         );
 
-      case 'fencing':
+      case "fencing":
         return (
           <div key={fieldName}>
             <label htmlFor={fieldName} className="form-label">
@@ -1317,7 +1584,7 @@ const PropertyUploadPage: React.FC = () => {
             <select
               id={fieldName}
               name={fieldName}
-              value={formData.fencing || ''}
+              value={formData.fencing || ""}
               onChange={handleInputChange}
               className="form-input"
             >
@@ -1329,7 +1596,7 @@ const PropertyUploadPage: React.FC = () => {
           </div>
         );
 
-      case 'totalArea':
+      case "totalArea":
         return (
           <div key={fieldName}>
             <label htmlFor={fieldName} className="form-label">
@@ -1341,7 +1608,7 @@ const PropertyUploadPage: React.FC = () => {
               name={fieldName}
               min="0"
               step="0.01"
-              value={formData.totalArea || ''}
+              value={formData.totalArea || ""}
               onChange={handleInputChange}
               className="form-input"
               placeholder="Enter total area"
@@ -1349,7 +1616,7 @@ const PropertyUploadPage: React.FC = () => {
           </div>
         );
 
-      case 'plotArea':
+      case "plotArea":
         return (
           <div key={fieldName}>
             <label htmlFor={fieldName} className="form-label">
@@ -1361,7 +1628,7 @@ const PropertyUploadPage: React.FC = () => {
               name={fieldName}
               min="0"
               step="0.01"
-              value={formData.plotArea || ''}
+              value={formData.plotArea || ""}
               onChange={handleInputChange}
               className="form-input"
               placeholder="Enter plot area"
@@ -1369,7 +1636,7 @@ const PropertyUploadPage: React.FC = () => {
           </div>
         );
 
-      case 'parking':
+      case "parking":
         return (
           <div key={fieldName}>
             <label htmlFor={fieldName} className="form-label">
@@ -1378,7 +1645,7 @@ const PropertyUploadPage: React.FC = () => {
             <select
               id={fieldName}
               name={fieldName}
-              value={formData.parking || ''}
+              value={formData.parking || ""}
               onChange={handleInputChange}
               className="form-input"
             >
@@ -1390,7 +1657,7 @@ const PropertyUploadPage: React.FC = () => {
           </div>
         );
 
-      case 'washroom':
+      case "washroom":
         return (
           <div key={fieldName}>
             <label htmlFor={fieldName} className="form-label">
@@ -1401,7 +1668,7 @@ const PropertyUploadPage: React.FC = () => {
               id={fieldName}
               name={fieldName}
               min="0"
-              value={formData.washroom || ''}
+              value={formData.washroom || ""}
               onChange={handleInputChange}
               className="form-input"
               placeholder="Number of washrooms"
@@ -1409,17 +1676,20 @@ const PropertyUploadPage: React.FC = () => {
           </div>
         );
 
-      case 'unit':
+      case "unit":
         return (
           <div key={fieldName}>
-            <label htmlFor={fieldName} className="form-label flex items-center gap-2">
+            <label
+              htmlFor={fieldName}
+              className="form-label flex items-center gap-2"
+            >
               <FontAwesomeIcon icon={faRuler} className="text-blue-600" />
               Unit
             </label>
             <select
               id={fieldName}
               name={fieldName}
-              value={formData.unit || ''}
+              value={formData.unit || ""}
               onChange={handleInputChange}
               className="form-input focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
             >
@@ -1433,21 +1703,30 @@ const PropertyUploadPage: React.FC = () => {
           </div>
         );
 
-      case 'furnishingAmenities':
-        const isUnfurnished = formData.furnishing === 'Unfurnished';
+      case "furnishingAmenities":
+        const isUnfurnished = formData.furnishing === "Unfurnished";
         return (
           <div key={fieldName}>
-            <label htmlFor={fieldName} className="form-label flex items-center gap-2">
+            <label
+              htmlFor={fieldName}
+              className="form-label flex items-center gap-2"
+            >
               <FontAwesomeIcon icon={faCouch} className="text-blue-600" />
               Furnishing Amenities
               {isUnfurnished && (
-                <span className="text-gray-500 text-sm ml-2">(Disabled for Unfurnished properties)</span>
+                <span className="text-gray-500 text-sm ml-2">
+                  (Disabled for Unfurnished properties)
+                </span>
               )}
             </label>
-            <div className={`grid grid-cols-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7 gap-3 mt-4 transition-opacity duration-300 ${isUnfurnished ? 'opacity-50 pointer-events-none' : ''}`}>
+            <div
+              className={`grid grid-cols-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7 gap-3 mt-4 transition-opacity duration-300 ${
+                isUnfurnished ? "opacity-50 pointer-events-none" : ""
+              }`}
+            >
               {furnishingAmenitiesIcons.map((amenity) => (
-                <motion.label 
-                  key={amenity.id} 
+                <motion.label
+                  key={amenity.id}
                   className="flex flex-col items-center justify-center cursor-pointer p-4 rounded-xl border-2 border-gray-200 hover:border-blue-400 hover:bg-blue-50 transition-all duration-300 group min-h-[100px] relative"
                   whileHover={!isUnfurnished ? { scale: 1.05, y: -2 } : {}}
                   whileTap={!isUnfurnished ? { scale: 0.95 } : {}}
@@ -1455,20 +1734,29 @@ const PropertyUploadPage: React.FC = () => {
                   <input
                     type="checkbox"
                     value={amenity.label}
-                    checked={formData.furnishingAmenities?.includes(amenity.label) || false}
+                    checked={
+                      formData.furnishingAmenities?.includes(amenity.label) ||
+                      false
+                    }
                     disabled={isUnfurnished}
                     onChange={(e) => {
                       if (isUnfurnished) return; // Prevent changes when disabled
-                      const currentAmenities = formData.furnishingAmenities || [];
+                      const currentAmenities =
+                        formData.furnishingAmenities || [];
                       if (e.target.checked) {
-                        setFormData(prev => ({
+                        setFormData((prev) => ({
                           ...prev,
-                          furnishingAmenities: [...currentAmenities, amenity.label]
+                          furnishingAmenities: [
+                            ...currentAmenities,
+                            amenity.label,
+                          ],
                         }));
                       } else {
-                        setFormData(prev => ({
+                        setFormData((prev) => ({
                           ...prev,
-                          furnishingAmenities: currentAmenities.filter(a => a !== amenity.label)
+                          furnishingAmenities: currentAmenities.filter(
+                            (a) => a !== amenity.label
+                          ),
                         }));
                       }
                     }}
@@ -1476,9 +1764,9 @@ const PropertyUploadPage: React.FC = () => {
                   />
                   <div className="flex flex-col items-center space-y-1">
                     <div className="w-5 h-5 flex items-center justify-center">
-                      <FontAwesomeIcon 
-                        icon={amenity.icon} 
-                        className="text-sm text-gray-500 group-hover:text-blue-600 transition-colors duration-300" 
+                      <FontAwesomeIcon
+                        icon={amenity.icon}
+                        className="text-sm text-gray-500 group-hover:text-blue-600 transition-colors duration-300"
                       />
                     </div>
                     <span className="text-xs text-center text-gray-700 group-hover:text-gray-900 transition-colors duration-300 font-medium leading-tight px-1">
@@ -1487,9 +1775,9 @@ const PropertyUploadPage: React.FC = () => {
                   </div>
                   <div className="absolute top-1.5 right-1.5 w-4 h-4 bg-white rounded-full border-2 border-gray-300 group-hover:border-blue-500 transition-colors duration-300 flex items-center justify-center">
                     {formData.furnishingAmenities?.includes(amenity.label) && (
-                      <FontAwesomeIcon 
-                        icon={faCheckCircle} 
-                        className="text-blue-600 text-xs" 
+                      <FontAwesomeIcon
+                        icon={faCheckCircle}
+                        className="text-blue-600 text-xs"
                       />
                     )}
                   </div>
@@ -1504,10 +1792,8 @@ const PropertyUploadPage: React.FC = () => {
     }
   };
 
-
-
   return (
-    <motion.div 
+    <motion.div
       className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 py-8 px-4"
       variants={variants.springDrop}
       initial="initial"
@@ -1516,7 +1802,7 @@ const PropertyUploadPage: React.FC = () => {
       transition={animations.springDrop}
     >
       <div className="container max-w-5xl mx-auto">
-        <motion.div 
+        <motion.div
           className="text-center mb-12"
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -1533,8 +1819,8 @@ const PropertyUploadPage: React.FC = () => {
           </p>
         </motion.div>
 
-        <motion.form 
-          onSubmit={handleSubmit} 
+        <motion.form
+          onSubmit={handleSubmit}
           className="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -1543,7 +1829,7 @@ const PropertyUploadPage: React.FC = () => {
           <div className="p-8">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
               {/* Address Fields */}
-              <motion.div 
+              <motion.div
                 className="lg:col-span-2"
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
@@ -1551,7 +1837,10 @@ const PropertyUploadPage: React.FC = () => {
               >
                 <div className="flex items-center gap-3 mb-6">
                   <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
-                    <FontAwesomeIcon icon={faMapMarkerAlt} className="text-blue-600" />
+                    <FontAwesomeIcon
+                      icon={faMapMarkerAlt}
+                      className="text-blue-600"
+                    />
                   </div>
                   <h3 className="text-xl font-semibold text-gray-900">
                     Property Address
@@ -1559,14 +1848,20 @@ const PropertyUploadPage: React.FC = () => {
                 </div>
               </motion.div>
 
-              <motion.div 
+              <motion.div
                 className="form-group"
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.7, duration: 0.5 }}
               >
-                <label htmlFor="addressState" className="form-label flex items-center gap-2">
-                  <FontAwesomeIcon icon={faMapMarkerAlt} className="text-blue-600" />
+                <label
+                  htmlFor="addressState"
+                  className="form-label flex items-center gap-2"
+                >
+                  <FontAwesomeIcon
+                    icon={faMapMarkerAlt}
+                    className="text-blue-600"
+                  />
                   State *
                 </label>
                 <select
@@ -1578,7 +1873,9 @@ const PropertyUploadPage: React.FC = () => {
                   className="form-input focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
                   disabled={isLoadingStates}
                 >
-                  <option value="">{isLoadingStates ? 'Loading states...' : 'Select State'}</option>
+                  <option value="">
+                    {isLoadingStates ? "Loading states..." : "Select State"}
+                  </option>
                   {states.map((state) => (
                     <option key={state} value={state}>
                       {state}
@@ -1587,13 +1884,16 @@ const PropertyUploadPage: React.FC = () => {
                 </select>
               </motion.div>
 
-              <motion.div 
+              <motion.div
                 className="form-group"
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.8, duration: 0.5 }}
               >
-                <label htmlFor="addressCity" className="form-label flex items-center gap-2">
+                <label
+                  htmlFor="addressCity"
+                  className="form-label flex items-center gap-2"
+                >
                   <FontAwesomeIcon icon={faCity} className="text-blue-600" />
                   City *
                 </label>
@@ -1607,12 +1907,11 @@ const PropertyUploadPage: React.FC = () => {
                   disabled={!formData.addressState || isLoadingCities}
                 >
                   <option value="">
-                    {!formData.addressState 
-                      ? 'Select State first' 
-                      : isLoadingCities 
-                        ? 'Loading cities...' 
-                        : 'Select City'
-                    }
+                    {!formData.addressState
+                      ? "Select State first"
+                      : isLoadingCities
+                      ? "Loading cities..."
+                      : "Select City"}
                   </option>
                   {cities.map((city) => (
                     <option key={city} value={city}>
@@ -1622,14 +1921,20 @@ const PropertyUploadPage: React.FC = () => {
                 </select>
               </motion.div>
 
-              <motion.div 
+              <motion.div
                 className="lg:col-span-2"
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.9, duration: 0.5 }}
               >
-                <label htmlFor="addressLocality" className="form-label flex items-center gap-2">
-                  <FontAwesomeIcon icon={faMapMarkerAlt} className="text-blue-600" />
+                <label
+                  htmlFor="addressLocality"
+                  className="form-label flex items-center gap-2"
+                >
+                  <FontAwesomeIcon
+                    icon={faMapMarkerAlt}
+                    className="text-blue-600"
+                  />
                   Locality *
                 </label>
                 <select
@@ -1642,12 +1947,11 @@ const PropertyUploadPage: React.FC = () => {
                   disabled={!formData.addressCity || isLoadingLocalities}
                 >
                   <option value="">
-                    {!formData.addressCity 
-                      ? 'Select City first' 
-                      : isLoadingLocalities 
-                        ? 'Loading localities...' 
-                        : 'Select Locality'
-                    }
+                    {!formData.addressCity
+                      ? "Select City first"
+                      : isLoadingLocalities
+                      ? "Loading localities..."
+                      : "Select Locality"}
                   </option>
                   {localities.map((locality) => (
                     <option key={locality} value={locality}>
@@ -1658,7 +1962,7 @@ const PropertyUploadPage: React.FC = () => {
               </motion.div>
 
               {/* Property Type */}
-              <motion.div 
+              <motion.div
                 className="lg:col-span-2"
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
@@ -1666,7 +1970,10 @@ const PropertyUploadPage: React.FC = () => {
               >
                 <div className="flex items-center gap-3 mb-6">
                   <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
-                    <FontAwesomeIcon icon={faBuilding} className="text-blue-600" />
+                    <FontAwesomeIcon
+                      icon={faBuilding}
+                      className="text-blue-600"
+                    />
                   </div>
                   <h3 className="text-xl font-semibold text-gray-900">
                     Property Type
@@ -1674,13 +1981,16 @@ const PropertyUploadPage: React.FC = () => {
                 </div>
               </motion.div>
 
-              <motion.div 
+              <motion.div
                 className="form-group"
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 1.1, duration: 0.5 }}
               >
-                <label htmlFor="category" className="form-label flex items-center gap-2">
+                <label
+                  htmlFor="category"
+                  className="form-label flex items-center gap-2"
+                >
                   <FontAwesomeIcon icon={faHome} className="text-blue-600" />
                   Category *
                 </label>
@@ -1697,14 +2007,20 @@ const PropertyUploadPage: React.FC = () => {
                 </select>
               </motion.div>
 
-              <motion.div 
+              <motion.div
                 className="form-group"
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 1.2, duration: 0.5 }}
               >
-                <label htmlFor="subCategory" className="form-label flex items-center gap-2">
-                  <FontAwesomeIcon icon={faBuilding} className="text-blue-600" />
+                <label
+                  htmlFor="subCategory"
+                  className="form-label flex items-center gap-2"
+                >
+                  <FontAwesomeIcon
+                    icon={faBuilding}
+                    className="text-blue-600"
+                  />
                   Sub Category *
                 </label>
                 <select
@@ -1715,24 +2031,30 @@ const PropertyUploadPage: React.FC = () => {
                   onChange={handleInputChange}
                   className="form-input focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
                 >
-                  {formData.category === 'Residential' 
-                    ? residentialSubCategories.map(sub => (
-                        <option key={sub} value={sub}>{sub}</option>
+                  {formData.category === "Residential"
+                    ? residentialSubCategories.map((sub) => (
+                        <option key={sub} value={sub}>
+                          {sub}
+                        </option>
                       ))
-                    : commercialSubCategories.map(sub => (
-                        <option key={sub} value={sub}>{sub}</option>
-                      ))
-                  }
+                    : commercialSubCategories.map((sub) => (
+                        <option key={sub} value={sub}>
+                          {sub}
+                        </option>
+                      ))}
                 </select>
               </motion.div>
 
-              <motion.div 
+              <motion.div
                 className="form-group"
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 1.3, duration: 0.5 }}
               >
-                <label htmlFor="isSale" className="form-label flex items-center gap-2">
+                <label
+                  htmlFor="isSale"
+                  className="form-label flex items-center gap-2"
+                >
                   <FontAwesomeIcon icon={faTag} className="text-blue-600" />
                   Sale Type *
                 </label>
@@ -1746,61 +2068,76 @@ const PropertyUploadPage: React.FC = () => {
                 >
                   <option value="">Select Sale Type</option>
                   <option value="Sell">Sell</option>
-                 {formData.subCategory === "Flats" || formData.subCategory === "Builder Floors" || formData.subCategory === "House Villas" || formData.subCategory === "Farmhouses" || formData.subCategory === 'Office Spaces' || formData.subCategory === 'Shops Showrooms' ? <option value="Rent">Rent</option> :<option value="Lease">Lease</option>}
+                  {formData.subCategory === "Flats" ||
+                  formData.subCategory === "Builder Floors" ||
+                  formData.subCategory === "House Villas" ||
+                  formData.subCategory === "Farmhouses" ||
+                  formData.subCategory === "Office Spaces" ||
+                  formData.subCategory === "Shops Showrooms" ? (
+                    <option value="Rent">Rent</option>
+                  ) : (
+                    <option value="Lease">Lease</option>
+                  )}
                 </select>
               </motion.div>
 
-               <motion.div 
-                 className="form-group"
-                 initial={{ opacity: 0, y: 20 }}
-                 animate={{ opacity: 1, y: 0 }}
-                 transition={{ delay: 1.4, duration: 0.5 }}
-               >
-                 <label htmlFor="title" className="form-label flex items-center gap-2">
-                   <FontAwesomeIcon icon={faTag} className="text-blue-600" />
-                   Property Title
-                 </label>
-                 <input
-                   type="text"
-                   id="title"
-                   name="title"
-                   value={formData.title || ''}
-                   onChange={handleInputChange}
-                   className="form-input focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
-                   placeholder="Enter property title"
-                 />
-               </motion.div>
+              <motion.div
+                className="form-group"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 1.4, duration: 0.5 }}
+              >
+                <label
+                  htmlFor="title"
+                  className="form-label flex items-center gap-2"
+                >
+                  <FontAwesomeIcon icon={faTag} className="text-blue-600" />
+                  Property Title
+                </label>
+                <input
+                  type="text"
+                  id="title"
+                  name="title"
+                  value={formData.title || ""}
+                  onChange={handleInputChange}
+                  className="form-input focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
+                  placeholder="Enter property title"
+                />
+              </motion.div>
 
-               <motion.div 
-                 className="lg:col-span-2"
-                 initial={{ opacity: 0, y: 20 }}
-                 animate={{ opacity: 1, y: 0 }}
-                 transition={{ delay: 1.5, duration: 0.5 }}
-               >
-                 <label htmlFor="description" className="form-label flex items-center gap-2">
-                   <FontAwesomeIcon icon={faTag} className="text-blue-600" />
-                   Property Description
-                 </label>
-                 <textarea
-                   id="description"
-                   name="description"
-                   rows={4}
-                   value={formData.description || ''}
-                   onChange={handleInputChange}
-                   className="form-input focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
-                   placeholder="Enter property description"
-                 />
-               </motion.div>
+              <motion.div
+                className="lg:col-span-2"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 1.5, duration: 0.5 }}
+              >
+                <label
+                  htmlFor="description"
+                  className="form-label flex items-center gap-2"
+                >
+                  <FontAwesomeIcon icon={faTag} className="text-blue-600" />
+                  Property Description
+                </label>
+                <textarea
+                  id="description"
+                  name="description"
+                  rows={4}
+                  value={formData.description || ""}
+                  onChange={handleInputChange}
+                  className="form-input focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
+                  placeholder="Enter property description"
+                />
+              </motion.div>
 
               {/* Dynamic Fields based on SubCategory */}
               <AnimatePresence>
                 {getRequiredFields(formData.subCategory).map((field, index) => (
-                  <motion.div 
-                    key={field} 
+                  <motion.div
+                    key={field}
                     className="form-group"
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 1.5 + (index * 0.1), duration: 0.5 }}
+                    transition={{ delay: 1.5 + index * 0.1, duration: 0.5 }}
                   >
                     {renderField(field)}
                   </motion.div>
@@ -1808,7 +2145,7 @@ const PropertyUploadPage: React.FC = () => {
               </AnimatePresence>
 
               {/* Amenities Sections */}
-              <motion.div 
+              <motion.div
                 className="lg:col-span-2"
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
@@ -1816,7 +2153,10 @@ const PropertyUploadPage: React.FC = () => {
               >
                 <div className="flex items-center gap-3 mb-6">
                   <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
-                    <FontAwesomeIcon icon={faShieldAlt} className="text-blue-600" />
+                    <FontAwesomeIcon
+                      icon={faShieldAlt}
+                      className="text-blue-600"
+                    />
                   </div>
                   <h3 className="text-xl font-semibold text-gray-900">
                     Property Amenities & Features
@@ -1825,21 +2165,23 @@ const PropertyUploadPage: React.FC = () => {
               </motion.div>
 
               <AnimatePresence>
-                {getAmenitiesFields(formData.subCategory).map((field, index) => (
-                  <motion.div 
-                    key={field} 
-                    className="lg:col-span-2"
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 2.1 + (index * 0.2), duration: 0.5 }}
-                  >
-                    {renderField(field)}
-                  </motion.div>
-                ))}
+                {getAmenitiesFields(formData.subCategory).map(
+                  (field, index) => (
+                    <motion.div
+                      key={field}
+                      className="lg:col-span-2"
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 2.1 + index * 0.2, duration: 0.5 }}
+                    >
+                      {renderField(field)}
+                    </motion.div>
+                  )
+                )}
               </AnimatePresence>
 
               {/* Image Upload */}
-              <motion.div 
+              <motion.div
                 className="lg:col-span-2"
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -1863,33 +2205,39 @@ const PropertyUploadPage: React.FC = () => {
 
             <AnimatePresence>
               {error && (
-                <motion.div 
+                <motion.div
                   className="mt-6 p-4 bg-red-50 border border-red-200 rounded-lg flex items-center gap-3"
                   initial={{ opacity: 0, y: -10 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -10 }}
                   transition={{ duration: 0.3 }}
                 >
-                  <FontAwesomeIcon icon={faExclamationTriangle} className="text-red-500" />
+                  <FontAwesomeIcon
+                    icon={faExclamationTriangle}
+                    className="text-red-500"
+                  />
                   <span className="text-red-700">{error}</span>
                 </motion.div>
               )}
 
               {success && (
-                <motion.div 
+                <motion.div
                   className="mt-6 p-4 bg-green-50 border border-green-200 rounded-lg flex items-center gap-3"
                   initial={{ opacity: 0, y: -10 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -10 }}
                   transition={{ duration: 0.3 }}
                 >
-                  <FontAwesomeIcon icon={faCheckCircle} className="text-green-500" />
+                  <FontAwesomeIcon
+                    icon={faCheckCircle}
+                    className="text-green-500"
+                  />
                   <span className="text-green-700">{success}</span>
                 </motion.div>
               )}
             </AnimatePresence>
 
-            <motion.div 
+            <motion.div
               className="mt-8"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -1904,7 +2252,10 @@ const PropertyUploadPage: React.FC = () => {
               >
                 {loading ? (
                   <>
-                    <FontAwesomeIcon icon={faSpinner} className="animate-spin" />
+                    <FontAwesomeIcon
+                      icon={faSpinner}
+                      className="animate-spin"
+                    />
                     Uploading Property...
                   </>
                 ) : (
@@ -1922,4 +2273,4 @@ const PropertyUploadPage: React.FC = () => {
   );
 };
 
-export default PropertyUploadPage; 
+export default PropertyUploadPage;

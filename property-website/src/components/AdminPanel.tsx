@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import axios from 'axios';
 import RealImg from './RealImg';
 import { animations, variants } from '../theme';
+import { useNavigate } from 'react-router-dom';
 
 interface TempUser {
   id: string;
@@ -46,6 +47,8 @@ const AdminPanel: React.FC = () => {
   const [tempProperties, setTempProperties] = useState<TempProperty[]>([]);
   const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState<'users' | 'properties'>('users');
+
+  const navigate = useNavigate();
   
   // Pagination and filter states for properties
   const [currentPage, setCurrentPage] = useState(1);
@@ -131,6 +134,8 @@ const AdminPanel: React.FC = () => {
       // Handle response structure based on the API response
       const properties = response.data.properties || [];
       const pagination = response.data.pagination || {};
+
+      // console.log("property : ", properties)
       
       setTempProperties(properties);
       setTotalPages(pagination.totalPages || 1);
@@ -464,7 +469,12 @@ const AdminPanel: React.FC = () => {
                           </div>
                           
                           {/* Actions */}
-                          <div className="mt-4 flex justify-end">
+                          <div className="mt-4 flex justify-between">
+                            <button 
+                            onClick={() => {navigate("/upload-property", {state : {propertyId: property.id}})}}
+                            className='text-blue-600 hover:text-blue-900 text-sm font-medium'>
+                              Edit
+                            </button>
                             <button
                               onClick={() => handleDeleteTempProperty(property.id)}
                               className="text-red-600 hover:text-red-900 text-sm font-medium"
