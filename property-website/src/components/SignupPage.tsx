@@ -7,6 +7,7 @@ import { colors, shadows, animations, variants } from '../theme';
 interface SignupFormData {
   fullName: string;
   mobileNumber: string;
+  userType: 'Agent' | 'Owner' | 'EndUser';
 }
 
 interface OTPFormData {
@@ -16,7 +17,8 @@ interface OTPFormData {
 const SignupPage: React.FC = () => {
   const [formData, setFormData] = useState<SignupFormData>({
     fullName: '',
-    mobileNumber: ''
+    mobileNumber: '',
+    userType: 'Owner'
   });
   const [otpData, setOtpData] = useState<OTPFormData>({
     otp: ''
@@ -28,7 +30,7 @@ const SignupPage: React.FC = () => {
   const [otpTimer, setOtpTimer] = useState(0);
   const navigate = useNavigate();
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({
       ...prev,
@@ -64,7 +66,7 @@ const SignupPage: React.FC = () => {
       const response = await axios.post('https://nextdealappserver.onrender.com/api/v1/temp/signup/send-otp', {
         fullName: formData.fullName,
         mobileNumber: formData.mobileNumber,
-        userType: 'Owner'
+        userType: formData.userType
       });
 
       if (response.status === 200) {
@@ -89,7 +91,7 @@ const SignupPage: React.FC = () => {
         fullName: formData.fullName,
         mobileNumber: formData.mobileNumber,
         otp: otpData.otp,
-        userType: 'Owner'
+        userType: formData.userType
       });
 
       if (response.status === 201) {
@@ -121,7 +123,7 @@ const SignupPage: React.FC = () => {
       const response = await axios.post('https://nextdealappserver.onrender.com/api/v1/temp/signup/send-otp', {
         fullName: formData.fullName,
         mobileNumber: formData.mobileNumber,
-        userType: 'Owner'
+        userType: formData.userType
       });
 
       if (response.status === 200) {
@@ -186,6 +188,23 @@ const SignupPage: React.FC = () => {
                     className="form-input"
                     placeholder="Enter your full name"
                   />
+                </div>
+                <div className="form-group">
+                  <label htmlFor="userType" className="form-label">
+                    User Type *
+                  </label>
+                  <select
+                    id="userType"
+                    name="userType"
+                    required
+                    value={formData.userType}
+                    onChange={handleInputChange}
+                    className="form-input"
+                  >
+                    <option value="Agent">Agent</option>
+                    <option value="Owner">Owner</option>
+                    <option value="EndUser">EndUser</option>
+                  </select>
                 </div>
                 <div className="form-group">
                   <label htmlFor="mobileNumber" className="form-label">

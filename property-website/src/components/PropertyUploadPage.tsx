@@ -633,8 +633,6 @@ const PropertyUploadPage: React.FC = () => {
         "furnishingAmenities",
         JSON.stringify(formData.furnishingAmenities || [])
       );
-      formDataToSend.append("unit", formData.unit || "");
-
       // Add images - send actual File objects for upload
       const successfulImages = formData.images.filter(
         (img) => img.file && !img.uploading && !img.error
@@ -737,10 +735,10 @@ const PropertyUploadPage: React.FC = () => {
           "yourfloor",
           "carpetArea",
           "buildupArea",
-          "unit",
           "constructionStatus",
           "furnishing",
           "bhks",
+          "propertyFacing",
         ];
 
       case "Builder Floors":
@@ -755,6 +753,8 @@ const PropertyUploadPage: React.FC = () => {
           "constructionStatus",
           "furnishing",
           "bhks",
+          "carpetArea",
+          "buildupArea",
         ];
 
       case "House Villas":
@@ -763,16 +763,20 @@ const PropertyUploadPage: React.FC = () => {
           "propertyPrice",
           "carpetArea",
           "buildupArea",
-          "unit",
+          
           "bhks",
           "propertyFacing",
           "furnishing",
           "constructionStatus",
           "ageOfTheProperty",
+          "totalfloors",
+          "yourfloor",
+
         ];
 
       case "Plots":
         return [
+          'projectName',
           "propertyPrice",
           "length",
           "width",
@@ -783,6 +787,7 @@ const PropertyUploadPage: React.FC = () => {
       case "Farmhouses":
         return [
           "totalBathrooms",
+          "propertyPrice",
           "length",
           "width",
           "bhks",
@@ -790,6 +795,7 @@ const PropertyUploadPage: React.FC = () => {
           "propertyFacing",
           "ageOfTheProperty",
           "reraApproved",
+          "projectName",
         ];
 
       case "Hotels":
@@ -801,6 +807,8 @@ const PropertyUploadPage: React.FC = () => {
           "furnishing",
           "constructionStatus",
           "ageOfTheProperty",
+          'totalArea',
+          'plotArea',
         ];
 
       case "Lands":
@@ -819,7 +827,7 @@ const PropertyUploadPage: React.FC = () => {
           "propertyPrice",
           "carpetArea",
           "buildupArea",
-          "unit",
+          
           "totalfloors",
           "yourfloor",
           "furnishing",
@@ -828,6 +836,8 @@ const PropertyUploadPage: React.FC = () => {
           "washroom",
           "reraApproved",
           "ageOfTheProperty",
+          "cabins",
+          "parking",
         ];
 
       case "Hostels":
