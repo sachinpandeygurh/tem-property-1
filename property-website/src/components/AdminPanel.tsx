@@ -457,7 +457,7 @@ const AdminPanel: React.FC = () => {
                             {property.address && (
                               <div className="flex justify-between">
                                 <span>Location:</span>
-                                <span className="font-medium">{property.address.city}, {property.address.state}</span>
+                                <span className="font-medium">{property.address.locality},{property.address.city}, {property.address.state}</span>
                               </div>
                             )}
                             {property.user && (

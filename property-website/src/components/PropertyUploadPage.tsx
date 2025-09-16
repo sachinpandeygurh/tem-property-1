@@ -237,7 +237,7 @@ const PropertyUploadPage: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
-  const [, setUser] = useState<any>(null);
+  const [user, setUser] = useState<any>(null);
   const navigate = useNavigate();
 
   // Dropdown data states
@@ -272,15 +272,15 @@ const PropertyUploadPage: React.FC = () => {
           const p = data.property;
           console.log("propertyData : ", p);
           setFormData({
-            userId: p.userId || "",
-            addressState: p.address?.state || "",
-            addressCity: p.address?.city || "",
-            addressLocality: p.address?.locality || "",
-            category: p.category || "Residential",
-            subCategory: p.subCategory || "Flats",
-            title: p.title || "",
-            description: p.description || "",
-            isSale: p.isSale || "Sell",
+            userId: p.userId,
+            addressState: p.address?.state,
+            addressCity: p.address?.city,
+            addressLocality: p.address?.locality,
+            category: p.category,
+            subCategory: p.subCategory,
+            title: p.title,
+            description: p.description,
+            isSale: p.isSale,
         
             // Property details
             projectName: p.projectName || undefined,
@@ -383,7 +383,7 @@ const PropertyUploadPage: React.FC = () => {
       setIsLoadingCities(true);
       try {
         const citiesList = await getCities(formData.addressState);
-        setCities(citiesList);
+        setCities(citiesList || formData.addressCity);
         // Reset city and locality when state changes
         setFormData((prev) => ({
           ...prev,
@@ -414,7 +414,7 @@ const PropertyUploadPage: React.FC = () => {
           formData.addressCity,
           formData.addressState
         );
-        setLocalities(localitiesList);
+        setLocalities(localitiesList || formData.addressLocality);
         // Reset locality when city changes
         setFormData((prev) => ({ ...prev, addressLocality: "" }));
       } catch (error) {
@@ -528,7 +528,7 @@ const PropertyUploadPage: React.FC = () => {
     setSuccess("");
 
     try {
-      const userId = formData.userId;
+      const userId =  formData.userId || user?.id;
 
       // Ensure user is logged in
       if (!userId) {
@@ -655,7 +655,7 @@ const PropertyUploadPage: React.FC = () => {
         setSuccess("Property uploaded successfully!");
         // Reset form
         setFormData({
-          userId: formData.userId,
+          userId: formData.userId ,
           addressState: "",
           addressCity: "",
           addressLocality: "",
@@ -711,7 +711,7 @@ const PropertyUploadPage: React.FC = () => {
           images: [],
         });
       }
-      window.location.reload();
+      // window.location.reload();
     } catch (err: any) {
       console.error("Error uploading property:", err);
       setError(
@@ -934,7 +934,7 @@ const PropertyUploadPage: React.FC = () => {
               type="text"
               id={fieldName}
               name={fieldName}
-              value={formData.title || ""}
+              value={formData.title}
               onChange={handleInputChange}
               className="form-input focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
               placeholder="Enter property title"
@@ -1881,7 +1881,7 @@ const PropertyUploadPage: React.FC = () => {
                   value={formData.addressState}
                   onChange={handleInputChange}
                   className="form-input focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
-                  disabled={isLoadingStates}
+                  // disabled={isLoadingStates}
                 >
                   <option value="">
                     {isLoadingStates ? "Loading states..." : "Select State"}
