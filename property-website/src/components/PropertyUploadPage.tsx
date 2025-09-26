@@ -398,6 +398,7 @@ const PropertyUploadPage: React.FC = () => {
       }
     };
     fetchCities();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [formData.addressState]);
 
   // Fetch localities when city changes
@@ -424,6 +425,7 @@ const PropertyUploadPage: React.FC = () => {
       }
     };
     fetchLocalities();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [formData.addressState, formData.addressCity]);
 
   const residentialSubCategories = [
