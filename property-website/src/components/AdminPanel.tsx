@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import axios from 'axios';
 import RealImg from './RealImg';
 import { animations, variants } from '../theme';
@@ -48,7 +48,8 @@ const AdminPanel: React.FC = () => {
   const [tempProperties, setTempProperties] = useState<TempProperty[]>([]);
   const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState<'users' | 'properties'>('users');
-
+  const [deletedProperty, setDeletedProperty] = useState<string>('');
+  const [deletingPropertyId, setDeletingPropertyId] = useState<string | null>(null);
   const navigate = useNavigate();
   
   // Pagination and filter states for properties
@@ -64,7 +65,8 @@ const AdminPanel: React.FC = () => {
     subCategory: '',
     minPrice: '',
     maxPrice: '',
-    mobileNumber: ''
+    mobileNumber: '',
+    city: ''
   });
 
 
@@ -193,17 +195,19 @@ const AdminPanel: React.FC = () => {
   };
 
   const handleDeleteTempProperty = async (propertyId: string) => {
-    if (window.confirm('Are you sure you want to delete this temporary property?')) {
-      try {
-        setLoading(true);
-        await axios.delete(`https://nextdealappserver.onrender.com/api/v1/temp/properties/${propertyId}`);
-        fetchTempProperties();
-        alert('Temporary property deleted successfully!');
-      } catch (error: any) {
-        alert(error.response?.data?.message || 'Error deleting temporary property');
-      } finally {
-        setLoading(false);
-      }
+    // Optimistic UI: hide card immediately and disable actions for that card
+    setDeletingPropertyId(propertyId);
+    setDeletedProperty(propertyId);
+    try {
+      await axios.delete(`https://nextdealappserver.onrender.com/api/v1/temp/properties/${propertyId}`);
+      setTotalProperties(prev => Math.max(0, prev - 1));
+      console.log('Temporary property deleted successfully!');
+    } catch (error: any) {
+      // Revert optimistic update on failure
+      setDeletedProperty('');
+      console.log(error.response?.data?.message || 'Error deleting temporary property');
+    } finally {
+      setDeletingPropertyId(null);
     }
   };
 
@@ -401,6 +405,21 @@ const AdminPanel: React.FC = () => {
                           <option value="Shops Showrooms">Shops Showrooms</option>
                         </select>
                       </div>
+                      <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">City</label>
+                        <select
+                          value={filters.city}
+                          onChange={(e) => handleFilterChange('city', e.target.value)}
+                          onKeyDown={(e) => { if (e.key === 'Enter') handleFilterSubmit(); }}
+                          className="form-input"
+                        >
+                          <option value="">All Cities</option>
+                          <option value="Bhopal">Bhopal</option>
+                          <option value="Indore">Indore</option>
+                          <option value="Delhi">Delhi</option>
+                          <option value="Lucknow">Lucknow</option>
+                        </select>
+                      </div>
                     </div>
                     
                     {/* Filter Action Buttons */}
@@ -429,7 +448,12 @@ const AdminPanel: React.FC = () => {
                             maxPrice: '',
                             mobileNumber: ''
                           };
-                          setFilters(cleared);
+                          setFilters(
+                            {
+                              ...cleared,
+                              city: ''
+                            }
+                          );
                           setCurrentPage(1);
                           fetchTempProperties(1, cleared);
                           window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -444,8 +468,24 @@ const AdminPanel: React.FC = () => {
                 
                 <div className="overflow-x-auto">
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {tempProperties.map((property) => (
-                      <div key={property.id} className="bg-white rounded-lg shadow-md overflow-hidden">
+                    <AnimatePresence>
+                      {tempProperties
+                        .filter((property) => property.id !== deletedProperty)
+                        .map((property) => (
+                          <motion.div
+                            key={property.id}
+                            layout
+                            initial={{ opacity: 0, y: 8 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, scale: 0.95 }}
+                            transition={{ duration: 0.18, ease: 'easeOut' }}
+                            className="bg-white rounded-lg shadow-md overflow-hidden relative"
+                          >
+                            {deletingPropertyId === property.id && (
+                              <div className="absolute inset-0 bg-white/60 flex items-center justify-center z-10">
+                                <div className="spinner" />
+                              </div>
+                            )}
                         {/* Property Image */}
                         <div className="h-48 bg-gray-200 relative">
                           {property.images && property.images.length > 0 ? (
@@ -466,7 +506,7 @@ const AdminPanel: React.FC = () => {
                         </div>
                         
                         {/* Property Details */}
-                        <div className="p-4">
+                          <div className="p-4">
                           <h3 className="font-semibold text-lg text-gray-900 mb-2 line-clamp-2">
                             {property.title}
                           </h3>
@@ -519,14 +559,16 @@ const AdminPanel: React.FC = () => {
                             </button>
                             <button
                               onClick={() => handleDeleteTempProperty(property.id)}
-                              className="text-red-600 hover:text-red-900 text-sm font-medium"
+                              disabled={deletingPropertyId === property.id}
+                              className={`text-sm font-medium ${deletingPropertyId === property.id ? 'text-gray-400 cursor-not-allowed' : 'text-red-600 hover:text-red-900'}`}
                             >
                               Delete
                             </button>
                           </div>
                         </div>
-                      </div>
+                      </motion.div>
                     ))}
+                    </AnimatePresence>
                   </div>
                 </div>
                 
