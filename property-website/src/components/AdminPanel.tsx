@@ -35,6 +35,7 @@ interface TempProperty {
     fullName: string;
     userType: string;
     accountType: string;
+    mobileNumber: string;
   };
   createdAt?: string;
 }
@@ -53,6 +54,7 @@ const AdminPanel: React.FC = () => {
   // Pagination and filter states for properties
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  const [totalProperties, setTotalProperties] = useState(0);
   // const [hasMore, setHasMore] = useState(true);
   const [showFilters, setShowFilters] = useState(false);
   const [showScrollToTop, setShowScrollToTop] = useState(false);
@@ -70,7 +72,7 @@ const AdminPanel: React.FC = () => {
   useEffect(() => {
     fetchTempUsers();
     fetchTempProperties(1, filters);
-  }, [filters]); // Run when filters change
+  }, []);
 
   // Scroll to top button effect
   useEffect(() => {
@@ -85,14 +87,38 @@ const AdminPanel: React.FC = () => {
   }, []);
 
   const handleFilterChange = (filterType: string, value: string) => {
+    let sanitizedValue: string = value;
+
+    if (filterType === 'minPrice' || filterType === 'maxPrice') {
+      // keep only digits, no negatives
+      sanitizedValue = value.replace(/[^0-9]/g, '');
+    }
+
+    if (filterType === 'mobileNumber') {
+      // keep digits, cap at 15 to avoid overly long inputs
+      sanitizedValue = value.replace(/[^0-9]/g, '').slice(0, 15);
+    }
+
     setFilters(prev => ({
       ...prev,
-      [filterType]: value
+      [filterType]: sanitizedValue
     }));
   };
 
   const handleFilterSubmit = () => {
+    const min = filters.minPrice ? parseInt(filters.minPrice, 10) : undefined;
+    const max = filters.maxPrice ? parseInt(filters.maxPrice, 10) : undefined;
+
+    if (min !== undefined && max !== undefined && min > max) {
+      alert('Min Price cannot be greater than Max Price.');
+      return;
+    }
+
+    // Reset to first page when applying filters
     fetchTempProperties(1, filters);
+    setCurrentPage(1);
+    // Smooth scroll to results
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const handlePageChange = (page: number) => {
@@ -139,6 +165,7 @@ const AdminPanel: React.FC = () => {
       
       setTempProperties(properties);
       setTotalPages(pagination.totalPages || 1);
+      setTotalProperties(pagination.total || 0);
       setCurrentPage(page);
       // setHasMore(pagination.hasMore);
     } catch (error) {
@@ -224,7 +251,7 @@ const AdminPanel: React.FC = () => {
                     : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                 }`}
               >
-                Temporary Properties ({tempProperties.length})
+                Temporary Properties ({totalProperties})
               </button>
             </nav>
           </div>
@@ -312,6 +339,7 @@ const AdminPanel: React.FC = () => {
                         <select
                           value={filters.category}
                           onChange={(e) => handleFilterChange('category', e.target.value)}
+                          onKeyDown={(e) => { if (e.key === 'Enter') handleFilterSubmit(); }}
                           className="form-input"
                         >
                           <option value="">All Categories</option>
@@ -325,6 +353,7 @@ const AdminPanel: React.FC = () => {
                           type="number"
                           value={filters.minPrice}
                           onChange={(e) => handleFilterChange('minPrice', e.target.value)}
+                          onKeyDown={(e) => { if (e.key === 'Enter') handleFilterSubmit(); }}
                           placeholder="Min Price"
                           className="form-input"
                         />
@@ -335,6 +364,7 @@ const AdminPanel: React.FC = () => {
                           type="number"
                           value={filters.maxPrice}
                           onChange={(e) => handleFilterChange('maxPrice', e.target.value)}
+                          onKeyDown={(e) => { if (e.key === 'Enter') handleFilterSubmit(); }}
                           placeholder="Max Price"
                           className="form-input"
                         />
@@ -345,6 +375,7 @@ const AdminPanel: React.FC = () => {
                           type="tel"
                           value={filters.mobileNumber}
                           onChange={(e) => handleFilterChange('mobileNumber', e.target.value)}
+                          onKeyDown={(e) => { if (e.key === 'Enter') handleFilterSubmit(); }}
                           placeholder="Mobile Number"
                           className="form-input"
                         />
@@ -354,6 +385,7 @@ const AdminPanel: React.FC = () => {
                         <select
                           value={filters.subCategory}
                           onChange={(e) => handleFilterChange('subCategory', e.target.value)}
+                          onKeyDown={(e) => { if (e.key === 'Enter') handleFilterSubmit(); }}
                           className="form-input"
                         >
                           <option value="">All Types</option>
@@ -390,13 +422,17 @@ const AdminPanel: React.FC = () => {
                       
                       <button
                         onClick={() => {
-                          setFilters({
+                          const cleared = {
                             category: '',
                             subCategory: '',
                             minPrice: '',
                             maxPrice: '',
                             mobileNumber: ''
-                          });
+                          };
+                          setFilters(cleared);
+                          setCurrentPage(1);
+                          fetchTempProperties(1, cleared);
+                          window.scrollTo({ top: 0, behavior: 'smooth' });
                         }}
                         className="px-6 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600 transition-colors duration-200"
                       >
@@ -464,6 +500,12 @@ const AdminPanel: React.FC = () => {
                               <div className="flex justify-between">
                                 <span>Owner:</span>
                                 <span className="font-medium">{property.user.fullName}</span>
+                              </div>
+                            )}
+                            {property.user && (
+                              <div onClick = {() => `tel:${property.user?.mobileNumber}`} className="flex justify-between">
+                                <span>Contact </span>
+                                <span className="font-medium">{property.user.mobileNumber}</span>
                               </div>
                             )}
                           </div>
