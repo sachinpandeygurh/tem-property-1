@@ -71,7 +71,7 @@ const AdminPanel: React.FC = () => {
 
   useEffect(() => {
     fetchTempUsers();
-    fetchTempProperties(1, filters);
+    fetchTempProperties(1, {});
   }, []);
 
   // Scroll to top button effect
