@@ -503,9 +503,9 @@ const AdminPanel: React.FC = () => {
                               </div>
                             )}
                             {property.user && (
-                              <div onClick = {() => `tel:${property.user?.mobileNumber}`} className="flex justify-between">
+                              <div  className="flex justify-between">
                                 <span>Contact </span>
-                                <span className="font-medium">{property.user.mobileNumber}</span>
+                                <button onClick = {() => `tel:${property.user?.mobileNumber}`} className="font-medium">{property.user.mobileNumber}</button>
                               </div>
                             )}
                           </div>
