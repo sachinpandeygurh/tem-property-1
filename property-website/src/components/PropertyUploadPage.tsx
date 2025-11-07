@@ -650,7 +650,7 @@ const PropertyUploadPage: React.FC = () => {
       });
 
       const response = await fetch(
-        "https://nextopson.com/api/v1/temp/properties",
+        "https://nextdealappserver.onrender.com/api/v1/temp/properties",
         {
           method: "POST",
           body: formDataToSend,
