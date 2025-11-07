@@ -650,7 +650,7 @@ const PropertyUploadPage: React.FC = () => {
       });
 
       const response = await fetch(
-        "http://192.168.1.4:5000/api/v1/temp/properties",
+        "https://nextopson.com/api/v1/temp/properties",
         {
           method: "POST",
           body: formDataToSend,
