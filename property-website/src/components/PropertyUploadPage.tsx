@@ -51,7 +51,7 @@ import { State, City, IState, ICity } from "country-state-city";
 const getLocalities = async (city: string, state?: string) => {
   try {
     const response = await fetch(
-      "http://192.168.1.4:5000/api/v1/dropdown/localities",
+      "https://nextopson.com/api/v1/dropdown/localities",
       {
         method: "POST",
         headers: {
