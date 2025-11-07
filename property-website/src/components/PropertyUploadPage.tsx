@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useLocation, useNavigate } from "react-router-dom";
 import PropertyImageUpload, { UploadedImage } from "./PropertyImageUpload";
@@ -45,51 +45,13 @@ import {
   faUpload,
   faImage,
 } from "@fortawesome/free-solid-svg-icons";
+import { State, City, IState, ICity } from "country-state-city";
 
-// API functions for dropdowns
-const getStates = async () => {
-  try {
-    const response = await fetch(
-      "https://nextopson.com/api/v1/dropdown/states"
-    );
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-    const data = await response.json();
-    return data;
-  } catch (error) {
-    console.error("Error fetching states:", error);
-    return [];
-  }
-};
-
-const getCities = async (state: string) => {
-  try {
-    const response = await fetch(
-      "https://nextopson.com/api/v1/dropdown/cities",
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ state }),
-      }
-    );
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-    const data = await response.json();
-    return data;
-  } catch (error) {
-    console.error("Error fetching cities:", error);
-    return [];
-  }
-};
-
+// API function for localities only
 const getLocalities = async (city: string, state?: string) => {
   try {
     const response = await fetch(
-      "https://nextopson.com/api/v1/dropdown/localities",
+      "http://192.168.1.4:5000/api/v1/dropdown/localities",
       {
         method: "POST",
         headers: {
@@ -117,16 +79,16 @@ interface PropertyFormData {
   addressLocality: string;
   category: "Residential" | "Commercial";
   subCategory:
-    | "Flats"
-    | "Builder Floors"
-    | "House Villas"
-    | "Plots"
-    | "Farmhouses"
-    | "Hotels"
-    | "Lands"
-    | "Office Spaces"
-    | "Hostels"
-    | "Shops Showrooms";
+  | "Flats"
+  | "Builder Floors"
+  | "House Villas"
+  | "Plots"
+  | "Farmhouses"
+  | "Hotels"
+  | "Lands"
+  | "Office Spaces"
+  | "Hostels"
+  | "Shops Showrooms";
   title?: string;
   description?: string;
   isSale?: "Sell" | "Rent" | "Lease";
@@ -241,8 +203,8 @@ const PropertyUploadPage: React.FC = () => {
   const navigate = useNavigate();
 
   // Dropdown data states
-  const [states, setStates] = useState<string[]>([]);
-  const [cities, setCities] = useState<string[]>([]);
+  const [states, setStates] = useState<IState[]>([]);
+  const [cities, setCities] = useState<ICity[]>([]);
   const [localities, setLocalities] = useState<string[]>([]);
   const [isLoadingStates, setIsLoadingStates] = useState(false);
   const [isLoadingCities, setIsLoadingCities] = useState(false);
@@ -267,7 +229,7 @@ const PropertyUploadPage: React.FC = () => {
         );
 
         const data = await res.json();
-  
+
         if (data) {
           const p = data.property;
           console.log("propertyData : ", p);
@@ -281,7 +243,7 @@ const PropertyUploadPage: React.FC = () => {
             title: p.title,
             description: p.description,
             isSale: p.isSale,
-        
+
             // Property details
             projectName: p.projectName || undefined,
             propertyName: p.title || undefined,
@@ -298,7 +260,7 @@ const PropertyUploadPage: React.FC = () => {
             reraApproved: p.reraApproved || false,
             amenities: p.amenities || [],
             fencing: p.fencing || undefined,
-        
+
             // Dimensions
             width: p.width || undefined,
             height: p.height || undefined,
@@ -308,7 +270,7 @@ const PropertyUploadPage: React.FC = () => {
             landArea: p.landArea || undefined,
             distFromOutRRoad: p.distFromOutRRoad || undefined,
             unit: p.unit || undefined,
-        
+
             // Additional fields
             viewFromProperty: p.viewFromProperty || [],
             soilType: p.soilType || undefined,
@@ -323,7 +285,7 @@ const PropertyUploadPage: React.FC = () => {
             agentNotes: p.agentNotes || undefined,
             workingWithAgent: p.workingWithAgent || false,
             furnishingAmenities: p.furnishingAmenities || [],
-        
+
             // Images
             images: p.propertyImages?.map((img: any) => img.presignedUrl) || [],
           });
@@ -335,12 +297,12 @@ const PropertyUploadPage: React.FC = () => {
 
     if (propertyId) {
       fetchProperty();
-    }else{
+    } else {
       console.log("property id not found")
     }
   }, [propertyId]);
 
-  
+
   // run after clicked on edit button end here
 
   useEffect(() => {
@@ -355,12 +317,13 @@ const PropertyUploadPage: React.FC = () => {
     }
   }, [navigate]);
 
-  // Fetch states on component mount
+  // Fetch states on component mount using country-state-city
   useEffect(() => {
-    const fetchStates = async () => {
+    const fetchStates = () => {
       setIsLoadingStates(true);
       try {
-        const statesList = await getStates();
+        // Get all states of India (country code: IN)
+        const statesList = State.getStatesOfCountry("IN");
         setStates(statesList);
       } catch (error) {
         console.error("Error fetching states:", error);
@@ -371,35 +334,60 @@ const PropertyUploadPage: React.FC = () => {
     fetchStates();
   }, []);
 
-  // Fetch cities when state changes
+  // Track previous state to detect actual changes
+  const prevStateRef = useRef<string>("");
+
+  // Fetch cities when state changes using country-state-city
   useEffect(() => {
     if (!formData.addressState) {
       setCities([]);
       setLocalities([]);
+      prevStateRef.current = "";
       return;
     }
 
-    const fetchCities = async () => {
+    // Only fetch cities if state actually changed or if states just loaded
+    const stateChanged = prevStateRef.current !== formData.addressState;
+    
+    const fetchCities = () => {
       setIsLoadingCities(true);
       try {
-        const citiesList = await getCities(formData.addressState);
-        setCities(citiesList || formData.addressCity);
-        // Reset city and locality when state changes
-        setFormData((prev) => ({
-          ...prev,
-          addressCity: "",
-          addressLocality: "",
-        }));
-        setLocalities([]);
+        // Find the state object to get the state code
+        const selectedState = states.find(
+          (state) => state.name === formData.addressState
+        );
+        
+        if (selectedState) {
+          // Get all cities of the selected state
+          const citiesList = City.getCitiesOfState("IN", selectedState.isoCode);
+          setCities(citiesList);
+        } else {
+          setCities([]);
+        }
+        
+        // Only reset city and locality when state actually changed (not on initial load)
+        if (stateChanged && prevStateRef.current !== "") {
+          setFormData((prev) => ({
+            ...prev,
+            addressCity: "",
+            addressLocality: "",
+          }));
+          setLocalities([]);
+        }
+        
+        prevStateRef.current = formData.addressState;
       } catch (error) {
         console.error("Error fetching cities:", error);
       } finally {
         setIsLoadingCities(false);
       }
     };
-    fetchCities();
+    
+    if (states.length > 0) {
+      fetchCities();
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [formData.addressState]);
+  }, [formData.addressState, states]);
 
   // Fetch localities when city changes
   useEffect(() => {
@@ -497,8 +485,8 @@ const PropertyUploadPage: React.FC = () => {
             name === "plotArea" ||
             name === "landArea" ||
             name === "distFromOutRRoad"
-          ? Number(value)
-          : value,
+            ? Number(value)
+            : value,
     }));
 
     // Reset subcategory when category changes
@@ -530,7 +518,7 @@ const PropertyUploadPage: React.FC = () => {
     setSuccess("");
 
     try {
-      const userId =  formData.userId || user?.id;
+      const userId = formData.userId || user?.id;
 
       // Ensure user is logged in
       if (!userId) {
@@ -657,7 +645,7 @@ const PropertyUploadPage: React.FC = () => {
         setSuccess("Property uploaded successfully!");
         // Reset form
         setFormData({
-          userId: formData.userId ,
+          userId: formData.userId,
           addressState: "",
           addressCity: "",
           addressLocality: "",
@@ -718,7 +706,7 @@ const PropertyUploadPage: React.FC = () => {
       console.error("Error uploading property:", err);
       setError(
         err.response?.data?.message ||
-          "Property upload failed. Please try again."
+        "Property upload failed. Please try again."
       );
     } finally {
       setLoading(false);
@@ -765,7 +753,7 @@ const PropertyUploadPage: React.FC = () => {
           "propertyPrice",
           "carpetArea",
           "buildupArea",
-          
+
           "bhks",
           "propertyFacing",
           "furnishing",
@@ -829,7 +817,7 @@ const PropertyUploadPage: React.FC = () => {
           "propertyPrice",
           "carpetArea",
           "buildupArea",
-          
+
           "totalfloors",
           "yourfloor",
           "furnishing",
@@ -1732,9 +1720,8 @@ const PropertyUploadPage: React.FC = () => {
               )}
             </label>
             <div
-              className={`grid grid-cols-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7 gap-3 mt-4 transition-opacity duration-300 ${
-                isUnfurnished ? "opacity-50 pointer-events-none" : ""
-              }`}
+              className={`grid grid-cols-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7 gap-3 mt-4 transition-opacity duration-300 ${isUnfurnished ? "opacity-50 pointer-events-none" : ""
+                }`}
             >
               {furnishingAmenitiesIcons.map((amenity) => (
                 <motion.label
@@ -1860,6 +1847,7 @@ const PropertyUploadPage: React.FC = () => {
                 </div>
               </motion.div>
 
+              {/* address section */}
               <motion.div
                 className="form-group"
                 initial={{ opacity: 0, y: 20 }}
@@ -1883,14 +1871,14 @@ const PropertyUploadPage: React.FC = () => {
                   value={formData.addressState}
                   onChange={handleInputChange}
                   className="form-input focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
-                  // disabled={isLoadingStates}
+                  disabled={isLoadingStates}
                 >
                   <option value="">
                     {isLoadingStates ? "Loading states..." : "Select State"}
                   </option>
                   {states.map((state) => (
-                    <option key={state} value={state}>
-                      {state}
+                    <option key={state.isoCode} value={state.name}>
+                      {state.name}
                     </option>
                   ))}
                 </select>
@@ -1922,12 +1910,12 @@ const PropertyUploadPage: React.FC = () => {
                     {!formData.addressState
                       ? "Select State first"
                       : isLoadingCities
-                      ? "Loading cities..."
-                      : "Select City"}
+                        ? "Loading cities..."
+                        : "Select City"}
                   </option>
                   {cities.map((city) => (
-                    <option key={city} value={city}>
-                      {city}
+                    <option key={city.name} value={city.name}>
+                      {city.name}
                     </option>
                   ))}
                 </select>
@@ -1962,8 +1950,8 @@ const PropertyUploadPage: React.FC = () => {
                     {!formData.addressCity
                       ? "Select City first"
                       : isLoadingLocalities
-                      ? "Loading localities..."
-                      : "Select Locality"}
+                        ? "Loading localities..."
+                        : "Select Locality"}
                   </option>
                   {localities.map((locality) => (
                     <option key={locality} value={locality}>
@@ -1972,6 +1960,8 @@ const PropertyUploadPage: React.FC = () => {
                   ))}
                 </select>
               </motion.div>
+
+              {/* address section end */}
 
               {/* Property Type */}
               <motion.div
@@ -2045,15 +2035,15 @@ const PropertyUploadPage: React.FC = () => {
                 >
                   {formData.category === "Residential"
                     ? residentialSubCategories.map((sub) => (
-                        <option key={sub} value={sub}>
-                          {sub}
-                        </option>
-                      ))
+                      <option key={sub} value={sub}>
+                        {sub}
+                      </option>
+                    ))
                     : commercialSubCategories.map((sub) => (
-                        <option key={sub} value={sub}>
-                          {sub}
-                        </option>
-                      ))}
+                      <option key={sub} value={sub}>
+                        {sub}
+                      </option>
+                    ))}
                 </select>
               </motion.div>
 
@@ -2081,11 +2071,11 @@ const PropertyUploadPage: React.FC = () => {
                   <option value="">Select Sale Type</option>
                   <option value="Sell">Sell</option>
                   {formData.subCategory === "Flats" ||
-                  formData.subCategory === "Builder Floors" ||
-                  formData.subCategory === "House Villas" ||
-                  formData.subCategory === "Farmhouses" ||
-                  formData.subCategory === "Office Spaces" ||
-                  formData.subCategory === "Shops Showrooms" ? (
+                    formData.subCategory === "Builder Floors" ||
+                    formData.subCategory === "House Villas" ||
+                    formData.subCategory === "Farmhouses" ||
+                    formData.subCategory === "Office Spaces" ||
+                    formData.subCategory === "Shops Showrooms" ? (
                     <option value="Rent">Rent</option>
                   ) : (
                     <option value="Lease">Lease</option>
