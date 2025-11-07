@@ -485,7 +485,7 @@ const PropertyUploadPage: React.FC = () => {
             name === "plotArea" ||
             name === "landArea" ||
             name === "distFromOutRRoad"
-            ? Number(value)
+            ? value === "" ? undefined : (isNaN(Number(value)) ? undefined : Number(value))
             : value,
     }));
 
@@ -538,16 +538,16 @@ const PropertyUploadPage: React.FC = () => {
       const formDataToSend = new FormData();
 
       // Add basic property data (always required)
-      formDataToSend.append("userId", userId);
-      formDataToSend.append("addressState", formData.addressState);
-      formDataToSend.append("addressCity", formData.addressCity);
-      formDataToSend.append("addressLocality", formData.addressLocality);
+      formDataToSend.append("userId", String(userId));
+      formDataToSend.append("addressState", formData.addressState || "");
+      formDataToSend.append("addressCity", formData.addressCity || "");
+      formDataToSend.append("addressLocality", formData.addressLocality || "");
       formDataToSend.append("category", formData.category);
       formDataToSend.append("subCategory", formData.subCategory);
       formDataToSend.append("isSale", formData.isSale || "Sell");
       formDataToSend.append(
         "propertyPrice",
-        formData.propertyPrice?.toString()
+        formData.propertyPrice ? String(formData.propertyPrice) : "0"
       );
 
       // Add all other fields (including empty ones for proper API handling)
@@ -555,22 +555,20 @@ const PropertyUploadPage: React.FC = () => {
       formDataToSend.append("description", formData.description || "");
       formDataToSend.append("projectName", formData.projectName || "");
       formDataToSend.append("propertyName", formData.propertyName || "");
-      formDataToSend.append(
-        "totalBathrooms",
-        formData.totalBathrooms?.toString() || ""
-      );
-      formDataToSend.append(
-        "totalRooms",
-        formData.totalRooms?.toString() || ""
-      );
-      formDataToSend.append(
-        "carpetArea",
-        formData.carpetArea?.toString() || ""
-      );
-      formDataToSend.append(
-        "buildupArea",
-        formData.buildupArea?.toString() || ""
-      );
+      // Only append numeric fields if they have values (to avoid empty string errors)
+      if (formData.totalBathrooms !== undefined && formData.totalBathrooms !== null) {
+        formDataToSend.append("totalBathrooms", String(formData.totalBathrooms));
+      }
+      if (formData.totalRooms !== undefined && formData.totalRooms !== null) {
+        formDataToSend.append("totalRooms", String(formData.totalRooms));
+      }
+      if (formData.carpetArea !== undefined && formData.carpetArea !== null) {
+        formDataToSend.append("carpetArea", String(formData.carpetArea));
+      }
+      // buildupArea is not in controller but keeping for form compatibility
+      if (formData.buildupArea !== undefined && formData.buildupArea !== null) {
+        formDataToSend.append("buildupArea", String(formData.buildupArea));
+      }
       formDataToSend.append("bhks", formData.bhks || "");
       formDataToSend.append("furnishing", formData.furnishing || "");
       formDataToSend.append(
@@ -584,23 +582,35 @@ const PropertyUploadPage: React.FC = () => {
       );
       formDataToSend.append(
         "reraApproved",
-        formData.reraApproved?.toString() || "false"
+        formData.reraApproved ? "1" : "0"
       );
       formDataToSend.append(
         "amenities",
         JSON.stringify(formData.amenities || [])
       );
       formDataToSend.append("fencing", formData.fencing || "");
-      formDataToSend.append("width", formData.width?.toString() || "0");
-      formDataToSend.append("height", formData.height?.toString() || "");
-      formDataToSend.append("length", formData.length?.toString() || "");
-      formDataToSend.append("totalArea", formData.totalArea?.toString() || "");
-      formDataToSend.append("plotArea", formData.plotArea?.toString() || "0");
-      formDataToSend.append("landArea", formData.landArea?.toString() || "0");
-      formDataToSend.append(
-        "distFromOutRRoad",
-        formData.distFromOutRRoad?.toString() || "0"
-      );
+      // Only append numeric fields if they have values (to avoid empty string errors)
+      if (formData.width !== undefined && formData.width !== null) {
+        formDataToSend.append("width", String(formData.width));
+      }
+      if (formData.height !== undefined && formData.height !== null) {
+        formDataToSend.append("height", String(formData.height));
+      }
+      if (formData.length !== undefined && formData.length !== null) {
+        formDataToSend.append("length", String(formData.length));
+      }
+      if (formData.totalArea !== undefined && formData.totalArea !== null) {
+        formDataToSend.append("totalArea", String(formData.totalArea));
+      }
+      if (formData.plotArea !== undefined && formData.plotArea !== null) {
+        formDataToSend.append("plotArea", String(formData.plotArea));
+      }
+      if (formData.landArea !== undefined && formData.landArea !== null) {
+        formDataToSend.append("landArea", String(formData.landArea));
+      }
+      if (formData.distFromOutRRoad !== undefined && formData.distFromOutRRoad !== null) {
+        formDataToSend.append("distFromOutRRoad", String(formData.distFromOutRRoad));
+      }
       formDataToSend.append(
         "viewFromProperty",
         JSON.stringify(formData.viewFromProperty || [])
@@ -612,18 +622,24 @@ const PropertyUploadPage: React.FC = () => {
       formDataToSend.append("yourfloor", formData.yourfloor || "");
       formDataToSend.append("cabins", formData.cabins || "");
       formDataToSend.append("parking", formData.parking || "");
-      formDataToSend.append("washroom", formData.washroom || "");
+      // Only append numeric fields if they have values (to avoid empty string errors)
+      if (formData.washroom !== undefined && formData.washroom !== null) {
+        formDataToSend.append("washroom", String(formData.washroom));
+      }
       formDataToSend.append("availablefor", formData.availablefor || "");
       formDataToSend.append("agentNotes", formData.agentNotes || "");
       formDataToSend.append(
         "workingWithAgent",
-        formData.workingWithAgent?.toString() || "false"
+        formData.workingWithAgent ? "1" : "0"
       );
       formDataToSend.append(
         "furnishingAmenities",
         JSON.stringify(formData.furnishingAmenities || [])
       );
+      formDataToSend.append("unit", formData.unit || "");
+
       // Add images - send actual File objects for upload
+      // The backend expects files in req.files array, so we append them with the field name "images"
       const successfulImages = formData.images.filter(
         (img) => img.file && !img.uploading && !img.error
       );
@@ -634,15 +650,33 @@ const PropertyUploadPage: React.FC = () => {
       });
 
       const response = await fetch(
-        "https://nextdealappserver.onrender.com/api/v1/temp/properties",
+        "http://192.168.1.4:5000/api/v1/temp/properties",
         {
           method: "POST",
           body: formDataToSend,
         }
       );
 
+      let responseData;
+      try {
+        responseData = await response.json();
+      } catch (parseError) {
+        // If response is not JSON, handle as error
+        setError("Invalid response from server. Please try again.");
+        setLoading(false);
+        return;
+      }
+
       if (response.status === 201 || response.status === 200) {
-        setSuccess("Property uploaded successfully!");
+        let successMessage = responseData.message || "Property uploaded successfully!";
+        
+        // Add warning if there were upload errors
+        if (responseData.warning) {
+          successMessage += ` ${responseData.warning}`;
+        }
+
+        setSuccess(successMessage);
+        
         // Reset form
         setFormData({
           userId: formData.userId,
@@ -656,8 +690,8 @@ const PropertyUploadPage: React.FC = () => {
           isSale: "Sell",
 
           // Property details
-          projectName: "",
-          propertyName: "",
+          projectName: undefined,
+          propertyName: undefined,
           totalBathrooms: undefined,
           totalRooms: undefined,
           propertyPrice: undefined,
@@ -700,13 +734,22 @@ const PropertyUploadPage: React.FC = () => {
           // Images
           images: [],
         });
+      } else {
+        // Handle error responses
+        const errorMessage = responseData.message || 
+          (responseData.error === "PAYLOAD_TOO_LARGE" 
+            ? `Request payload too large. ${responseData.maxSize || "2GB"} maximum.`
+            : responseData.error === "TOO_MANY_FILES"
+            ? `Too many files. ${responseData.maxFiles || 50} maximum.`
+            : responseData.error === "TOTAL_FILE_SIZE_TOO_LARGE"
+            ? `Total file size too large. ${responseData.maxTotalSize || "2GB"} maximum.`
+            : "Property upload failed. Please try again.");
+        setError(errorMessage);
       }
-      // window.location.reload();
     } catch (err: any) {
       console.error("Error uploading property:", err);
       setError(
-        err.response?.data?.message ||
-        "Property upload failed. Please try again."
+        err.message || "Property upload failed. Please try again."
       );
     } finally {
       setLoading(false);
