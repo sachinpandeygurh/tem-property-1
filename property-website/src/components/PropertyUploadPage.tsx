@@ -44,11 +44,12 @@ import {
   faSpinner,
   faUpload,
   faImage,
+  faTimes,
 } from "@fortawesome/free-solid-svg-icons";
 import { State, City, IState, ICity } from "country-state-city";
 
 // API function for localities only
-const getLocalities = async (city: string, state?: string) => {
+const getLocalities = async (city: string, state?: string, search?: string) => {
   try {
     const response = await fetch(
       "https://nextopson.com/api/v1/dropdown/localities",
@@ -57,7 +58,7 @@ const getLocalities = async (city: string, state?: string) => {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ state, city }),
+        body: JSON.stringify({ state, city , search}),
       }
     );
     if (!response.ok) {
@@ -209,7 +210,10 @@ const PropertyUploadPage: React.FC = () => {
   const [isLoadingStates, setIsLoadingStates] = useState(false);
   const [isLoadingCities, setIsLoadingCities] = useState(false);
   const [isLoadingLocalities, setIsLoadingLocalities] = useState(false);
-
+  const [searchLocality, setSearchLocality] = useState("");
+  const [showLocalityDropdown, setShowLocalityDropdown] = useState(false);
+  const searchLocalityInputRef = useRef<HTMLInputElement>(null);
+  const localityDropdownRef = useRef<HTMLDivElement>(null);
   // run after clicked on edit button start here
   const location = useLocation();
   const { propertyId } = location.state || {};
@@ -289,6 +293,10 @@ const PropertyUploadPage: React.FC = () => {
             // Images
             images: p.propertyImages?.map((img: any) => img.presignedUrl) || [],
           });
+          // Set search locality to the selected locality when editing
+          if (p.address?.locality) {
+            setSearchLocality(p.address.locality);
+          }
         }
       } catch (err) {
         console.error("Error fetching property:", err);
@@ -336,6 +344,8 @@ const PropertyUploadPage: React.FC = () => {
 
   // Track previous state to detect actual changes
   const prevStateRef = useRef<string>("");
+  // Track previous city to detect actual changes
+  const prevCityRef = useRef<string>("");
 
   // Fetch cities when state changes using country-state-city
   useEffect(() => {
@@ -389,32 +399,44 @@ const PropertyUploadPage: React.FC = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [formData.addressState, states]);
 
-  // Fetch localities when city changes
+  // Fetch localities when city changes (initial load)
   useEffect(() => {
     if (!formData.addressState || !formData.addressCity) {
       setLocalities([]);
+      prevCityRef.current = "";
       return;
     }
 
-    const fetchLocalities = async () => {
-      setIsLoadingLocalities(true);
-      try {
-        const localitiesList = await getLocalities(
-          formData.addressCity,
-          formData.addressState
-        );
-        setLocalities(localitiesList || formData.addressLocality);
-        // Reset locality when city changes
-        setFormData((prev) => ({ ...prev, addressLocality: "" }));
-      } catch (error) {
-        console.error("Error fetching localities:", error);
-      } finally {
-        setIsLoadingLocalities(false);
-      }
-    };
-    fetchLocalities();
+    // Reset search when city changes
+    const cityChanged = prevCityRef.current !== formData.addressCity;
+    if (cityChanged && prevCityRef.current !== "") {
+      setSearchLocality("");
+      setFormData((prev) => ({ ...prev, addressLocality: "" }));
+      setLocalities([]);
+      setShowLocalityDropdown(false);
+    }
+    prevCityRef.current = formData.addressCity;
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [formData.addressState, formData.addressCity]);
+
+  // Handle click outside to close dropdown
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        localityDropdownRef.current &&
+        !localityDropdownRef.current.contains(event.target as Node) &&
+        searchLocalityInputRef.current &&
+        !searchLocalityInputRef.current.contains(event.target as Node)
+      ) {
+        setShowLocalityDropdown(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
 
   const residentialSubCategories = [
     "Flats",
@@ -504,6 +526,59 @@ const PropertyUploadPage: React.FC = () => {
         ...prev,
         furnishingAmenities: [],
       }));
+    }
+  };
+
+  // Function to fetch localities
+  const fetchLocalities = async (searchTerm?: string) => {
+    if (!formData.addressState || !formData.addressCity) {
+      return;
+    }
+
+    setIsLoadingLocalities(true);
+    try {
+      const localitiesList = await getLocalities(
+        formData.addressCity,
+        formData.addressState,
+        searchTerm
+      );
+      setLocalities(localitiesList);
+      setShowLocalityDropdown(true);
+    } catch (error) {
+      console.error("Error fetching localities:", error);
+      setLocalities([]);
+    } finally {
+      setIsLoadingLocalities(false);
+    }
+  };
+
+  const handleSearchLocalityChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchLocality(e.target.value);
+  };
+
+  const handleSearchKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      fetchLocalities(searchLocality);
+    }
+  };
+
+  const handleClearSearch = () => {
+    setSearchLocality("");
+    setFormData((prev) => ({ ...prev, addressLocality: "" }));
+    setLocalities([]);
+    setShowLocalityDropdown(false);
+  };
+
+  const handleSelectLocality = (locality: string) => {
+    setFormData((prev) => ({ ...prev, addressLocality: locality }));
+    setSearchLocality(locality);
+    setShowLocalityDropdown(false);
+  };
+
+  const handleSearchFocus = () => {
+    if (formData.addressCity && localities.length > 0) {
+      setShowLocalityDropdown(true);
     }
   };
 
@@ -1965,7 +2040,7 @@ const PropertyUploadPage: React.FC = () => {
               </motion.div>
 
               <motion.div
-                className="lg:col-span-2"
+                className="lg:col-span-2 relative"
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.9, duration: 0.5 }}
@@ -1980,28 +2055,96 @@ const PropertyUploadPage: React.FC = () => {
                   />
                   Locality *
                 </label>
-                <select
-                  id="addressLocality"
-                  name="addressLocality"
-                  required
-                  value={formData.addressLocality}
-                  onChange={handleInputChange}
-                  className="form-input focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
-                  disabled={!formData.addressCity || isLoadingLocalities}
-                >
-                  <option value="">
-                    {!formData.addressCity
-                      ? "Select City first"
-                      : isLoadingLocalities
-                        ? "Loading localities..."
-                        : "Select Locality"}
-                  </option>
-                  {localities.map((locality) => (
-                    <option key={locality} value={locality}>
-                      {locality}
-                    </option>
-                  ))}
-                </select>
+                {formData.addressCity ? (
+                  <div className="relative">
+                    <div className="relative">
+                    
+                      <input
+                        ref={searchLocalityInputRef}
+                        type="text"
+                        id="searchLocality"
+                        name="searchLocality"
+                        value={searchLocality}
+                        onChange={handleSearchLocalityChange}
+                        onKeyDown={handleSearchKeyDown}
+                        onFocus={handleSearchFocus}
+                        className="form-input pl-10 pr-10 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
+                        placeholder="Search locality and press Enter..."
+                        disabled={isLoadingLocalities}
+                        required
+                      />
+                      {searchLocality && (
+                        <button
+                          type="button"
+                          onClick={handleClearSearch}
+                          className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                        >
+                          <FontAwesomeIcon icon={faTimes} />
+                        </button>
+                      )}
+                    </div>
+                    {/* Hidden input for form validation */}
+                    <input
+                      type="hidden"
+                      name="addressLocality"
+                      value={formData.addressLocality}
+                      required
+                    />
+                    {/* Dropdown list */}
+                    <AnimatePresence>
+                      {showLocalityDropdown && localities.length > 0 && (
+                        <motion.div
+                          ref={localityDropdownRef}
+                          initial={{ opacity: 0, y: -10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, y: -10 }}
+                          transition={{ duration: 0.2 }}
+                          className="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-y-auto"
+                        >
+                          {localities.map((locality, index) => (
+                            <div
+                              key={locality}
+                              onClick={() => handleSelectLocality(locality)}
+                              className={`px-4 py-3 cursor-pointer hover:bg-gray-50 transition-colors ${
+                                index !== localities.length - 1
+                                  ? "border-b border-gray-100"
+                                  : ""
+                              } ${
+                                formData.addressLocality === locality
+                                  ? "bg-blue-50"
+                                  : ""
+                              }`}
+                            >
+                              {locality}
+                            </div>
+                          ))}
+                        </motion.div>
+                      )}
+                      {showLocalityDropdown &&
+                        isLoadingLocalities &&
+                        localities.length === 0 && (
+                          <motion.div
+                            initial={{ opacity: 0, y: -10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: -10 }}
+                            className="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg p-4"
+                          >
+                            <div className="flex items-center justify-center gap-2 text-gray-500">
+                              <FontAwesomeIcon
+                                icon={faSpinner}
+                                className="animate-spin"
+                              />
+                              <span>Loading localities...</span>
+                            </div>
+                          </motion.div>
+                        )}
+                    </AnimatePresence>
+                  </div>
+                ) : (
+                  <div className="text-gray-500 text-sm py-2">
+                    Select City first
+                  </div>
+                )}
               </motion.div>
 
               {/* address section end */}
