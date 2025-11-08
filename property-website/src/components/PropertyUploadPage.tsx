@@ -44,7 +44,7 @@ import {
   faSpinner,
   faUpload,
   faImage,
-  faTimes,
+  faSearch,
 } from "@fortawesome/free-solid-svg-icons";
 import { State, City, IState, ICity } from "country-state-city";
 
@@ -563,11 +563,8 @@ const PropertyUploadPage: React.FC = () => {
     }
   };
 
-  const handleClearSearch = () => {
-    setSearchLocality("");
-    setFormData((prev) => ({ ...prev, addressLocality: "" }));
-    setLocalities([]);
-    setShowLocalityDropdown(false);
+  const handleSearch = () => {
+    fetchLocalities(searchLocality);
   };
 
   const handleSelectLocality = (locality: string) => {
@@ -2076,10 +2073,10 @@ const PropertyUploadPage: React.FC = () => {
                       {searchLocality && (
                         <button
                           type="button"
-                          onClick={handleClearSearch}
+                          onClick={handleSearch}
                           className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
                         >
-                          <FontAwesomeIcon icon={faTimes} />
+                          <FontAwesomeIcon icon={faSearch} />
                         </button>
                       )}
                     </div>
