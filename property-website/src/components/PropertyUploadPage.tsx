@@ -236,7 +236,6 @@ const PropertyUploadPage: React.FC = () => {
 
         if (data) {
           const p = data.property;
-          console.log("propertyData : ", p);
           setFormData({
             userId: p.userId,
             addressState: p.address?.state,
@@ -611,9 +610,9 @@ const PropertyUploadPage: React.FC = () => {
 
       // Add basic property data (always required)
       formDataToSend.append("userId", String(userId));
-      formDataToSend.append("addressState", formData.addressState || "");
-      formDataToSend.append("addressCity", formData.addressCity || "");
-      formDataToSend.append("addressLocality", formData.addressLocality || "");
+      formDataToSend.append("addressState", formData.addressState);
+      formDataToSend.append("addressCity", formData.addressCity);
+      formDataToSend.append("addressLocality", formData.addressLocality);
       formDataToSend.append("category", formData.category);
       formDataToSend.append("subCategory", formData.subCategory);
       formDataToSend.append("isSale", formData.isSale || "Sell");
@@ -806,6 +805,7 @@ const PropertyUploadPage: React.FC = () => {
           // Images
           images: [],
         });
+        window.location.reload();
       } else {
         // Handle error responses
         const errorMessage = responseData.message || 
