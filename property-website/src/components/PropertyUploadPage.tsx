@@ -47,7 +47,6 @@ import {
   faSearch,
 } from "@fortawesome/free-solid-svg-icons";
 import { State, City, IState, ICity } from "country-state-city";
-
 // API function for localities only
 const getLocalities = async (city: string, state?: string, search?: string) => {
   try {
@@ -74,6 +73,7 @@ const getLocalities = async (city: string, state?: string, search?: string) => {
 
 interface PropertyFormData {
   // Basic required fields
+  propertyId?: string;
   userId: string;
   addressState: string;
   addressCity: string;
@@ -309,6 +309,9 @@ const PropertyUploadPage: React.FC = () => {
     }
   }, [propertyId]);
 
+
+   console.log("propertyId", propertyId);
+      
 
   // run after clicked on edit button end here
 
@@ -610,6 +613,7 @@ const PropertyUploadPage: React.FC = () => {
 
       // Add basic property data (always required)
       formDataToSend.append("userId", String(userId));
+      if(propertyId){formDataToSend.append("propertyId", String(propertyId))}
       formDataToSend.append("addressState", formData.addressState);
       formDataToSend.append("addressCity", formData.addressCity);
       formDataToSend.append("addressLocality", formData.addressLocality);
@@ -711,6 +715,8 @@ const PropertyUploadPage: React.FC = () => {
 
       // Add images - send actual File objects for upload
       // The backend expects files in req.files array, so we append them with the field name "images"
+
+      
       const successfulImages = formData.images.filter(
         (img) => img.file && !img.uploading && !img.error
       );
@@ -720,6 +726,7 @@ const PropertyUploadPage: React.FC = () => {
         }
       });
 
+      
       const response = await fetch(
         "https://nextdealappserver.onrender.com/api/v1/temp/properties",
         {
@@ -750,6 +757,7 @@ const PropertyUploadPage: React.FC = () => {
         
         // Reset form
         setFormData({
+          propertyId: propertyId,
           userId: formData.userId,
           addressState: "",
           addressCity: "",
@@ -805,7 +813,7 @@ const PropertyUploadPage: React.FC = () => {
           // Images
           images: [],
         });
-        window.location.reload();
+        // window.location.reload();
       } else {
         // Handle error responses
         const errorMessage = responseData.message || 
