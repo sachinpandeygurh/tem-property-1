@@ -63,7 +63,7 @@ const SignupPage: React.FC = () => {
     setSuccess('');
 
     try {
-      const response = await axios.post('https://nextdealappserver.onrender.com/api/v1/temp/signup/send-otp', {
+      const response = await axios.post('https://nextopson.com/temp/api/v1/temp/signup/send-otp', {
         fullName: formData.fullName,
         mobileNumber: formData.mobileNumber,
         userType: formData.userType
@@ -87,7 +87,7 @@ const SignupPage: React.FC = () => {
     setSuccess('');
 
     try {
-      const response = await axios.post('https://nextdealappserver.onrender.com/api/v1/temp/signup/verify-otp', {
+      const response = await axios.post('https://nextopson.com/temp/api/v1/temp/signup/verify-otp', {
         fullName: formData.fullName,
         mobileNumber: formData.mobileNumber,
         otp: otpData.otp,
@@ -96,10 +96,10 @@ const SignupPage: React.FC = () => {
 
       if (response.status === 201) {
         setSuccess('Account created successfully!');
-        
+
         // Store user data in localStorage
         localStorage.setItem('user', JSON.stringify(response.data.user));
-        
+
         // Redirect to property upload page
         setTimeout(() => {
           navigate('/upload-property');
@@ -114,13 +114,13 @@ const SignupPage: React.FC = () => {
 
   const handleResendOTP = async () => {
     if (otpTimer > 0) return;
-    
+
     setLoading(true);
     setError('');
     setSuccess('');
 
     try {
-      const response = await axios.post('https://nextdealappserver.onrender.com/api/v1/temp/signup/send-otp', {
+      const response = await axios.post('https://nextopson.com/temp/api/v1/temp/signup/send-otp', {
         fullName: formData.fullName,
         mobileNumber: formData.mobileNumber,
         userType: formData.userType
@@ -138,7 +138,7 @@ const SignupPage: React.FC = () => {
   };
 
   return (
-    <motion.div 
+    <motion.div
       className="min-h-screen flex items-center justify-center py-8 px-4"
       style={{ backgroundColor: colors.GRAY_50 }}
       variants={variants.springDrop}
@@ -148,23 +148,23 @@ const SignupPage: React.FC = () => {
       transition={animations.springDrop}
     >
       <div className="w-full max-w-md">
-        <div 
+        <div
           className="card"
-          style={{ 
+          style={{
             backgroundColor: colors.WHITE,
             boxShadow: shadows.xl
           }}
         >
           <div className="card-body">
             <div className="text-center mb-8">
-              <h2 
+              <h2
                 className="text-3xl font-bold mb-2"
                 style={{ color: colors.TEXT_COLOR }}
               >
                 {otpSent ? 'Verify OTP' : 'Create Account'}
               </h2>
               <p style={{ color: colors.GRAY_600 }}>
-                {otpSent 
+                {otpSent
                   ? 'Enter the 4-digit OTP sent to your mobile'
                   : 'Sign up to start uploading properties'
                 }

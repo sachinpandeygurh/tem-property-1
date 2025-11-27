@@ -57,7 +57,7 @@ const getLocalities = async (city: string, state?: string, search?: string) => {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ state, city , search}),
+        body: JSON.stringify({ state, city, search }),
       }
     );
     if (!response.ok) {
@@ -310,8 +310,8 @@ const PropertyUploadPage: React.FC = () => {
   }, [propertyId]);
 
 
-   console.log("propertyId", propertyId);
-      
+  console.log("propertyId", propertyId);
+
 
   // run after clicked on edit button end here
 
@@ -360,7 +360,7 @@ const PropertyUploadPage: React.FC = () => {
 
     // Only fetch cities if state actually changed or if states just loaded
     const stateChanged = prevStateRef.current !== formData.addressState;
-    
+
     const fetchCities = () => {
       setIsLoadingCities(true);
       try {
@@ -368,7 +368,7 @@ const PropertyUploadPage: React.FC = () => {
         const selectedState = states.find(
           (state) => state.name === formData.addressState
         );
-        
+
         if (selectedState) {
           // Get all cities of the selected state
           const citiesList = City.getCitiesOfState("IN", selectedState.isoCode);
@@ -376,7 +376,7 @@ const PropertyUploadPage: React.FC = () => {
         } else {
           setCities([]);
         }
-        
+
         // Only reset city and locality when state actually changed (not on initial load)
         if (stateChanged && prevStateRef.current !== "") {
           setFormData((prev) => ({
@@ -386,7 +386,7 @@ const PropertyUploadPage: React.FC = () => {
           }));
           setLocalities([]);
         }
-        
+
         prevStateRef.current = formData.addressState;
       } catch (error) {
         console.error("Error fetching cities:", error);
@@ -394,7 +394,7 @@ const PropertyUploadPage: React.FC = () => {
         setIsLoadingCities(false);
       }
     };
-    
+
     if (states.length > 0) {
       fetchCities();
     }
@@ -613,7 +613,7 @@ const PropertyUploadPage: React.FC = () => {
 
       // Add basic property data (always required)
       formDataToSend.append("userId", String(userId));
-      if(propertyId){formDataToSend.append("propertyId", String(propertyId))}
+      if (propertyId) { formDataToSend.append("propertyId", String(propertyId)) }
       formDataToSend.append("addressState", formData.addressState);
       formDataToSend.append("addressCity", formData.addressCity);
       formDataToSend.append("addressLocality", formData.addressLocality);
@@ -716,7 +716,7 @@ const PropertyUploadPage: React.FC = () => {
       // Add images - send actual File objects for upload
       // The backend expects files in req.files array, so we append them with the field name "images"
 
-      
+
       const successfulImages = formData.images.filter(
         (img) => img.file && !img.uploading && !img.error
       );
@@ -726,9 +726,9 @@ const PropertyUploadPage: React.FC = () => {
         }
       });
 
-      
+
       const response = await fetch(
-        "https://nextdealappserver.onrender.com/api/v1/temp/properties",
+        "https://nextopson.com/temp/api/v1/temp/properties",
         {
           method: "POST",
           body: formDataToSend,
@@ -747,14 +747,14 @@ const PropertyUploadPage: React.FC = () => {
 
       if (response.status === 201 || response.status === 200) {
         let successMessage = responseData.message || "Property uploaded successfully!";
-        
+
         // Add warning if there were upload errors
         if (responseData.warning) {
           successMessage += ` ${responseData.warning}`;
         }
 
         setSuccess(successMessage);
-        
+
         // Reset form
         setFormData({
           propertyId: propertyId,
@@ -816,14 +816,14 @@ const PropertyUploadPage: React.FC = () => {
         // window.location.reload();
       } else {
         // Handle error responses
-        const errorMessage = responseData.message || 
-          (responseData.error === "PAYLOAD_TOO_LARGE" 
+        const errorMessage = responseData.message ||
+          (responseData.error === "PAYLOAD_TOO_LARGE"
             ? `Request payload too large. ${responseData.maxSize || "2GB"} maximum.`
             : responseData.error === "TOO_MANY_FILES"
-            ? `Too many files. ${responseData.maxFiles || 50} maximum.`
-            : responseData.error === "TOTAL_FILE_SIZE_TOO_LARGE"
-            ? `Total file size too large. ${responseData.maxTotalSize || "2GB"} maximum.`
-            : "Property upload failed. Please try again.");
+              ? `Too many files. ${responseData.maxFiles || 50} maximum.`
+              : responseData.error === "TOTAL_FILE_SIZE_TOO_LARGE"
+                ? `Total file size too large. ${responseData.maxTotalSize || "2GB"} maximum.`
+                : "Property upload failed. Please try again.");
         setError(errorMessage);
       }
     } catch (err: any) {
@@ -2063,7 +2063,7 @@ const PropertyUploadPage: React.FC = () => {
                 {formData.addressCity ? (
                   <div className="relative">
                     <div className="relative">
-                    
+
                       <input
                         ref={searchLocalityInputRef}
                         type="text"
@@ -2110,15 +2110,13 @@ const PropertyUploadPage: React.FC = () => {
                             <div
                               key={locality}
                               onClick={() => handleSelectLocality(locality)}
-                              className={`px-4 py-3 cursor-pointer hover:bg-gray-50 transition-colors ${
-                                index !== localities.length - 1
-                                  ? "border-b border-gray-100"
-                                  : ""
-                              } ${
-                                formData.addressLocality === locality
+                              className={`px-4 py-3 cursor-pointer hover:bg-gray-50 transition-colors ${index !== localities.length - 1
+                                ? "border-b border-gray-100"
+                                : ""
+                                } ${formData.addressLocality === locality
                                   ? "bg-blue-50"
                                   : ""
-                              }`}
+                                }`}
                             >
                               {locality}
                             </div>

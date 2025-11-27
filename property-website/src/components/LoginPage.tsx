@@ -14,7 +14,7 @@ interface OTPFormData {
 
 const LoginPage: React.FC = () => {
   const [formData, setFormData] = useState<LoginFormData>({
-    mobileNumber: '' 
+    mobileNumber: ''
   });
   const [otpData, setOtpData] = useState<OTPFormData>({
     otp: ''
@@ -60,7 +60,7 @@ const LoginPage: React.FC = () => {
     setSuccess('');
 
     try {
-      const response = await axios.post('https://nextdealappserver.onrender.com/api/v1/temp/login/send-otp', {
+      const response = await axios.post('https://nextopson.com/temp/api/v1/temp/login/send-otp', {
         mobileNumber: formData.mobileNumber
       });
 
@@ -82,17 +82,17 @@ const LoginPage: React.FC = () => {
     setSuccess('');
 
     try {
-      const response = await axios.post('https://nextdealappserver.onrender.com/api/v1/temp/login/verify-otp', {
+      const response = await axios.post('https://nextopson.com/temp/api/v1/temp/login/verify-otp', {
         mobileNumber: formData.mobileNumber,
         otp: otpData.otp
       });
 
       if (response.status === 200) {
         setSuccess('Login successful!');
-        
+
         // Store user data in localStorage
         localStorage.setItem('user', JSON.stringify(response.data.user));
-        
+
         // Redirect to property upload page
         setTimeout(() => {
           navigate('/upload-property');
@@ -119,13 +119,13 @@ const LoginPage: React.FC = () => {
 
   const handleResendOTP = async () => {
     if (otpTimer > 0) return;
-    
+
     setLoading(true);
     setError('');
     setSuccess('');
 
     try {
-      const response = await axios.post('https://nextdealappserver.onrender.com/api/v1/temp/login/send-otp', {
+      const response = await axios.post('https://nextopson.com/temp/api/v1/temp/login/send-otp', {
         mobileNumber: formData.mobileNumber
       });
 
@@ -141,7 +141,7 @@ const LoginPage: React.FC = () => {
   };
 
   return (
-    <motion.div 
+    <motion.div
       className="min-h-screen flex items-center justify-center py-8 px-4"
       style={{ backgroundColor: colors.GRAY_50 }}
       variants={variants.springDrop}
@@ -151,23 +151,23 @@ const LoginPage: React.FC = () => {
       transition={animations.springDrop}
     >
       <div className="w-full max-w-md">
-        <div 
+        <div
           className="card"
-          style={{ 
+          style={{
             backgroundColor: colors.WHITE,
             boxShadow: shadows.xl
           }}
         >
           <div className="card-body">
             <div className="text-center mb-8">
-              <h2 
+              <h2
                 className="text-3xl font-bold mb-2"
                 style={{ color: colors.TEXT_COLOR }}
               >
                 {otpSent ? 'Verify OTP' : 'Welcome Back'}
               </h2>
               <p style={{ color: colors.GRAY_600 }}>
-                {otpSent 
+                {otpSent
                   ? 'Enter the 4-digit OTP sent to your mobile'
                   : 'Login to access your account'
                 }

@@ -43,7 +43,7 @@ interface TempProperty {
 const AdminPanel: React.FC = () => {
   // const userString = localStorage.getItem('user');
   // const user = userString ? JSON.parse(userString) : null;
- 
+
   const [tempUsers, setTempUsers] = useState<TempUser[]>([]);
   const [tempProperties, setTempProperties] = useState<TempProperty[]>([]);
   const [loading, setLoading] = useState(false);
@@ -51,7 +51,7 @@ const AdminPanel: React.FC = () => {
   const [deletedProperty, setDeletedProperty] = useState<string>('');
   const [deletingPropertyId, setDeletingPropertyId] = useState<string | null>(null);
   const navigate = useNavigate();
-  
+
   // Pagination and filter states for properties
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
@@ -139,7 +139,7 @@ const AdminPanel: React.FC = () => {
   const fetchTempUsers = async () => {
     try {
       setLoading(true);
-      const response = await axios.get('https://nextdealappserver.onrender.com/api/v1/temp/users');
+      const response = await axios.get('https://nextopson.com/temp/api/v1/temp/users');
       setTempUsers(response.data.users);
     } catch (error) {
       console.error('Error fetching temp users:', error);
@@ -151,20 +151,20 @@ const AdminPanel: React.FC = () => {
   const fetchTempProperties = async (page = 1, filterParams = {}) => {
     try {
       setLoading(true);
-      const response = await axios.get('https://nextdealappserver.onrender.com/api/v1/temp/properties', {
+      const response = await axios.get('https://nextopson.com/temp/api/v1/temp/properties', {
         params: {
           page: page,
           limit: 10,
           ...filterParams
         }
       });
-      
+
       // Handle response structure based on the API response
       const properties = response.data.properties || [];
       const pagination = response.data.pagination || {};
 
       // console.log("property : ", properties)
-      
+
       setTempProperties(properties);
       setTotalPages(pagination.totalPages || 1);
       setTotalProperties(pagination.total || 0);
@@ -183,7 +183,7 @@ const AdminPanel: React.FC = () => {
     if (window.confirm('Are you sure you want to delete this temporary user?')) {
       try {
         setLoading(true);
-        await axios.delete(`https://nextdealappserver.onrender.com/api/v1/temp/users/${userId}`);
+        await axios.delete(`https://nextopson.com/temp/api/v1/temp/users/${userId}`);
         fetchTempUsers();
         alert('Temporary user deleted successfully!');
       } catch (error: any) {
@@ -199,7 +199,7 @@ const AdminPanel: React.FC = () => {
     setDeletingPropertyId(propertyId);
     setDeletedProperty(propertyId);
     try {
-      await axios.delete(`https://nextdealappserver.onrender.com/api/v1/temp/properties/${propertyId}`);
+      await axios.delete(`https://nextopson.com/temp/api/v1/temp/properties/${propertyId}`);
       setTotalProperties(prev => Math.max(0, prev - 1));
       console.log('Temporary property deleted successfully!');
     } catch (error: any) {
@@ -214,7 +214,7 @@ const AdminPanel: React.FC = () => {
 
 
   return (
-    <motion.div 
+    <motion.div
       className="min-h-screen py-8 bg-gray-50"
       variants={variants.springDrop}
       initial="initial"
@@ -239,21 +239,19 @@ const AdminPanel: React.FC = () => {
             <nav className="-mb-px flex space-x-8 px-6">
               <button
                 onClick={() => setActiveTab('users')}
-                className={`py-2 px-1 border-b-2 font-medium text-sm transition-all duration-200 ${
-                  activeTab === 'users'
-                    ? 'border-indigo-500 text-indigo-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                }`}
+                className={`py-2 px-1 border-b-2 font-medium text-sm transition-all duration-200 ${activeTab === 'users'
+                  ? 'border-indigo-500 text-indigo-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  }`}
               >
                 Temporary Users ({tempUsers.length})
               </button>
               <button
                 onClick={() => setActiveTab('properties')}
-                className={`py-2 px-1 border-b-2 font-medium text-sm transition-all duration-200 ${
-                  activeTab === 'properties'
-                    ? 'border-indigo-500 text-indigo-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                }`}
+                className={`py-2 px-1 border-b-2 font-medium text-sm transition-all duration-200 ${activeTab === 'properties'
+                  ? 'border-indigo-500 text-indigo-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  }`}
               >
                 Temporary Properties ({totalProperties})
               </button>
@@ -333,8 +331,8 @@ const AdminPanel: React.FC = () => {
                     {showFilters ? 'Hide Filters' : 'Show Filters'}
                   </button>
                 </div>
-                
-                                {/* Filters */}
+
+                {/* Filters */}
                 {showFilters && (
                   <div className="mb-6 p-4 bg-gray-50 rounded-lg">
                     <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4 mb-4">
@@ -406,7 +404,7 @@ const AdminPanel: React.FC = () => {
                         </select>
                       </div>
                       <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-1">City</label>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">City</label>
                         <select
                           value={filters.city}
                           onChange={(e) => handleFilterChange('city', e.target.value)}
@@ -421,7 +419,7 @@ const AdminPanel: React.FC = () => {
                         </select>
                       </div>
                     </div>
-                    
+
                     {/* Filter Action Buttons */}
                     <div className="flex justify-center space-x-4">
                       <button
@@ -438,7 +436,7 @@ const AdminPanel: React.FC = () => {
                           'Apply Filters'
                         )}
                       </button>
-                      
+
                       <button
                         onClick={() => {
                           const cleared = {
@@ -465,7 +463,7 @@ const AdminPanel: React.FC = () => {
                     </div>
                   </div>
                 )}
-                
+
                 <div className="overflow-x-auto">
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     <AnimatePresence>
@@ -486,92 +484,92 @@ const AdminPanel: React.FC = () => {
                                 <div className="spinner" />
                               </div>
                             )}
-                        {/* Property Image */}
-                        <div className="h-48 bg-gray-200 relative">
-                          {property.images && property.images.length > 0 ? (
-                            <RealImg
-                              imageKey={property.images[0]}
-                              width="100%"
-                              height="100%"
-                              alt={property.title}
-                              className="w-full h-full object-cover"
-                              showSkeleton={true}
-                              loadingDelay={300}
-                            />
-                          ) : (
-                            <div className="w-full h-full flex items-center justify-center text-gray-500">
-                              No Image
+                            {/* Property Image */}
+                            <div className="h-48 bg-gray-200 relative">
+                              {property.images && property.images.length > 0 ? (
+                                <RealImg
+                                  imageKey={property.images[0]}
+                                  width="100%"
+                                  height="100%"
+                                  alt={property.title}
+                                  className="w-full h-full object-cover"
+                                  showSkeleton={true}
+                                  loadingDelay={300}
+                                />
+                              ) : (
+                                <div className="w-full h-full flex items-center justify-center text-gray-500">
+                                  No Image
+                                </div>
+                              )}
                             </div>
-                          )}
-                        </div>
-                        
-                        {/* Property Details */}
-                          <div className="p-4">
-                          <h3 className="font-semibold text-lg text-gray-900 mb-2 line-clamp-2">
-                            {property.title}
-                          </h3>
-                          
-                          <div className="space-y-2 text-sm text-gray-600">
-                            <div className="flex justify-between">
-                              <span>Category:</span>
-                              <span className="font-medium">{property.category}</span>
+
+                            {/* Property Details */}
+                            <div className="p-4">
+                              <h3 className="font-semibold text-lg text-gray-900 mb-2 line-clamp-2">
+                                {property.title}
+                              </h3>
+
+                              <div className="space-y-2 text-sm text-gray-600">
+                                <div className="flex justify-between">
+                                  <span>Category:</span>
+                                  <span className="font-medium">{property.category}</span>
+                                </div>
+                                <div className="flex justify-between">
+                                  <span>Type:</span>
+                                  <span className="font-medium">{property.subCategory}</span>
+                                </div>
+                                <div className="flex justify-between">
+                                  <span>Price:</span>
+                                  <span className="font-medium text-green-600">₹{property.propertyPrice?.toLocaleString()}</span>
+                                </div>
+                                {property.carpetArea && (
+                                  <div className="flex justify-between">
+                                    <span>Area:</span>
+                                    <span className="font-medium">{property.carpetArea} sq ft</span>
+                                  </div>
+                                )}
+                                {property.address && (
+                                  <div className="flex justify-between">
+                                    <span>Location:</span>
+                                    <span className="font-medium">{property.address.locality},{property.address.city}, {property.address.state}</span>
+                                  </div>
+                                )}
+                                {property.user && (
+                                  <div className="flex justify-between">
+                                    <span>Owner:</span>
+                                    <span className="font-medium">{property.user.fullName}</span>
+                                  </div>
+                                )}
+                                {property.user && (
+                                  <div className="flex justify-between">
+                                    <span>Contact </span>
+                                    <button onClick={() => `tel:${property.user?.mobileNumber}`} className="font-medium">{property.user.mobileNumber}</button>
+                                  </div>
+                                )}
+                              </div>
+
+                              {/* Actions */}
+                              <div className="mt-4 flex justify-between">
+                                <button
+                                  onClick={() => { navigate("/upload-property", { state: { propertyId: property.id } }) }}
+                                  className='text-blue-600 hover:text-blue-900 text-sm font-medium'>
+                                  Edit
+                                </button>
+                                <button
+                                  onClick={() => handleDeleteTempProperty(property.id)}
+                                  disabled={deletingPropertyId === property.id}
+                                  className={`text-sm font-medium ${deletingPropertyId === property.id ? 'text-gray-400 cursor-not-allowed' : 'text-red-600 hover:text-red-900'}`}
+                                >
+                                  Delete
+                                </button>
+                              </div>
                             </div>
-                            <div className="flex justify-between">
-                              <span>Type:</span>
-                              <span className="font-medium">{property.subCategory}</span>
-                            </div>
-                            <div className="flex justify-between">
-                              <span>Price:</span>
-                              <span className="font-medium text-green-600">₹{property.propertyPrice?.toLocaleString()}</span>
-                            </div>
-                            {property.carpetArea && (
-                              <div className="flex justify-between">
-                                <span>Area:</span>
-                                <span className="font-medium">{property.carpetArea} sq ft</span>
-                              </div>
-                            )}
-                            {property.address && (
-                              <div className="flex justify-between">
-                                <span>Location:</span>
-                                <span className="font-medium">{property.address.locality},{property.address.city}, {property.address.state}</span>
-                              </div>
-                            )}
-                            {property.user && (
-                              <div className="flex justify-between">
-                                <span>Owner:</span>
-                                <span className="font-medium">{property.user.fullName}</span>
-                              </div>
-                            )}
-                            {property.user && (
-                              <div  className="flex justify-between">
-                                <span>Contact </span>
-                                <button onClick = {() => `tel:${property.user?.mobileNumber}`} className="font-medium">{property.user.mobileNumber}</button>
-                              </div>
-                            )}
-                          </div>
-                          
-                          {/* Actions */}
-                          <div className="mt-4 flex justify-between">
-                            <button 
-                            onClick={() => {navigate("/upload-property", {state : {propertyId: property.id}})}}
-                            className='text-blue-600 hover:text-blue-900 text-sm font-medium'>
-                              Edit
-                            </button>
-                            <button
-                              onClick={() => handleDeleteTempProperty(property.id)}
-                              disabled={deletingPropertyId === property.id}
-                              className={`text-sm font-medium ${deletingPropertyId === property.id ? 'text-gray-400 cursor-not-allowed' : 'text-red-600 hover:text-red-900'}`}
-                            >
-                              Delete
-                            </button>
-                          </div>
-                        </div>
-                      </motion.div>
-                    ))}
+                          </motion.div>
+                        ))}
                     </AnimatePresence>
                   </div>
                 </div>
-                
+
                 {/* Pagination */}
                 {tempProperties.length > 0 && (
                   <div className="mt-8">
@@ -583,7 +581,7 @@ const AdminPanel: React.FC = () => {
                         Total: {tempProperties.length} properties
                       </div>
                     </div>
-                    
+
                     <div className="mt-4 flex justify-center">
                       <nav className="flex items-center space-x-1">
                         {/* Previous Button */}
@@ -594,15 +592,15 @@ const AdminPanel: React.FC = () => {
                         >
                           Previous
                         </button>
-                        
+
                         {/* Page Numbers */}
                         {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => {
                           // Show first page, last page, current page, and pages around current
-                          const shouldShow = 
-                            page === 1 || 
-                            page === totalPages || 
+                          const shouldShow =
+                            page === 1 ||
+                            page === totalPages ||
                             (page >= currentPage - 1 && page <= currentPage + 1);
-                          
+
                           if (!shouldShow) {
                             // Show ellipsis
                             if (page === currentPage - 2 || page === currentPage + 2) {
@@ -614,23 +612,22 @@ const AdminPanel: React.FC = () => {
                             }
                             return null;
                           }
-                          
+
                           return (
                             <button
                               key={page}
                               onClick={() => handlePageChange(page)}
                               disabled={loading}
-                              className={`px-3 py-2 text-sm font-medium rounded-md transition-colors duration-200 ${
-                                currentPage === page
-                                  ? 'bg-indigo-600 text-white'
-                                  : 'text-gray-500 bg-white border border-gray-300 hover:bg-gray-50'
-                              }`}
+                              className={`px-3 py-2 text-sm font-medium rounded-md transition-colors duration-200 ${currentPage === page
+                                ? 'bg-indigo-600 text-white'
+                                : 'text-gray-500 bg-white border border-gray-300 hover:bg-gray-50'
+                                }`}
                             >
                               {page}
                             </button>
                           );
                         })}
-                        
+
                         {/* Next Button */}
                         <button
                           onClick={() => handlePageChange(currentPage + 1)}
@@ -641,7 +638,7 @@ const AdminPanel: React.FC = () => {
                         </button>
                       </nav>
                     </div>
-                    
+
                     {loading && (
                       <div className="mt-4 flex justify-center">
                         <div className="flex items-center space-x-2 text-gray-600">
@@ -652,7 +649,7 @@ const AdminPanel: React.FC = () => {
                     )}
                   </div>
                 )}
-                
+
                 {/* No Properties Message */}
                 {!loading && tempProperties.length === 0 && (
                   <div className="mt-8 text-center">
@@ -683,17 +680,17 @@ const AdminPanel: React.FC = () => {
           whileHover={{ scale: 1.1 }}
           whileTap={{ scale: 0.9 }}
         >
-          <svg 
-            className="w-6 h-6" 
-            fill="none" 
-            stroke="currentColor" 
+          <svg
+            className="w-6 h-6"
+            fill="none"
+            stroke="currentColor"
             viewBox="0 0 24 24"
           >
-            <path 
-              strokeLinecap="round" 
-              strokeLinejoin="round" 
-              strokeWidth={2} 
-              d="M5 10l7-7m0 0l7 7m-7-7v18" 
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M5 10l7-7m0 0l7 7m-7-7v18"
             />
           </svg>
         </motion.button>

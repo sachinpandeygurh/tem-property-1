@@ -27,7 +27,7 @@
 
 ## Environment Variables
 
-The app is pre-configured to use `https://nextdealappserver.onrender.com/api/v1` as the API URL.
+The app is pre-configured to use `https://nextopson.com/temp/api/v1` as the API URL.
 
 To override, add in Vercel dashboard:
 - `REACT_APP_API_URL` = `https://your-api-url.com/api/v1`
