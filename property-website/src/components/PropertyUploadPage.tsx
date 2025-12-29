@@ -259,7 +259,7 @@ const PropertyUploadPage: React.FC = () => {
         if (data) {
           const p = data.property;
           setFormData({
-            userId: userId,
+            userId: propertyId? p.userId : userId,
             addressState: p.address?.state,
             addressCity: p.address?.city,
             addressLocality: p.address?.locality,
@@ -339,7 +339,7 @@ const PropertyUploadPage: React.FC = () => {
     } else {
       console.log("property id not found")
     }
-  }, [propertyId]);
+  }, [propertyId, userId]);
 
 
   console.log("form data", formData);
