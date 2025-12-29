@@ -259,7 +259,7 @@ const PropertyUploadPage: React.FC = () => {
         if (data) {
           const p = data.property;
           setFormData({
-            userId: propertyId? p.userId : userId,
+            userId: propertyId ? p.userId : userId,
             addressState: p.address?.state,
             addressCity: p.address?.city,
             addressLocality: p.address?.locality,
@@ -639,86 +639,109 @@ const PropertyUploadPage: React.FC = () => {
         return;
       }
 
-      // Build imageKeys array from uploaded images
-      const imageKeys = formData.images
-        .filter((img) => img.key && !img.uploading && !img.error)
-        .map((img) => ({
-          imageKey: img.key || "",
-          imgClassifications: (img.imgClassifications as 'Bathroom' | 'Bedroom' | 'Dining' | 'Kitchen' | 'Livingroom' | 'Other') || 'Other',
-          accurencyPercent: img.accurencyPercent ? Number(img.accurencyPercent) : 0,
-        }));
+      // Create FormData object
+      const data = new FormData();
 
-      // Build request body in JSON format
-      const requestBody: any = {
-        userId: String(userId),
-        ...(propertyId && { propertyId: String(propertyId) }),
-        ...(formData.addressState && { addressState: formData.addressState }),
-        ...(formData.addressCity && { addressCity: formData.addressCity }),
-        ...(formData.addressLocality && { addressLocality: formData.addressLocality }),
-        category: formData.category,
-        subCategory: formData.subCategory,
-        ...(formData.isSale && { isSale: formData.isSale }),
-        propertyPrice: formData.propertyPrice || 0,
-        ...(formData.title && { title: formData.title }),
-        ...(formData.description && { description: formData.description }),
-        ...(formData.projectName && { projectName: formData.projectName }),
-        ...(formData.propertyName && { propertyName: formData.propertyName }),
-        ...(formData.totalBathrooms !== undefined && formData.totalBathrooms !== null && { totalBathrooms: formData.totalBathrooms }),
-        ...(formData.totalRooms !== undefined && formData.totalRooms !== null && { totalRooms: formData.totalRooms }),
-        ...(formData.carpetArea !== undefined && formData.carpetArea !== null && { carpetArea: formData.carpetArea }),
-        ...(formData.buildupArea !== undefined && formData.buildupArea !== null && { buildupArea: formData.buildupArea }),
-        ...(formData.bhks && { bhks: formData.bhks }),
-        ...(formData.furnishing && { furnishing: formData.furnishing }),
-        ...(formData.furnishingAmenities && formData.furnishingAmenities.length > 0 && { furnishingAmenities: formData.furnishingAmenities }),
-        ...(formData.constructionStatus && { constructionStatus: formData.constructionStatus }),
-        ...(formData.propertyFacing && { propertyFacing: formData.propertyFacing }),
-        ...(formData.ageOfTheProperty && { ageOfTheProperty: formData.ageOfTheProperty }),
-        ...(formData.reraApproved !== undefined && { reraApproved: formData.reraApproved }),
-        ...(formData.amenities && formData.amenities.length > 0 && { amenities: formData.amenities }),
-        ...(formData.fencing && { fencing: formData.fencing }),
-        ...(formData.width !== undefined && formData.width !== null && { width: formData.width }),
-        ...(formData.height !== undefined && formData.height !== null && { height: formData.height }),
-        ...(formData.length !== undefined && formData.length !== null && { length: formData.length }),
-        ...(formData.totalArea !== undefined && formData.totalArea !== null && { totalArea: formData.totalArea }),
-        ...(formData.plotArea !== undefined && formData.plotArea !== null && { plotArea: formData.plotArea }),
-        ...(formData.viewFromProperty && formData.viewFromProperty.length > 0 && { viewFromProperty: formData.viewFromProperty }),
-        ...(formData.landArea !== undefined && formData.landArea !== null && { landArea: formData.landArea }),
-        ...(formData.distFromOutRRoad !== undefined && formData.distFromOutRRoad !== null && { distFromOutRRoad: formData.distFromOutRRoad }),
-        ...(formData.unit && { unit: formData.unit }),
-        ...(formData.soilType && { soilType: formData.soilType }),
-        ...(formData.approachRoad && { approachRoad: formData.approachRoad }),
-        ...(formData.totalfloors && { totalfloors: formData.totalfloors }),
-        ...(formData.officefloor && { officefloor: formData.officefloor }),
-        ...(formData.yourfloor && { yourfloor: formData.yourfloor }),
-        ...(formData.cabins && { cabins: formData.cabins }),
-        ...(formData.parking && { parking: formData.parking }),
-        ...(formData.washroom !== undefined && formData.washroom !== null && { washroom: formData.washroom }),
-        ...(formData.availablefor && { availablefor: formData.availablefor }),
-        ...(formData.agentNotes && { agentNotes: formData.agentNotes }),
-        ...(formData.workingWithAgent !== undefined && { workingWithAgent: formData.workingWithAgent }),
-        ...(formData.landType && { landType: formData.landType as 'agricultural' | 'commercial' | 'industrial' }),
-        ...(formData.independent !== undefined && { independent: formData.independent }),
-        // Hostel-specific fields
-        ...(formData.attachedWashroom && { attachedWashroom: formData.attachedWashroom }),
-        ...(formData.roomType && { roomType: formData.roomType }),
-        ...(formData.genderPreference && { genderPreference: formData.genderPreference }),
-        ...(formData.mealIncluded && { mealIncluded: formData.mealIncluded }),
-        ...(formData.liftAvailable && { liftAvailable: formData.liftAvailable }),
-        ...(formData.noOfBedrooms !== undefined && formData.noOfBedrooms !== null && { noOfBedrooms: formData.noOfBedrooms }),
-        // Image keys array
-        ...(imageKeys.length > 0 && { imageKeys }),
-      };
+      // Append required basic fields
+      data.append("userId", String(userId));
+      if (propertyId) data.append("propertyId", String(propertyId));
+      if (formData.addressState) data.append("addressState", formData.addressState);
+      if (formData.addressCity) data.append("addressCity", formData.addressCity);
+      if (formData.addressLocality) data.append("addressLocality", formData.addressLocality);
+      data.append("category", formData.category);
+      data.append("subCategory", formData.subCategory);
+      if (formData.isSale) data.append("isSale", formData.isSale);
+      data.append("propertyPrice", String(formData.propertyPrice || 0));
+
+      // Append other fields, handling types
+      if (formData.title) data.append("title", formData.title);
+      if (formData.description) data.append("description", formData.description);
+      if (formData.projectName) data.append("projectName", formData.projectName);
+      if (formData.propertyName) data.append("propertyName", formData.propertyName);
+
+      if (formData.totalBathrooms !== undefined) data.append("totalBathrooms", String(formData.totalBathrooms));
+      if (formData.totalRooms !== undefined) data.append("totalRooms", String(formData.totalRooms));
+      if (formData.carpetArea !== undefined) data.append("carpetArea", String(formData.carpetArea));
+      if (formData.buildupArea !== undefined) data.append("buildupArea", String(formData.buildupArea));
+
+      if (formData.bhks) data.append("bhks", formData.bhks);
+      if (formData.furnishing) data.append("furnishing", formData.furnishing);
+      if (formData.constructionStatus) data.append("constructionStatus", formData.constructionStatus);
+      if (formData.propertyFacing) data.append("propertyFacing", formData.propertyFacing);
+      if (formData.ageOfTheProperty) data.append("ageOfTheProperty", formData.ageOfTheProperty);
+
+      // Boolean to string
+      if (formData.reraApproved !== undefined) data.append("reraApproved", String(formData.reraApproved));
+      if (formData.workingWithAgent !== undefined) data.append("workingWithAgent", String(formData.workingWithAgent));
+      if (formData.independent !== undefined) data.append("independent", String(formData.independent));
+
+      // Arrays - Stringify them as per curl example
+      if (formData.amenities && formData.amenities.length > 0) {
+        data.append("amenities", JSON.stringify(formData.amenities));
+      }
+      if (formData.furnishingAmenities && formData.furnishingAmenities.length > 0) {
+        data.append("furnishingAmenities", JSON.stringify(formData.furnishingAmenities));
+      }
+      if (formData.viewFromProperty && formData.viewFromProperty.length > 0) {
+        data.append("viewFromProperty", JSON.stringify(formData.viewFromProperty));
+      }
+
+      if (formData.fencing) data.append("fencing", formData.fencing);
+
+      // Dimensions
+      if (formData.width !== undefined) data.append("width", String(formData.width));
+      if (formData.height !== undefined) data.append("height", String(formData.height));
+      if (formData.length !== undefined) data.append("length", String(formData.length));
+      if (formData.totalArea !== undefined) data.append("totalArea", String(formData.totalArea));
+      if (formData.plotArea !== undefined) data.append("plotArea", String(formData.plotArea));
+      if (formData.landArea !== undefined) data.append("landArea", String(formData.landArea));
+      if (formData.distFromOutRRoad !== undefined) data.append("distFromOutRRoad", String(formData.distFromOutRRoad));
+
+      if (formData.unit) data.append("unit", formData.unit);
+      if (formData.soilType) data.append("soilType", formData.soilType);
+      if (formData.approachRoad) data.append("approachRoad", formData.approachRoad);
+
+      if (formData.totalfloors) data.append("totalfloors", formData.totalfloors);
+      if (formData.officefloor) data.append("officefloor", formData.officefloor);
+      if (formData.yourfloor) data.append("yourfloor", formData.yourfloor);
+      if (formData.cabins) data.append("cabins", formData.cabins);
+      if (formData.parking) data.append("parking", formData.parking);
+      if (formData.washroom) data.append("washroom", formData.washroom);
+      if (formData.availablefor) data.append("availablefor", formData.availablefor);
+      if (formData.agentNotes) data.append("agentNotes", formData.agentNotes);
+      if (formData.landType) data.append("landType", formData.landType);
+
+      // Hostel specific
+      if (formData.attachedWashroom) data.append("attachedWashroom", formData.attachedWashroom);
+      if (formData.roomType) data.append("roomType", formData.roomType);
+      if (formData.genderPreference) data.append("genderPreference", formData.genderPreference);
+      if (formData.mealIncluded) data.append("mealIncluded", formData.mealIncluded);
+      if (formData.liftAvailable) data.append("liftAvailable", formData.liftAvailable);
+      if (formData.noOfBedrooms !== undefined && formData.noOfBedrooms !== null) {
+        data.append("noOfBedrooms", String(formData.noOfBedrooms));
+      }
+
+      // Handle Images
+      // Append each file with the key "images"
+      if (formData.images && formData.images.length > 0) {
+        formData.images.forEach((img) => {
+          if (img.file) {
+            data.append("images", img.file);
+          }
+        });
+      }
 
       const apiUrl = propertyId
         ? `https://nextopson.com/temp/api/v1/temp/properties/${propertyId}`
         : "https://nextopson.com/temp/api/v1/temp/properties";
+      // const apiUrl = propertyId
+      //   ? `http://192.168.1.11:5001/api/v1/temp/properties/${propertyId}`
+      //   : "http://192.168.1.11:5001/api/v1/temp/properties";
 
       const response = await fetch(apiUrl, {
         method: propertyId ? "PUT" : "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(requestBody),
+        // Do NOT set Content-Type header when sending FormData; browser sets it automatically with boundary
+        body: data,
       });
 
       let responseData;
@@ -733,12 +756,6 @@ const PropertyUploadPage: React.FC = () => {
 
       if (response.status === 201 || response.status === 200) {
         let successMessage = responseData.message || "Property uploaded successfully!";
-
-        // Add warning if there were upload errors
-        if (responseData.warning) {
-          successMessage += ` ${responseData.warning}`;
-        }
-
         setSuccess(successMessage);
 
         // Reset form
@@ -809,6 +826,10 @@ const PropertyUploadPage: React.FC = () => {
           // Images
           images: [],
         });
+
+        // Optionally scroll to top or show success message
+        window.scrollTo(0, 0);
+
         // window.location.reload();
       } else {
         // Handle error responses
@@ -848,6 +869,7 @@ const PropertyUploadPage: React.FC = () => {
           "furnishing",
           "bhks",
           "propertyFacing",
+          "reraApproved",
         ];
 
       case "Builder Floors":
@@ -1373,9 +1395,7 @@ const PropertyUploadPage: React.FC = () => {
               className="form-input"
             >
               <option value="">Select Age</option>
-              <option value="0-1 years">0-1 years</option>
-              <option value="1-3 years">1-3 years</option>
-              <option value="3-5 years">3-5 years</option>
+              <option value="0-5 years">0-5 years</option>
               <option value="5-10 years">5-10 years</option>
               <option value="10+ years">10+ years</option>
             </select>
