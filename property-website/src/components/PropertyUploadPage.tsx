@@ -135,14 +135,26 @@ interface PropertyFormData {
   agentNotes?: string;
   workingWithAgent?: boolean;
   furnishingAmenities?: string[];
+  landType?: 'agricultural' | 'commercial' | 'industrial';
+  independent?: boolean;
+
+  // Hostel-specific fields
+  attachedWashroom?: string | null;
+  roomType?: string | null;
+  genderPreference?: string | null;
+  mealIncluded?: string | null;
+  liftAvailable?: string | null;
+  noOfBedrooms?: number | null;
 
   // Images
   images: UploadedImage[];
 }
 
 const PropertyUploadPage: React.FC = () => {
+  const userData = localStorage.getItem("user");
+  const userId = JSON.parse(userData || "{}").id
   const [formData, setFormData] = useState<PropertyFormData>({
-    userId: "",
+    userId: userId,
     addressState: "",
     addressCity: "",
     addressLocality: "",
@@ -193,6 +205,16 @@ const PropertyUploadPage: React.FC = () => {
     agentNotes: undefined,
     workingWithAgent: false,
     furnishingAmenities: [],
+    landType: undefined,
+    independent: false,
+
+    // Hostel-specific fields
+    attachedWashroom: null,
+    roomType: null,
+    genderPreference: null,
+    mealIncluded: null,
+    liftAvailable: null,
+    noOfBedrooms: null,
 
     // Images
     images: [],
@@ -237,7 +259,7 @@ const PropertyUploadPage: React.FC = () => {
         if (data) {
           const p = data.property;
           setFormData({
-            userId: p.userId,
+            userId: userId,
             addressState: p.address?.state,
             addressCity: p.address?.city,
             addressLocality: p.address?.locality,
@@ -288,6 +310,16 @@ const PropertyUploadPage: React.FC = () => {
             agentNotes: p.agentNotes || undefined,
             workingWithAgent: p.workingWithAgent || false,
             furnishingAmenities: p.furnishingAmenities || [],
+            landType: p.landType || undefined,
+            independent: p.independent || false,
+
+            // Hostel-specific fields
+            attachedWashroom: p.attachedWashroom || null,
+            roomType: p.roomType || null,
+            genderPreference: p.genderPreference || null,
+            mealIncluded: p.mealIncluded || null,
+            liftAvailable: p.liftAvailable || null,
+            noOfBedrooms: p.noOfBedrooms || null,
 
             // Images
             images: p.propertyImages?.map((img: any) => img.presignedUrl) || [],
@@ -310,9 +342,7 @@ const PropertyUploadPage: React.FC = () => {
   }, [propertyId]);
 
 
-  console.log("propertyId", propertyId);
-
-
+  console.log("form data", formData);
   // run after clicked on edit button end here
 
   useEffect(() => {
@@ -609,131 +639,87 @@ const PropertyUploadPage: React.FC = () => {
         return;
       }
 
-      const formDataToSend = new FormData();
+      // Build imageKeys array from uploaded images
+      const imageKeys = formData.images
+        .filter((img) => img.key && !img.uploading && !img.error)
+        .map((img) => ({
+          imageKey: img.key || "",
+          imgClassifications: (img.imgClassifications as 'Bathroom' | 'Bedroom' | 'Dining' | 'Kitchen' | 'Livingroom' | 'Other') || 'Other',
+          accurencyPercent: img.accurencyPercent ? Number(img.accurencyPercent) : 0,
+        }));
 
-      // Add basic property data (always required)
-      formDataToSend.append("userId", String(userId));
-      if (propertyId) { formDataToSend.append("propertyId", String(propertyId)) }
-      formDataToSend.append("addressState", formData.addressState);
-      formDataToSend.append("addressCity", formData.addressCity);
-      formDataToSend.append("addressLocality", formData.addressLocality);
-      formDataToSend.append("category", formData.category);
-      formDataToSend.append("subCategory", formData.subCategory);
-      formDataToSend.append("isSale", formData.isSale || "Sell");
-      formDataToSend.append(
-        "propertyPrice",
-        formData.propertyPrice ? String(formData.propertyPrice) : "0"
-      );
+      // Build request body in JSON format
+      const requestBody: any = {
+        userId: String(userId),
+        ...(propertyId && { propertyId: String(propertyId) }),
+        ...(formData.addressState && { addressState: formData.addressState }),
+        ...(formData.addressCity && { addressCity: formData.addressCity }),
+        ...(formData.addressLocality && { addressLocality: formData.addressLocality }),
+        category: formData.category,
+        subCategory: formData.subCategory,
+        ...(formData.isSale && { isSale: formData.isSale }),
+        propertyPrice: formData.propertyPrice || 0,
+        ...(formData.title && { title: formData.title }),
+        ...(formData.description && { description: formData.description }),
+        ...(formData.projectName && { projectName: formData.projectName }),
+        ...(formData.propertyName && { propertyName: formData.propertyName }),
+        ...(formData.totalBathrooms !== undefined && formData.totalBathrooms !== null && { totalBathrooms: formData.totalBathrooms }),
+        ...(formData.totalRooms !== undefined && formData.totalRooms !== null && { totalRooms: formData.totalRooms }),
+        ...(formData.carpetArea !== undefined && formData.carpetArea !== null && { carpetArea: formData.carpetArea }),
+        ...(formData.buildupArea !== undefined && formData.buildupArea !== null && { buildupArea: formData.buildupArea }),
+        ...(formData.bhks && { bhks: formData.bhks }),
+        ...(formData.furnishing && { furnishing: formData.furnishing }),
+        ...(formData.furnishingAmenities && formData.furnishingAmenities.length > 0 && { furnishingAmenities: formData.furnishingAmenities }),
+        ...(formData.constructionStatus && { constructionStatus: formData.constructionStatus }),
+        ...(formData.propertyFacing && { propertyFacing: formData.propertyFacing }),
+        ...(formData.ageOfTheProperty && { ageOfTheProperty: formData.ageOfTheProperty }),
+        ...(formData.reraApproved !== undefined && { reraApproved: formData.reraApproved }),
+        ...(formData.amenities && formData.amenities.length > 0 && { amenities: formData.amenities }),
+        ...(formData.fencing && { fencing: formData.fencing }),
+        ...(formData.width !== undefined && formData.width !== null && { width: formData.width }),
+        ...(formData.height !== undefined && formData.height !== null && { height: formData.height }),
+        ...(formData.length !== undefined && formData.length !== null && { length: formData.length }),
+        ...(formData.totalArea !== undefined && formData.totalArea !== null && { totalArea: formData.totalArea }),
+        ...(formData.plotArea !== undefined && formData.plotArea !== null && { plotArea: formData.plotArea }),
+        ...(formData.viewFromProperty && formData.viewFromProperty.length > 0 && { viewFromProperty: formData.viewFromProperty }),
+        ...(formData.landArea !== undefined && formData.landArea !== null && { landArea: formData.landArea }),
+        ...(formData.distFromOutRRoad !== undefined && formData.distFromOutRRoad !== null && { distFromOutRRoad: formData.distFromOutRRoad }),
+        ...(formData.unit && { unit: formData.unit }),
+        ...(formData.soilType && { soilType: formData.soilType }),
+        ...(formData.approachRoad && { approachRoad: formData.approachRoad }),
+        ...(formData.totalfloors && { totalfloors: formData.totalfloors }),
+        ...(formData.officefloor && { officefloor: formData.officefloor }),
+        ...(formData.yourfloor && { yourfloor: formData.yourfloor }),
+        ...(formData.cabins && { cabins: formData.cabins }),
+        ...(formData.parking && { parking: formData.parking }),
+        ...(formData.washroom !== undefined && formData.washroom !== null && { washroom: formData.washroom }),
+        ...(formData.availablefor && { availablefor: formData.availablefor }),
+        ...(formData.agentNotes && { agentNotes: formData.agentNotes }),
+        ...(formData.workingWithAgent !== undefined && { workingWithAgent: formData.workingWithAgent }),
+        ...(formData.landType && { landType: formData.landType as 'agricultural' | 'commercial' | 'industrial' }),
+        ...(formData.independent !== undefined && { independent: formData.independent }),
+        // Hostel-specific fields
+        ...(formData.attachedWashroom && { attachedWashroom: formData.attachedWashroom }),
+        ...(formData.roomType && { roomType: formData.roomType }),
+        ...(formData.genderPreference && { genderPreference: formData.genderPreference }),
+        ...(formData.mealIncluded && { mealIncluded: formData.mealIncluded }),
+        ...(formData.liftAvailable && { liftAvailable: formData.liftAvailable }),
+        ...(formData.noOfBedrooms !== undefined && formData.noOfBedrooms !== null && { noOfBedrooms: formData.noOfBedrooms }),
+        // Image keys array
+        ...(imageKeys.length > 0 && { imageKeys }),
+      };
 
-      // Add all other fields (including empty ones for proper API handling)
-      formDataToSend.append("title", formData.title || "");
-      formDataToSend.append("description", formData.description || "");
-      formDataToSend.append("projectName", formData.projectName || "");
-      formDataToSend.append("propertyName", formData.propertyName || "");
-      // Only append numeric fields if they have values (to avoid empty string errors)
-      if (formData.totalBathrooms !== undefined && formData.totalBathrooms !== null) {
-        formDataToSend.append("totalBathrooms", String(formData.totalBathrooms));
-      }
-      if (formData.totalRooms !== undefined && formData.totalRooms !== null) {
-        formDataToSend.append("totalRooms", String(formData.totalRooms));
-      }
-      if (formData.carpetArea !== undefined && formData.carpetArea !== null) {
-        formDataToSend.append("carpetArea", String(formData.carpetArea));
-      }
-      // buildupArea is not in controller but keeping for form compatibility
-      if (formData.buildupArea !== undefined && formData.buildupArea !== null) {
-        formDataToSend.append("buildupArea", String(formData.buildupArea));
-      }
-      formDataToSend.append("bhks", formData.bhks || "");
-      formDataToSend.append("furnishing", formData.furnishing || "");
-      formDataToSend.append(
-        "constructionStatus",
-        formData.constructionStatus || ""
-      );
-      formDataToSend.append("propertyFacing", formData.propertyFacing || "");
-      formDataToSend.append(
-        "ageOfTheProperty",
-        formData.ageOfTheProperty || ""
-      );
-      formDataToSend.append(
-        "reraApproved",
-        formData.reraApproved ? "1" : "0"
-      );
-      formDataToSend.append(
-        "amenities",
-        JSON.stringify(formData.amenities || [])
-      );
-      formDataToSend.append("fencing", formData.fencing || "");
-      // Only append numeric fields if they have values (to avoid empty string errors)
-      if (formData.width !== undefined && formData.width !== null) {
-        formDataToSend.append("width", String(formData.width));
-      }
-      if (formData.height !== undefined && formData.height !== null) {
-        formDataToSend.append("height", String(formData.height));
-      }
-      if (formData.length !== undefined && formData.length !== null) {
-        formDataToSend.append("length", String(formData.length));
-      }
-      if (formData.totalArea !== undefined && formData.totalArea !== null) {
-        formDataToSend.append("totalArea", String(formData.totalArea));
-      }
-      if (formData.plotArea !== undefined && formData.plotArea !== null) {
-        formDataToSend.append("plotArea", String(formData.plotArea));
-      }
-      if (formData.landArea !== undefined && formData.landArea !== null) {
-        formDataToSend.append("landArea", String(formData.landArea));
-      }
-      if (formData.distFromOutRRoad !== undefined && formData.distFromOutRRoad !== null) {
-        formDataToSend.append("distFromOutRRoad", String(formData.distFromOutRRoad));
-      }
-      formDataToSend.append(
-        "viewFromProperty",
-        JSON.stringify(formData.viewFromProperty || [])
-      );
-      formDataToSend.append("soilType", formData.soilType || "");
-      formDataToSend.append("approachRoad", formData.approachRoad || "");
-      formDataToSend.append("totalfloors", formData.totalfloors || "");
-      formDataToSend.append("officefloor", formData.officefloor || "");
-      formDataToSend.append("yourfloor", formData.yourfloor || "");
-      formDataToSend.append("cabins", formData.cabins || "");
-      formDataToSend.append("parking", formData.parking || "");
-      // Only append numeric fields if they have values (to avoid empty string errors)
-      if (formData.washroom !== undefined && formData.washroom !== null) {
-        formDataToSend.append("washroom", String(formData.washroom));
-      }
-      formDataToSend.append("availablefor", formData.availablefor || "");
-      formDataToSend.append("agentNotes", formData.agentNotes || "");
-      formDataToSend.append(
-        "workingWithAgent",
-        formData.workingWithAgent ? "1" : "0"
-      );
-      formDataToSend.append(
-        "furnishingAmenities",
-        JSON.stringify(formData.furnishingAmenities || [])
-      );
-      formDataToSend.append("unit", formData.unit || "");
+      const apiUrl = propertyId
+        ? `https://nextopson.com/temp/api/v1/temp/properties/${propertyId}`
+        : "https://nextopson.com/temp/api/v1/temp/properties";
 
-      // Add images - send actual File objects for upload
-      // The backend expects files in req.files array, so we append them with the field name "images"
-
-
-      const successfulImages = formData.images.filter(
-        (img) => img.file && !img.uploading && !img.error
-      );
-      successfulImages.forEach((image) => {
-        if (image.file) {
-          formDataToSend.append("images", image.file);
-        }
+      const response = await fetch(apiUrl, {
+        method: propertyId ? "PUT" : "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(requestBody),
       });
-
-
-      const response = await fetch(
-        "https://nextopson.com/temp/api/v1/temp/properties",
-        {
-          method: "POST",
-          body: formDataToSend,
-        }
-      );
 
       let responseData;
       try {
@@ -809,6 +795,16 @@ const PropertyUploadPage: React.FC = () => {
           agentNotes: undefined,
           workingWithAgent: false,
           furnishingAmenities: [],
+          landType: undefined,
+          independent: false,
+
+          // Hostel-specific fields
+          attachedWashroom: null,
+          roomType: null,
+          genderPreference: null,
+          mealIncluded: null,
+          liftAvailable: null,
+          noOfBedrooms: null,
 
           // Images
           images: [],
@@ -837,7 +833,7 @@ const PropertyUploadPage: React.FC = () => {
   };
 
   // Function to get required fields based on subcategory (excluding amenities)
-  const getRequiredFields = (subCategory: string): string[] => {
+  const getRequiredFields = (subCategory: string, isSale?: string): string[] => {
     switch (subCategory) {
       case "Flats":
         return [
@@ -954,6 +950,28 @@ const PropertyUploadPage: React.FC = () => {
         ];
 
       case "Hostels":
+        // If isSale is Rent, show additional fields
+        if (isSale === "Rent") {
+          return [
+            "propertyName",
+            "noOfBedrooms",
+            "propertyPrice",
+            "description",
+            "length",
+            "width",
+            "totalfloors",
+            "yourfloor",
+            "furnishing",
+            "constructionStatus",
+            "propertyFacing",
+            "ageOfTheProperty",
+            "attachedWashroom",
+            "roomType",
+            "genderPreference",
+            "mealIncluded",
+            "liftAvailable",
+          ];
+        }
         return [
           "propertyName",
           "propertyPrice",
@@ -1056,6 +1074,8 @@ const PropertyUploadPage: React.FC = () => {
         );
 
       case "description":
+        const isHostelRentDesc =
+          formData.subCategory === "Hostels" && formData.isSale === "Rent";
         return (
           <div key={fieldName}>
             <label
@@ -1072,8 +1092,14 @@ const PropertyUploadPage: React.FC = () => {
               value={formData.description || ""}
               onChange={handleInputChange}
               className="form-input focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
-              placeholder="Enter property description"
+              placeholder={isHostelRentDesc ? "e.g. 3 BHK flat for rent in premium locations" : "Enter property description"}
             />
+            {isHostelRentDesc && (
+              <div className="mt-2 flex items-center gap-2 text-sm text-gray-500">
+                <FontAwesomeIcon icon={faExclamationTriangle} className="text-blue-500" />
+                <span>Property description will auto generate if you are not filled</span>
+              </div>
+            )}
           </div>
         );
 
@@ -1100,6 +1126,7 @@ const PropertyUploadPage: React.FC = () => {
         );
 
       case "propertyName":
+        const isHostel = formData.subCategory === "Hostels";
         return (
           <div key={fieldName}>
             <label
@@ -1107,7 +1134,7 @@ const PropertyUploadPage: React.FC = () => {
               className="form-label flex items-center gap-2"
             >
               <FontAwesomeIcon icon={faHome} className="text-blue-600" />
-              Property Name
+              {isHostel ? "PG / Hotel Name" : "Property Name"} *
             </label>
             <input
               type="text"
@@ -1116,12 +1143,14 @@ const PropertyUploadPage: React.FC = () => {
               value={formData.propertyName || ""}
               onChange={handleInputChange}
               className="form-input focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
-              placeholder="Enter property name"
+              placeholder={isHostel ? "e.g. Green Valley PG" : "Enter property name"}
             />
           </div>
         );
 
       case "propertyPrice":
+        const isHostelRent =
+          formData.subCategory === "Hostels" && formData.isSale === "Rent";
         return (
           <div key={fieldName}>
             <label
@@ -1129,7 +1158,7 @@ const PropertyUploadPage: React.FC = () => {
               className="form-label flex items-center gap-2"
             >
               <FontAwesomeIcon icon={faTag} className="text-blue-600" />
-              Price (₹) *
+              {isHostelRent ? "Price (bed/month) (₹)" : "Price (₹)"} *
             </label>
             <input
               type="number"
@@ -1140,7 +1169,7 @@ const PropertyUploadPage: React.FC = () => {
               value={formData.propertyPrice || ""}
               onChange={handleInputChange}
               className="form-input focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
-              placeholder="Enter price"
+              placeholder={isHostelRent ? "e.g. 5000" : "Enter price"}
             />
           </div>
         );
@@ -1473,10 +1502,12 @@ const PropertyUploadPage: React.FC = () => {
         );
 
       case "length":
+        const isHostelRentLength =
+          formData.subCategory === "Hostels" && formData.isSale === "Rent";
         return (
           <div key={fieldName}>
             <label htmlFor={fieldName} className="form-label">
-              Length (ft)
+              Length {isHostelRentLength ? "(sq.ft)" : "(ft)"} *
             </label>
             <input
               type="number"
@@ -1487,16 +1518,18 @@ const PropertyUploadPage: React.FC = () => {
               value={formData.length || ""}
               onChange={handleInputChange}
               className="form-input"
-              placeholder="Enter length"
+              placeholder={isHostelRentLength ? "e.g. 10" : "Enter length"}
             />
           </div>
         );
 
       case "width":
+        const isHostelRentWidth =
+          formData.subCategory === "Hostels" && formData.isSale === "Rent";
         return (
           <div key={fieldName}>
             <label htmlFor={fieldName} className="form-label">
-              Width (ft)
+              Width {isHostelRentWidth ? "(sq.ft)" : "(ft)"} *
             </label>
             <input
               type="number"
@@ -1507,16 +1540,18 @@ const PropertyUploadPage: React.FC = () => {
               value={formData.width || ""}
               onChange={handleInputChange}
               className="form-input"
-              placeholder="Enter width"
+              placeholder={isHostelRentWidth ? "e.g. 10" : "Enter width"}
             />
           </div>
         );
 
       case "totalfloors":
+        const isHostelRentTotalFloors =
+          formData.subCategory === "Hostels" && formData.isSale === "Rent";
         return (
           <div key={fieldName}>
             <label htmlFor={fieldName} className="form-label">
-              Total Floors
+              {isHostelRentTotalFloors ? "Total Floor" : "Total Floors"} *
             </label>
             <input
               type="text"
@@ -1525,26 +1560,34 @@ const PropertyUploadPage: React.FC = () => {
               value={formData.totalfloors || ""}
               onChange={handleInputChange}
               className="form-input"
-              placeholder="Enter total floors"
+              placeholder={isHostelRentTotalFloors ? "e.g. 3" : "Enter total floors"}
             />
           </div>
         );
 
       case "yourfloor":
+        const isHostelRentFloor =
+          formData.subCategory === "Hostels" && formData.isSale === "Rent";
         return (
           <div key={fieldName}>
             <label htmlFor={fieldName} className="form-label">
-              Your Floor
+              {isHostelRentFloor ? "Room Floor" : "Property Floor"}
             </label>
-            <input
-              type="text"
+            <select
               id={fieldName}
               name={fieldName}
               value={formData.yourfloor || ""}
               onChange={handleInputChange}
               className="form-input"
-              placeholder="Enter your floor"
-            />
+            >
+              <option value="">{isHostelRentFloor ? "choose floor" : "Select floor"}</option>
+              {formData.totalfloors &&
+                Array.from({ length: parseInt(formData.totalfloors) || 0 }, (_, i) => (
+                  <option key={i + 1} value={i + 1}>
+                    {i + 1}
+                  </option>
+                ))}
+            </select>
           </div>
         );
 
@@ -1909,6 +1952,265 @@ const PropertyUploadPage: React.FC = () => {
           </div>
         );
 
+      case "attachedWashroom":
+        return (
+          <div key={fieldName}>
+            <label htmlFor={fieldName} className="form-label">
+              Attached Washroom *
+            </label>
+            <div className="flex gap-4">
+              <label className="flex items-center cursor-pointer">
+                <input
+                  type="radio"
+                  name={fieldName}
+                  value="Yes"
+                  checked={formData.attachedWashroom === "Yes"}
+                  onChange={(e) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      attachedWashroom: e.target.value,
+                    }))
+                  }
+                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
+                />
+                <span className="ml-2 text-gray-700">Yes</span>
+              </label>
+              <label className="flex items-center cursor-pointer">
+                <input
+                  type="radio"
+                  name={fieldName}
+                  value="No"
+                  checked={formData.attachedWashroom === "No"}
+                  onChange={(e) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      attachedWashroom: e.target.value,
+                    }))
+                  }
+                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
+                />
+                <span className="ml-2 text-gray-700">No</span>
+              </label>
+            </div>
+          </div>
+        );
+
+      case "roomType":
+        return (
+          <div key={fieldName}>
+            <label htmlFor={fieldName} className="form-label">
+              Room Type *
+            </label>
+            <div className="flex gap-4">
+              <label className="flex items-center cursor-pointer">
+                <input
+                  type="radio"
+                  name={fieldName}
+                  value="Sharing"
+                  checked={formData.roomType === "Sharing"}
+                  onChange={(e) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      roomType: e.target.value,
+                    }))
+                  }
+                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
+                />
+                <span className="ml-2 text-gray-700">Sharing</span>
+              </label>
+              <label className="flex items-center cursor-pointer">
+                <input
+                  type="radio"
+                  name={fieldName}
+                  value="Private"
+                  checked={formData.roomType === "Private"}
+                  onChange={(e) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      roomType: e.target.value,
+                    }))
+                  }
+                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
+                />
+                <span className="ml-2 text-gray-700">Private</span>
+              </label>
+            </div>
+          </div>
+        );
+
+      case "genderPreference":
+        return (
+          <div key={fieldName}>
+            <label htmlFor={fieldName} className="form-label">
+              For *
+            </label>
+            <div className="flex gap-4">
+              <label className="flex items-center cursor-pointer">
+                <input
+                  type="radio"
+                  name={fieldName}
+                  value="Boys"
+                  checked={formData.genderPreference === "Boys"}
+                  onChange={(e) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      genderPreference: e.target.value,
+                    }))
+                  }
+                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
+                />
+                <span className="ml-2 text-gray-700">Boys</span>
+              </label>
+              <label className="flex items-center cursor-pointer">
+                <input
+                  type="radio"
+                  name={fieldName}
+                  value="Girls"
+                  checked={formData.genderPreference === "Girls"}
+                  onChange={(e) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      genderPreference: e.target.value,
+                    }))
+                  }
+                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
+                />
+                <span className="ml-2 text-gray-700">Girls</span>
+              </label>
+              <label className="flex items-center cursor-pointer">
+                <input
+                  type="radio"
+                  name={fieldName}
+                  value="Co-ed"
+                  checked={formData.genderPreference === "Co-ed"}
+                  onChange={(e) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      genderPreference: e.target.value,
+                    }))
+                  }
+                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
+                />
+                <span className="ml-2 text-gray-700">Co-ed</span>
+              </label>
+            </div>
+          </div>
+        );
+
+      case "mealIncluded":
+        return (
+          <div key={fieldName}>
+            <label htmlFor={fieldName} className="form-label">
+              Meal Included *
+            </label>
+            <div className="flex gap-4">
+              <label className="flex items-center cursor-pointer">
+                <input
+                  type="radio"
+                  name={fieldName}
+                  value="Yes"
+                  checked={formData.mealIncluded === "Yes"}
+                  onChange={(e) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      mealIncluded: e.target.value,
+                    }))
+                  }
+                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
+                />
+                <span className="ml-2 text-gray-700">Yes</span>
+              </label>
+              <label className="flex items-center cursor-pointer">
+                <input
+                  type="radio"
+                  name={fieldName}
+                  value="No"
+                  checked={formData.mealIncluded === "No"}
+                  onChange={(e) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      mealIncluded: e.target.value,
+                    }))
+                  }
+                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
+                />
+                <span className="ml-2 text-gray-700">No</span>
+              </label>
+            </div>
+          </div>
+        );
+
+      case "liftAvailable":
+        return (
+          <div key={fieldName}>
+            <label htmlFor={fieldName} className="form-label">
+              Lift Available *
+            </label>
+            <div className="flex gap-4">
+              <label className="flex items-center cursor-pointer">
+                <input
+                  type="radio"
+                  name={fieldName}
+                  value="Yes"
+                  checked={formData.liftAvailable === "Yes"}
+                  onChange={(e) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      liftAvailable: e.target.value,
+                    }))
+                  }
+                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
+                />
+                <span className="ml-2 text-gray-700">Yes</span>
+              </label>
+              <label className="flex items-center cursor-pointer">
+                <input
+                  type="radio"
+                  name={fieldName}
+                  value="No"
+                  checked={formData.liftAvailable === "No"}
+                  onChange={(e) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      liftAvailable: e.target.value,
+                    }))
+                  }
+                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
+                />
+                <span className="ml-2 text-gray-700">No</span>
+              </label>
+            </div>
+          </div>
+        );
+
+      case "noOfBedrooms":
+        return (
+          <div key={fieldName}>
+            <label
+              htmlFor={fieldName}
+              className="form-label flex items-center gap-2"
+            >
+              <FontAwesomeIcon icon={faBed} className="text-blue-600" />
+              How many beds *
+            </label>
+            <input
+              type="number"
+              id={fieldName}
+              name={fieldName}
+              min="1"
+              value={formData.noOfBedrooms || ""}
+              onChange={(e) =>
+                setFormData((prev) => ({
+                  ...prev,
+                  noOfBedrooms: e.target.value ? Number(e.target.value) : null,
+                }))
+              }
+              className="form-input focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
+              placeholder="e.g. 2"
+            />
+          </div>
+        );
+
       default:
         return null;
     }
@@ -2259,7 +2561,12 @@ const PropertyUploadPage: React.FC = () => {
                 >
                   <option value="">Select Sale Type</option>
                   <option value="Sell">Sell</option>
-                  {formData.subCategory === "Flats" ||
+                  {formData.subCategory === "Hostels" ? (
+                    <>
+                      <option value="Rent">Rent</option>
+                      <option value="Lease">Lease</option>
+                    </>
+                  ) : formData.subCategory === "Flats" ||
                     formData.subCategory === "Builder Floors" ||
                     formData.subCategory === "House Villas" ||
                     formData.subCategory === "Farmhouses" ||
@@ -2322,7 +2629,7 @@ const PropertyUploadPage: React.FC = () => {
 
               {/* Dynamic Fields based on SubCategory */}
               <AnimatePresence>
-                {getRequiredFields(formData.subCategory).map((field, index) => (
+                {getRequiredFields(formData.subCategory, formData.isSale).map((field, index) => (
                   <motion.div
                     key={field}
                     className="form-group"
