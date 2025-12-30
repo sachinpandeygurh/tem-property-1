@@ -894,15 +894,12 @@ const PropertyUploadPage: React.FC = () => {
           "propertyPrice",
           "carpetArea",
           "buildupArea",
-
           "bhks",
           "propertyFacing",
           "furnishing",
           "constructionStatus",
           "ageOfTheProperty",
-          "totalfloors",
-          "yourfloor",
-
+          "reraApproved",
         ];
 
       case "Plots":
@@ -919,6 +916,7 @@ const PropertyUploadPage: React.FC = () => {
         return [
           "totalBathrooms",
           "propertyPrice",
+          "projectName",
           "length",
           "width",
           "bhks",
@@ -926,7 +924,6 @@ const PropertyUploadPage: React.FC = () => {
           "propertyFacing",
           "ageOfTheProperty",
           "reraApproved",
-          "projectName",
         ];
 
       case "Hotels":
@@ -945,7 +942,8 @@ const PropertyUploadPage: React.FC = () => {
       case "Lands":
         return [
           "landArea",
-          "distFromOutRRoad",
+          // "distFromOutRRoad",
+          "landType",
           "propertyPrice",
           "soilType",
           "approachRoad",
@@ -958,17 +956,16 @@ const PropertyUploadPage: React.FC = () => {
           "propertyPrice",
           "carpetArea",
           "buildupArea",
-
           "totalfloors",
           "yourfloor",
           "furnishing",
           "constructionStatus",
           "propertyFacing",
           "washroom",
-          "reraApproved",
           "ageOfTheProperty",
           "cabins",
           "parking",
+          "reraApproved",
         ];
 
       case "Hostels":
@@ -978,7 +975,7 @@ const PropertyUploadPage: React.FC = () => {
             "propertyName",
             "noOfBedrooms",
             "propertyPrice",
-            "description",
+            // "description",
             "length",
             "width",
             "totalfloors",
@@ -1238,6 +1235,29 @@ const PropertyUploadPage: React.FC = () => {
               onChange={handleInputChange}
               className="form-input focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
               placeholder="Number of rooms"
+            />
+          </div>
+        );
+
+      case "cabins":
+        return (
+          <div key={fieldName}>
+            <label
+              htmlFor={fieldName}
+              className="form-label flex items-center gap-2"
+            >
+              <FontAwesomeIcon icon={faBed} className="text-blue-600" />
+              Cabins
+            </label>
+            <input
+              type="number"
+              id={fieldName}
+              name={fieldName}
+              min="0"
+              value={formData.cabins || ""}
+              onChange={handleInputChange}
+              className="form-input focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
+              placeholder="Number of Cabins"
             />
           </div>
         );
@@ -1682,7 +1702,7 @@ const PropertyUploadPage: React.FC = () => {
         return (
           <div key={fieldName}>
             <label htmlFor={fieldName} className="form-label">
-              Land Area (sq ft)
+              Land Area (acre)
             </label>
             <input
               type="number"
@@ -1732,10 +1752,34 @@ const PropertyUploadPage: React.FC = () => {
               className="form-input"
             >
               <option value="">Select Soil Type</option>
-              <option value="Alluvial">Alluvial</option>
-              <option value="Black">Black</option>
-              <option value="Red">Red</option>
-              <option value="Laterite">Laterite</option>
+              <option value="Sandy">Sandy</option>
+              <option value="Clay">Clay</option>
+              <option value="Loamy">Loamy</option>
+              <option value="Rocky">Rocky</option>
+              <option value="Silty">Silty</option>
+              <option value="Peaty">Peaty</option>
+              <option value="Saline">Saline</option>
+            </select>
+          </div>
+        );
+        
+      case "landType":
+        return (
+          <div key={fieldName}>
+            <label htmlFor={fieldName} className="form-label">
+              Land Type
+            </label>
+            <select
+              id={fieldName}
+              name={fieldName}
+              value={formData.landType || ""}
+              onChange={handleInputChange}
+              className="form-input"
+            >
+              <option value="">Select Land Type</option>
+              <option value="Agricultural">Agricultural</option>
+              <option value="Commercial">Commercial</option>
+              <option value="Industrial">Industrial</option>
             </select>
           </div>
         );
@@ -1754,9 +1798,8 @@ const PropertyUploadPage: React.FC = () => {
               className="form-input"
             >
               <option value="">Select Road Type</option>
-              <option value="Metalled">Metalled</option>
-              <option value="Unmetalled">Unmetalled</option>
-              <option value="Kutcha">Kutcha</option>
+              <option value="Paved">Paved</option>
+              <option value="Unpaved">Unpaved</option>
             </select>
           </div>
         );
@@ -1836,9 +1879,9 @@ const PropertyUploadPage: React.FC = () => {
               className="form-input"
             >
               <option value="">Select Parking</option>
-              <option value="Available">Available</option>
-              <option value="Not Available">Not Available</option>
-              <option value="Street Parking">Street Parking</option>
+              <option value="Public">Public</option>
+              <option value="Private">Private</option>
+              {/* <option value="Street Parking">Street Parking</option> */}
             </select>
           </div>
         );
