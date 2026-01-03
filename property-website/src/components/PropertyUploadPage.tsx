@@ -1777,9 +1777,9 @@ const PropertyUploadPage: React.FC = () => {
               className="form-input"
             >
               <option value="">Select Land Type</option>
-              <option value="Agricultural">Agricultural</option>
-              <option value="Commercial">Commercial</option>
-              <option value="Industrial">Industrial</option>
+              <option value="agricultural">Agricultural</option>
+              <option value="commercial">Commercial</option>
+              <option value="industrial">Industrial</option>
             </select>
           </div>
         );
