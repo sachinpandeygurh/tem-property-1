@@ -737,15 +737,9 @@ const PropertyUploadPage: React.FC = () => {
         });
       }
 
-      const apiUrl = propertyId
-        ? `https://nextopson.com/temp/api/v1/temp/properties/${propertyId}`
-        : "https://nextopson.com/temp/api/v1/temp/properties";
-      // const apiUrl = propertyId
-      //   ? `http://192.168.1.11:5001/api/v1/temp/properties/${propertyId}`
-      //   : "http://192.168.1.11:5001/api/v1/temp/properties";
-
+      const apiUrl = "https://nextopson.com/temp/api/v1/temp/properties";
       const response = await fetch(apiUrl, {
-        method: propertyId ? "PUT" : "POST",
+        method: "POST",
         // Do NOT set Content-Type header when sending FormData; browser sets it automatically with boundary
         body: data,
       });

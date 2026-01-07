@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import axios from 'axios';
-import RealImg from './RealImg';
+// import RealImg from './RealImg';
 import { animations, variants } from '../theme';
 import { useNavigate } from 'react-router-dom';
 
@@ -46,6 +46,7 @@ const AdminPanel: React.FC = () => {
 
   const [tempUsers, setTempUsers] = useState<TempUser[]>([]);
   const [tempProperties, setTempProperties] = useState<TempProperty[]>([]);
+  // console.log("test :",tempProperties)
   const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState<'users' | 'properties'>('users');
   const [deletingPropertyId, setDeletingPropertyId] = useState<string | null>(null);
@@ -281,7 +282,7 @@ const AdminPanel: React.FC = () => {
                     <thead>
                       <tr>
                         <th>Name</th>
-                        <th>Email</th>
+                        {/* <th>Email</th> */}
                         <th>Mobile</th>
                         <th>Type</th>
                         <th>Created</th>
@@ -294,9 +295,9 @@ const AdminPanel: React.FC = () => {
                           <td className="font-medium text-gray-900">
                             {user.fullName}
                           </td>
-                          <td className="text-gray-500">
+                          {/* <td className="text-gray-500">
                             {user.email}
-                          </td>
+                          </td> */}
                           <td className="text-gray-500">
                             {user.mobileNumber}
                           </td>
@@ -488,15 +489,17 @@ const AdminPanel: React.FC = () => {
                           {/* Property Image */}
                           <div className="h-48 bg-gray-200 relative">
                             {property.images && property.images.length > 0 ? (
-                              <RealImg
-                                imageKey={property.images[0]}
-                                width="100%"
-                                height="100%"
-                                alt={property.title}
-                                className="w-full h-full object-cover"
-                                showSkeleton={true}
-                                loadingDelay={300}
-                              />
+                              // <RealImg
+                              //   imageKey={property.images[0]}
+                              //   width="100%"
+                              //   height="100%"
+                              //   alt={property.title}
+                              //   className="w-full h-full object-cover"
+                              //   showSkeleton={true}
+                              //   loadingDelay={300}
+                              // />
+                              <img src={property.images[0]} alt={property.title} className='w-full max-h-48 object-contain' />
+
                             ) : (
                               <div className="w-full h-full flex items-center justify-center text-gray-500">
                                 No Image
