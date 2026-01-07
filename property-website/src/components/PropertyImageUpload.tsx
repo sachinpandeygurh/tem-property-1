@@ -29,6 +29,11 @@ const PropertyImageUpload: React.FC<PropertyImageUploadProps> = ({
   const [uploadedImages, setUploadedImages] = useState<UploadedImage[]>(images);
   const [isUploading, setIsUploading] = useState(false);
 
+  // Sync internal state with props when images prop changes (for form reset)
+  React.useEffect(() => {
+    setUploadedImages(images);
+  }, [images]);
+
   const handleImageUpload = useCallback((files: FileList) => {
     if (!files || files.length === 0) return;
 
@@ -55,9 +60,9 @@ const PropertyImageUpload: React.FC<PropertyImageUploadProps> = ({
       }
 
       const imageUrl = URL.createObjectURL(file);
-      setUploadedImages(prev => [...prev, { 
+      setUploadedImages(prev => [...prev, {
         file: file,
-        uri: imageUrl, 
+        uri: imageUrl,
         uploading: false
       }]);
     });
@@ -110,7 +115,7 @@ const PropertyImageUpload: React.FC<PropertyImageUploadProps> = ({
   }, [uploadedImages, onChange]);
 
   return (
-    <motion.div 
+    <motion.div
       className="space-y-6"
       variants={variants.springDrop}
       initial="initial"
@@ -130,8 +135,8 @@ const PropertyImageUpload: React.FC<PropertyImageUploadProps> = ({
       {/* Image Grid */}
       <div className="grid grid-cols-4 gap-2">
         {uploadedImages.map((image, index) => (
-          <div 
-            key={image.uri || index} 
+          <div
+            key={image.uri || index}
             className="relative group"
           >
             <div className="aspect-square rounded-xl overflow-hidden bg-gray-100 shadow-md">
@@ -148,7 +153,7 @@ const PropertyImageUpload: React.FC<PropertyImageUploadProps> = ({
                 </div>
               )}
             </div>
-            
+
             {/* Delete Button */}
             <button
               onClick={() => handleDelete(image.uri, image.key)}
@@ -156,7 +161,7 @@ const PropertyImageUpload: React.FC<PropertyImageUploadProps> = ({
             >
               ×
             </button>
-            
+
             {/* Image Label */}
             <div className="mt-2 text-xs text-center px-2 py-1 rounded-lg bg-gray-100 text-gray-600">
               {image.imgClassifications || `Image ${index + 1}`}

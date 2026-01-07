@@ -48,7 +48,6 @@ const AdminPanel: React.FC = () => {
   const [tempProperties, setTempProperties] = useState<TempProperty[]>([]);
   const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState<'users' | 'properties'>('users');
-  const [deletedProperty, setDeletedProperty] = useState<string>('');
   const [deletingPropertyId, setDeletingPropertyId] = useState<string | null>(null);
   const navigate = useNavigate();
 
@@ -151,10 +150,11 @@ const AdminPanel: React.FC = () => {
   const fetchTempProperties = async (page = 1, filterParams = {}) => {
     try {
       setLoading(true);
+      // const response = await axios.get('http://192.168.1.7:5001/api/v1/temp/properties', {
       const response = await axios.get('https://nextopson.com/temp/api/v1/temp/properties', {
         params: {
           page: page,
-          limit: 10,
+          limit: 12,
           ...filterParams
         }
       });
@@ -184,7 +184,8 @@ const AdminPanel: React.FC = () => {
       try {
         setLoading(true);
         await axios.delete(`https://nextopson.com/temp/api/v1/temp/users/${userId}`);
-        fetchTempUsers();
+        // Update local state instead of refetching everything
+        setTempUsers(prev => prev.filter(u => u.id !== userId));
         alert('Temporary user deleted successfully!');
       } catch (error: any) {
         alert(error.response?.data?.message || 'Error deleting temporary user');
@@ -195,17 +196,19 @@ const AdminPanel: React.FC = () => {
   };
 
   const handleDeleteTempProperty = async (propertyId: string) => {
-    // Optimistic UI: hide card immediately and disable actions for that card
+    if (!window.confirm('Are you sure you want to delete this property?')) return;
+
+    // Optimistic UI: disable actions for that card
     setDeletingPropertyId(propertyId);
-    setDeletedProperty(propertyId);
     try {
       await axios.delete(`https://nextopson.com/temp/api/v1/temp/properties/${propertyId}`);
+      // Remove from state immediately
+      setTempProperties(prev => prev.filter(p => p.id !== propertyId));
       setTotalProperties(prev => Math.max(0, prev - 1));
       console.log('Temporary property deleted successfully!');
     } catch (error: any) {
-      // Revert optimistic update on failure
-      setDeletedProperty('');
       console.log(error.response?.data?.message || 'Error deleting temporary property');
+      alert('Error deleting property');
     } finally {
       setDeletingPropertyId(null);
     }
@@ -335,7 +338,7 @@ const AdminPanel: React.FC = () => {
                 {/* Filters */}
                 {showFilters && (
                   <div className="mb-6 p-4 bg-gray-50 rounded-lg">
-                    <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4 mb-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 mb-4">
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">Category</label>
                         <select
@@ -464,110 +467,107 @@ const AdminPanel: React.FC = () => {
                   </div>
                 )}
 
-                <div className="overflow-x-auto">
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    <AnimatePresence>
-                      {tempProperties
-                        .filter((property) => property.id !== deletedProperty)
-                        .map((property) => (
-                          <motion.div
-                            key={property.id}
-                            layout
-                            initial={{ opacity: 0, y: 8 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            exit={{ opacity: 0, scale: 0.95 }}
-                            transition={{ duration: 0.18, ease: 'easeOut' }}
-                            className="bg-white rounded-lg shadow-md overflow-hidden relative"
-                          >
-                            {deletingPropertyId === property.id && (
-                              <div className="absolute inset-0 bg-white/60 flex items-center justify-center z-10">
-                                <div className="spinner" />
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                  <AnimatePresence>
+                    {tempProperties
+                      .map((property) => (
+                        <motion.div
+                          key={property.id}
+                          layout
+                          initial={{ opacity: 0, y: 8 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, scale: 0.95 }}
+                          transition={{ duration: 0.18, ease: 'easeOut' }}
+                          className="bg-white rounded-lg shadow-md overflow-hidden relative"
+                        >
+                          {deletingPropertyId === property.id && (
+                            <div className="absolute inset-0 bg-white/60 flex items-center justify-center z-10">
+                              <div className="spinner" />
+                            </div>
+                          )}
+                          {/* Property Image */}
+                          <div className="h-48 bg-gray-200 relative">
+                            {property.images && property.images.length > 0 ? (
+                              <RealImg
+                                imageKey={property.images[0]}
+                                width="100%"
+                                height="100%"
+                                alt={property.title}
+                                className="w-full h-full object-cover"
+                                showSkeleton={true}
+                                loadingDelay={300}
+                              />
+                            ) : (
+                              <div className="w-full h-full flex items-center justify-center text-gray-500">
+                                No Image
                               </div>
                             )}
-                            {/* Property Image */}
-                            <div className="h-48 bg-gray-200 relative">
-                              {property.images && property.images.length > 0 ? (
-                                <RealImg
-                                  imageKey={property.images[0]}
-                                  width="100%"
-                                  height="100%"
-                                  alt={property.title}
-                                  className="w-full h-full object-cover"
-                                  showSkeleton={true}
-                                  loadingDelay={300}
-                                />
-                              ) : (
-                                <div className="w-full h-full flex items-center justify-center text-gray-500">
-                                  No Image
+                          </div>
+
+                          {/* Property Details */}
+                          <div className="p-4">
+                            <h3 className="font-semibold text-lg text-gray-900 mb-2 line-clamp-2">
+                              {property.title}
+                            </h3>
+
+                            <div className="space-y-2 text-sm text-gray-600">
+                              <div className="flex justify-between">
+                                <span>Category:</span>
+                                <span className="font-medium">{property.category}</span>
+                              </div>
+                              <div className="flex justify-between">
+                                <span>Type:</span>
+                                <span className="font-medium">{property.subCategory}</span>
+                              </div>
+                              <div className="flex justify-between">
+                                <span>Price:</span>
+                                <span className="font-medium text-green-600">₹{property.propertyPrice?.toLocaleString()}</span>
+                              </div>
+                              {property.carpetArea && (
+                                <div className="flex justify-between">
+                                  <span>Area:</span>
+                                  <span className="font-medium">{property.carpetArea} sq ft</span>
+                                </div>
+                              )}
+                              {property.address && (
+                                <div className="flex justify-between">
+                                  <span>Location:</span>
+                                  <span className="font-medium">{property.address.locality},{property.address.city}, {property.address.state}</span>
+                                </div>
+                              )}
+                              {property.user && (
+                                <div className="flex justify-between">
+                                  <span>Owner:</span>
+                                  <span className="font-medium">{property.user.fullName}</span>
+                                </div>
+                              )}
+                              {property.user && (
+                                <div className="flex justify-between">
+                                  <span>Contact </span>
+                                  <button onClick={() => `tel:${property.user?.mobileNumber}`} className="font-medium">{property.user.mobileNumber}</button>
                                 </div>
                               )}
                             </div>
 
-                            {/* Property Details */}
-                            <div className="p-4">
-                              <h3 className="font-semibold text-lg text-gray-900 mb-2 line-clamp-2">
-                                {property.title}
-                              </h3>
-
-                              <div className="space-y-2 text-sm text-gray-600">
-                                <div className="flex justify-between">
-                                  <span>Category:</span>
-                                  <span className="font-medium">{property.category}</span>
-                                </div>
-                                <div className="flex justify-between">
-                                  <span>Type:</span>
-                                  <span className="font-medium">{property.subCategory}</span>
-                                </div>
-                                <div className="flex justify-between">
-                                  <span>Price:</span>
-                                  <span className="font-medium text-green-600">₹{property.propertyPrice?.toLocaleString()}</span>
-                                </div>
-                                {property.carpetArea && (
-                                  <div className="flex justify-between">
-                                    <span>Area:</span>
-                                    <span className="font-medium">{property.carpetArea} sq ft</span>
-                                  </div>
-                                )}
-                                {property.address && (
-                                  <div className="flex justify-between">
-                                    <span>Location:</span>
-                                    <span className="font-medium">{property.address.locality},{property.address.city}, {property.address.state}</span>
-                                  </div>
-                                )}
-                                {property.user && (
-                                  <div className="flex justify-between">
-                                    <span>Owner:</span>
-                                    <span className="font-medium">{property.user.fullName}</span>
-                                  </div>
-                                )}
-                                {property.user && (
-                                  <div className="flex justify-between">
-                                    <span>Contact </span>
-                                    <button onClick={() => `tel:${property.user?.mobileNumber}`} className="font-medium">{property.user.mobileNumber}</button>
-                                  </div>
-                                )}
-                              </div>
-
-                              {/* Actions */}
-                              <div className="mt-4 flex justify-between">
-                                <button
-                                  onClick={() => { navigate("/upload-property", { state: { propertyId: property.id } }) }}
-                                  className='text-blue-600 hover:text-blue-900 text-sm font-medium'>
-                                  Edit
-                                </button>
-                                <button
-                                  onClick={() => handleDeleteTempProperty(property.id)}
-                                  disabled={deletingPropertyId === property.id}
-                                  className={`text-sm font-medium ${deletingPropertyId === property.id ? 'text-gray-400 cursor-not-allowed' : 'text-red-600 hover:text-red-900'}`}
-                                >
-                                  Delete
-                                </button>
-                              </div>
+                            {/* Actions */}
+                            <div className="mt-4 flex justify-between">
+                              <button
+                                onClick={() => { navigate("/upload-property", { state: { propertyId: property.id } }) }}
+                                className='text-blue-600 hover:text-blue-900 text-sm font-medium'>
+                                Edit
+                              </button>
+                              <button
+                                onClick={() => handleDeleteTempProperty(property.id)}
+                                disabled={deletingPropertyId === property.id}
+                                className={`text-sm font-medium ${deletingPropertyId === property.id ? 'text-gray-400 cursor-not-allowed' : 'text-red-600 hover:text-red-900'}`}
+                              >
+                                Delete
+                              </button>
                             </div>
-                          </motion.div>
-                        ))}
-                    </AnimatePresence>
-                  </div>
+                          </div>
+                        </motion.div>
+                      ))}
+                  </AnimatePresence>
                 </div>
 
                 {/* Pagination */}

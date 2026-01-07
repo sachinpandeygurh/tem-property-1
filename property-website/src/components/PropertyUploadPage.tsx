@@ -639,6 +639,12 @@ const PropertyUploadPage: React.FC = () => {
         return;
       }
 
+      if (!formData.images || formData.images.length === 0) {
+        setError("At least one property image is required");
+        setLoading(false);
+        return;
+      }
+
       // Create FormData object
       const data = new FormData();
 
@@ -1762,7 +1768,7 @@ const PropertyUploadPage: React.FC = () => {
             </select>
           </div>
         );
-        
+
       case "landType":
         return (
           <div key={fieldName}>
