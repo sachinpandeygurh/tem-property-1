@@ -12,7 +12,11 @@ interface OTPFormData {
   otp: string;
 }
 
-const LoginPage: React.FC = () => {
+interface LoginPageProps {
+  setUser: (user: any) => void;
+}
+
+const LoginPage: React.FC<LoginPageProps> = ({setUser}) => {
   const [formData, setFormData] = useState<LoginFormData>({
     mobileNumber: ''
   });
@@ -92,6 +96,7 @@ const LoginPage: React.FC = () => {
 
         // Store user data in localStorage
         localStorage.setItem('user', JSON.stringify(response.data.user));
+        setUser(response.data.user);
 
         // Redirect to property upload page
         setTimeout(() => {

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useRef } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useLocation, useNavigate } from "react-router-dom";
 import PropertyImageUpload, { UploadedImage } from "./PropertyImageUpload";
@@ -44,32 +44,34 @@ import {
   faSpinner,
   faUpload,
   faImage,
-  faSearch,
+  // faSearch,
 } from "@fortawesome/free-solid-svg-icons";
-import { State, City, IState, ICity } from "country-state-city";
-// API function for localities only
-const getLocalities = async (city: string, state?: string, search?: string) => {
-  try {
-    const response = await fetch(
-      "https://nextopson.com/api/v1/dropdown/localities",
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ state, city, search }),
-      }
-    );
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-    const data = await response.json();
-    return data;
-  } catch (error) {
-    console.error("Error fetching localities:", error);
-    return [];
-  }
-};
+
+// import { State, City, IState, ICity } from "country-state-city";
+import StateCityLocalityPicker from "./StateCityLocalityPicker";
+// // API function for localities only
+// const getLocalities = async (city: string, state?: string, search?: string) => {
+//   try {
+//     const response = await fetch(
+//       "https://nextopson.com/api/v1/dropdown/localities",
+//       {
+//         method: "POST",
+//         headers: {
+//           "Content-Type": "application/json",
+//         },
+//         body: JSON.stringify({ state, city, search }),
+//       }
+//     );
+//     if (!response.ok) {
+//       throw new Error(`HTTP error! status: ${response.status}`);
+//     }
+//     const data = await response.json();
+//     return data;
+//   } catch (error) {
+//     console.error("Error fetching localities:", error);
+//     return [];
+//   }
+// };
 
 interface PropertyFormData {
   // Basic required fields
@@ -80,16 +82,16 @@ interface PropertyFormData {
   addressLocality: string;
   category: "Residential" | "Commercial";
   subCategory:
-  | "Flats"
-  | "Builder Floors"
-  | "House Villas"
-  | "Plots"
-  | "Farmhouses"
-  | "Hotels"
-  | "Lands"
-  | "Office Spaces"
-  | "Hostels"
-  | "Shops Showrooms";
+    | "Flats"
+    | "Builder Floors"
+    | "House Villas"
+    | "Plots"
+    | "Farmhouses"
+    | "Hotels"
+    | "Lands"
+    | "Office Spaces"
+    | "Hostels"
+    | "Shops Showrooms";
   title?: string;
   description?: string;
   isSale?: "Sell" | "Rent" | "Lease";
@@ -135,7 +137,7 @@ interface PropertyFormData {
   agentNotes?: string;
   workingWithAgent?: boolean;
   furnishingAmenities?: string[];
-  landType?: 'agricultural' | 'commercial' | 'industrial';
+  landType?: "agricultural" | "commercial" | "industrial";
   independent?: boolean;
 
   // Hostel-specific fields
@@ -152,7 +154,7 @@ interface PropertyFormData {
 
 const PropertyUploadPage: React.FC = () => {
   const userData = localStorage.getItem("user");
-  const userId = JSON.parse(userData || "{}").id
+  const userId = JSON.parse(userData || "{}").id;
   const [formData, setFormData] = useState<PropertyFormData>({
     userId: userId,
     addressState: "",
@@ -226,16 +228,16 @@ const PropertyUploadPage: React.FC = () => {
   const navigate = useNavigate();
 
   // Dropdown data states
-  const [states, setStates] = useState<IState[]>([]);
-  const [cities, setCities] = useState<ICity[]>([]);
-  const [localities, setLocalities] = useState<string[]>([]);
-  const [isLoadingStates, setIsLoadingStates] = useState(false);
-  const [isLoadingCities, setIsLoadingCities] = useState(false);
-  const [isLoadingLocalities, setIsLoadingLocalities] = useState(false);
-  const [searchLocality, setSearchLocality] = useState("");
-  const [showLocalityDropdown, setShowLocalityDropdown] = useState(false);
-  const searchLocalityInputRef = useRef<HTMLInputElement>(null);
-  const localityDropdownRef = useRef<HTMLDivElement>(null);
+  // const [states, setStates] = useState<IState[]>([]);
+  // const [cities, setCities] = useState<ICity[]>([]);
+  // const [localities, setLocalities] = useState<string[]>([]);
+  // const [isLoadingStates, setIsLoadingStates] = useState(false);
+  // const [isLoadingCities, setIsLoadingCities] = useState(false);
+  // const [isLoadingLocalities, setIsLoadingLocalities] = useState(false);
+  // const [searchLocality, setSearchLocality] = useState("");
+  // const [showLocalityDropdown, setShowLocalityDropdown] = useState(false);
+  // const searchLocalityInputRef = useRef<HTMLInputElement>(null);
+  // const localityDropdownRef = useRef<HTMLDivElement>(null);
   // run after clicked on edit button start here
   const location = useLocation();
   const { propertyId } = location.state || {};
@@ -325,9 +327,9 @@ const PropertyUploadPage: React.FC = () => {
             images: p.propertyImages?.map((img: any) => img.presignedUrl) || [],
           });
           // Set search locality to the selected locality when editing
-          if (p.address?.locality) {
-            setSearchLocality(p.address.locality);
-          }
+          // if (p.address?.locality) {
+          //   setSearchLocality(p.address.locality);
+          // }
         }
       } catch (err) {
         console.error("Error fetching property:", err);
@@ -337,10 +339,9 @@ const PropertyUploadPage: React.FC = () => {
     if (propertyId) {
       fetchProperty();
     } else {
-      console.log("property id not found")
+      console.log("property id not found");
     }
   }, [propertyId, userId]);
-
 
   console.log("form data", formData);
   // run after clicked on edit button end here
@@ -357,118 +358,118 @@ const PropertyUploadPage: React.FC = () => {
     }
   }, [navigate]);
 
-  // Fetch states on component mount using country-state-city
-  useEffect(() => {
-    const fetchStates = () => {
-      setIsLoadingStates(true);
-      try {
-        // Get all states of India (country code: IN)
-        const statesList = State.getStatesOfCountry("IN");
-        setStates(statesList);
-      } catch (error) {
-        console.error("Error fetching states:", error);
-      } finally {
-        setIsLoadingStates(false);
-      }
-    };
-    fetchStates();
-  }, []);
+  // // Fetch states on component mount using country-state-city
+  // useEffect(() => {
+  //   const fetchStates = () => {
+  //     setIsLoadingStates(true);
+  //     try {
+  //       // Get all states of India (country code: IN)
+  //       const statesList = State.getStatesOfCountry("IN");
+  //       setStates(statesList);
+  //     } catch (error) {
+  //       console.error("Error fetching states:", error);
+  //     } finally {
+  //       setIsLoadingStates(false);
+  //     }
+  //   };
+  //   fetchStates();
+  // }, []);
 
   // Track previous state to detect actual changes
-  const prevStateRef = useRef<string>("");
+  // const prevStateRef = useRef<string>("");
   // Track previous city to detect actual changes
-  const prevCityRef = useRef<string>("");
+  // const prevCityRef = useRef<string>("");
 
   // Fetch cities when state changes using country-state-city
-  useEffect(() => {
-    if (!formData.addressState) {
-      setCities([]);
-      setLocalities([]);
-      prevStateRef.current = "";
-      return;
-    }
+  // useEffect(() => {
+  //   if (!formData.addressState) {
+  //     setCities([]);
+  //     setLocalities([]);
+  //     prevStateRef.current = "";
+  //     return;
+  //   }
 
-    // Only fetch cities if state actually changed or if states just loaded
-    const stateChanged = prevStateRef.current !== formData.addressState;
+  //   // Only fetch cities if state actually changed or if states just loaded
+  //   const stateChanged = prevStateRef.current !== formData.addressState;
 
-    const fetchCities = () => {
-      setIsLoadingCities(true);
-      try {
-        // Find the state object to get the state code
-        const selectedState = states.find(
-          (state) => state.name === formData.addressState
-        );
+  //   const fetchCities = () => {
+  //     setIsLoadingCities(true);
+  //     try {
+  //       // Find the state object to get the state code
+  //       const selectedState = states.find(
+  //         (state) => state.name === formData.addressState
+  //       );
 
-        if (selectedState) {
-          // Get all cities of the selected state
-          const citiesList = City.getCitiesOfState("IN", selectedState.isoCode);
-          setCities(citiesList);
-        } else {
-          setCities([]);
-        }
+  //       if (selectedState) {
+  //         // Get all cities of the selected state
+  //         const citiesList = City.getCitiesOfState("IN", selectedState.isoCode);
+  //         setCities(citiesList);
+  //       } else {
+  //         setCities([]);
+  //       }
 
-        // Only reset city and locality when state actually changed (not on initial load)
-        if (stateChanged && prevStateRef.current !== "") {
-          setFormData((prev) => ({
-            ...prev,
-            addressCity: "",
-            addressLocality: "",
-          }));
-          setLocalities([]);
-        }
+  //       // Only reset city and locality when state actually changed (not on initial load)
+  //       if (stateChanged && prevStateRef.current !== "") {
+  //         setFormData((prev) => ({
+  //           ...prev,
+  //           addressCity: "",
+  //           addressLocality: "",
+  //         }));
+  //         setLocalities([]);
+  //       }
 
-        prevStateRef.current = formData.addressState;
-      } catch (error) {
-        console.error("Error fetching cities:", error);
-      } finally {
-        setIsLoadingCities(false);
-      }
-    };
+  //       prevStateRef.current = formData.addressState;
+  //     } catch (error) {
+  //       console.error("Error fetching cities:", error);
+  //     } finally {
+  //       setIsLoadingCities(false);
+  //     }
+  //   };
 
-    if (states.length > 0) {
-      fetchCities();
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [formData.addressState, states]);
+  //   if (states.length > 0) {
+  //     fetchCities();
+  //   }
+  //   // eslint-disable-next-line react-hooks/exhaustive-deps
+  // }, [formData.addressState, states]);
 
   // Fetch localities when city changes (initial load)
-  useEffect(() => {
-    if (!formData.addressState || !formData.addressCity) {
-      setLocalities([]);
-      prevCityRef.current = "";
-      return;
-    }
+  // useEffect(() => {
+  //   if (!formData.addressState || !formData.addressCity) {
+  //     setLocalities([]);
+  //     prevCityRef.current = "";
+  //     return;
+  //   }
 
-    // Reset search when city changes
-    const cityChanged = prevCityRef.current !== formData.addressCity;
-    if (cityChanged && prevCityRef.current !== "") {
-      setSearchLocality("");
-      setFormData((prev) => ({ ...prev, addressLocality: "" }));
-      setLocalities([]);
-      setShowLocalityDropdown(false);
-    }
-    prevCityRef.current = formData.addressCity;
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [formData.addressState, formData.addressCity]);
+  //   // Reset search when city changes
+  //   const cityChanged = prevCityRef.current !== formData.addressCity;
+  //   if (cityChanged && prevCityRef.current !== "") {
+  //     setSearchLocality("");
+  //     setFormData((prev) => ({ ...prev, addressLocality: "" }));
+  //     setLocalities([]);
+  //     setShowLocalityDropdown(false);
+  //   }
+  //   prevCityRef.current = formData.addressCity;
+  //   // eslint-disable-next-line react-hooks/exhaustive-deps
+  // }, [formData.addressState, formData.addressCity]);
 
   // Handle click outside to close dropdown
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (
-        localityDropdownRef.current &&
-        !localityDropdownRef.current.contains(event.target as Node) &&
-        searchLocalityInputRef.current &&
-        !searchLocalityInputRef.current.contains(event.target as Node)
-      ) {
-        setShowLocalityDropdown(false);
-      }
-    };
+  // useEffect(() => {
+  //   const handleClickOutside = (event: MouseEvent) => {
+  //     if (
+  //       localityDropdownRef.current &&
+  //       !localityDropdownRef.current.contains(event.target as Node) &&
+  //       searchLocalityInputRef.current &&
+  //       !searchLocalityInputRef.current.contains(event.target as Node)
+  //     ) {
+  //       setShowLocalityDropdown(false);
+  //     }
+  //   };
 
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, []);
+  //   document.addEventListener("mousedown", handleClickOutside);
+  //   return () => {
+  //     document.removeEventListener("mousedown", handleClickOutside);
+  //   };
+  // }, []);
 
   const residentialSubCategories = [
     "Flats",
@@ -539,8 +540,12 @@ const PropertyUploadPage: React.FC = () => {
             name === "plotArea" ||
             name === "landArea" ||
             name === "distFromOutRRoad"
-            ? value === "" ? undefined : (isNaN(Number(value)) ? undefined : Number(value))
-            : value,
+          ? value === ""
+            ? undefined
+            : isNaN(Number(value))
+            ? undefined
+            : Number(value)
+          : value,
     }));
 
     // Reset subcategory when category changes
@@ -561,55 +566,57 @@ const PropertyUploadPage: React.FC = () => {
     }
   };
 
-  // Function to fetch localities
-  const fetchLocalities = async (searchTerm?: string) => {
-    if (!formData.addressState || !formData.addressCity) {
-      return;
-    }
+  // // Function to fetch localities
+  // const fetchLocalities = async (searchTerm?: string) => {
+  //   if (!formData.addressState || !formData.addressCity) {
+  //     return;
+  //   }
 
-    setIsLoadingLocalities(true);
-    try {
-      const localitiesList = await getLocalities(
-        formData.addressCity,
-        formData.addressState,
-        searchTerm
-      );
-      setLocalities(localitiesList);
-      setShowLocalityDropdown(true);
-    } catch (error) {
-      console.error("Error fetching localities:", error);
-      setLocalities([]);
-    } finally {
-      setIsLoadingLocalities(false);
-    }
-  };
+  //   setIsLoadingLocalities(true);
+  //   try {
+  //     const localitiesList = await getLocalities(
+  //       formData.addressCity,
+  //       formData.addressState,
+  //       searchTerm
+  //     );
+  //     setLocalities(localitiesList);
+  //     setShowLocalityDropdown(true);
+  //   } catch (error) {
+  //     console.error("Error fetching localities:", error);
+  //     setLocalities([]);
+  //   } finally {
+  //     setIsLoadingLocalities(false);
+  //   }
+  // };
 
-  const handleSearchLocalityChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchLocality(e.target.value);
-  };
+  // const handleSearchLocalityChange = (
+  //   e: React.ChangeEvent<HTMLInputElement>
+  // ) => {
+  //   setSearchLocality(e.target.value);
+  // };
 
-  const handleSearchKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Enter") {
-      e.preventDefault();
-      fetchLocalities(searchLocality);
-    }
-  };
+  // const handleSearchKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+  //   if (e.key === "Enter") {
+  //     e.preventDefault();
+  //     fetchLocalities(searchLocality);
+  //   }
+  // };
 
-  const handleSearch = () => {
-    fetchLocalities(searchLocality);
-  };
+  // const handleSearch = () => {
+  //   fetchLocalities(searchLocality);
+  // };
 
-  const handleSelectLocality = (locality: string) => {
-    setFormData((prev) => ({ ...prev, addressLocality: locality }));
-    setSearchLocality(locality);
-    setShowLocalityDropdown(false);
-  };
+  // const handleSelectLocality = (locality: string) => {
+  //   setFormData((prev) => ({ ...prev, addressLocality: locality }));
+  //   setSearchLocality(locality);
+  //   setShowLocalityDropdown(false);
+  // };
 
-  const handleSearchFocus = () => {
-    if (formData.addressCity && localities.length > 0) {
-      setShowLocalityDropdown(true);
-    }
-  };
+  // const handleSearchFocus = () => {
+  //   if (formData.addressCity && localities.length > 0) {
+  //     setShowLocalityDropdown(true);
+  //   }
+  // };
 
   const handleImagesChange = useCallback((newImages: UploadedImage[]) => {
     setFormData((prev) => ({ ...prev, images: newImages }));
@@ -651,9 +658,12 @@ const PropertyUploadPage: React.FC = () => {
       // Append required basic fields
       data.append("userId", String(userId));
       if (propertyId) data.append("propertyId", String(propertyId));
-      if (formData.addressState) data.append("addressState", formData.addressState);
-      if (formData.addressCity) data.append("addressCity", formData.addressCity);
-      if (formData.addressLocality) data.append("addressLocality", formData.addressLocality);
+      if (formData.addressState)
+        data.append("addressState", formData.addressState);
+      if (formData.addressCity)
+        data.append("addressCity", formData.addressCity);
+      if (formData.addressLocality)
+        data.append("addressLocality", formData.addressLocality);
       data.append("category", formData.category);
       data.append("subCategory", formData.subCategory);
       if (formData.isSale) data.append("isSale", formData.isSale);
@@ -661,69 +671,110 @@ const PropertyUploadPage: React.FC = () => {
 
       // Append other fields, handling types
       if (formData.title) data.append("title", formData.title);
-      if (formData.description) data.append("description", formData.description);
-      if (formData.projectName) data.append("projectName", formData.projectName);
-      if (formData.propertyName) data.append("propertyName", formData.propertyName);
+      if (formData.description)
+        data.append("description", formData.description);
+      if (formData.projectName)
+        data.append("projectName", formData.projectName);
+      if (formData.propertyName)
+        data.append("propertyName", formData.propertyName);
 
-      if (formData.totalBathrooms !== undefined) data.append("totalBathrooms", String(formData.totalBathrooms));
-      if (formData.totalRooms !== undefined) data.append("totalRooms", String(formData.totalRooms));
-      if (formData.carpetArea !== undefined) data.append("carpetArea", String(formData.carpetArea));
-      if (formData.buildupArea !== undefined) data.append("buildupArea", String(formData.buildupArea));
+      if (formData.totalBathrooms !== undefined)
+        data.append("totalBathrooms", String(formData.totalBathrooms));
+      if (formData.totalRooms !== undefined)
+        data.append("totalRooms", String(formData.totalRooms));
+      if (formData.carpetArea !== undefined)
+        data.append("carpetArea", String(formData.carpetArea));
+      if (formData.buildupArea !== undefined)
+        data.append("buildupArea", String(formData.buildupArea));
 
       if (formData.bhks) data.append("bhks", formData.bhks);
       if (formData.furnishing) data.append("furnishing", formData.furnishing);
-      if (formData.constructionStatus) data.append("constructionStatus", formData.constructionStatus);
-      if (formData.propertyFacing) data.append("propertyFacing", formData.propertyFacing);
-      if (formData.ageOfTheProperty) data.append("ageOfTheProperty", formData.ageOfTheProperty);
+      if (formData.constructionStatus)
+        data.append("constructionStatus", formData.constructionStatus);
+      if (formData.propertyFacing)
+        data.append("propertyFacing", formData.propertyFacing);
+      if (formData.ageOfTheProperty)
+        data.append("ageOfTheProperty", formData.ageOfTheProperty);
 
       // Boolean to string
-      if (formData.reraApproved !== undefined) data.append("reraApproved", String(formData.reraApproved));
-      if (formData.workingWithAgent !== undefined) data.append("workingWithAgent", String(formData.workingWithAgent));
-      if (formData.independent !== undefined) data.append("independent", String(formData.independent));
+      if (formData.reraApproved !== undefined)
+        data.append("reraApproved", String(formData.reraApproved));
+      if (formData.workingWithAgent !== undefined)
+        data.append("workingWithAgent", String(formData.workingWithAgent));
+      if (formData.independent !== undefined)
+        data.append("independent", String(formData.independent));
 
       // Arrays - Stringify them as per curl example
       if (formData.amenities && formData.amenities.length > 0) {
         data.append("amenities", JSON.stringify(formData.amenities));
       }
-      if (formData.furnishingAmenities && formData.furnishingAmenities.length > 0) {
-        data.append("furnishingAmenities", JSON.stringify(formData.furnishingAmenities));
+      if (
+        formData.furnishingAmenities &&
+        formData.furnishingAmenities.length > 0
+      ) {
+        data.append(
+          "furnishingAmenities",
+          JSON.stringify(formData.furnishingAmenities)
+        );
       }
       if (formData.viewFromProperty && formData.viewFromProperty.length > 0) {
-        data.append("viewFromProperty", JSON.stringify(formData.viewFromProperty));
+        data.append(
+          "viewFromProperty",
+          JSON.stringify(formData.viewFromProperty)
+        );
       }
 
       if (formData.fencing) data.append("fencing", formData.fencing);
 
       // Dimensions
-      if (formData.width !== undefined) data.append("width", String(formData.width));
-      if (formData.height !== undefined) data.append("height", String(formData.height));
-      if (formData.length !== undefined) data.append("length", String(formData.length));
-      if (formData.totalArea !== undefined) data.append("totalArea", String(formData.totalArea));
-      if (formData.plotArea !== undefined) data.append("plotArea", String(formData.plotArea));
-      if (formData.landArea !== undefined) data.append("landArea", String(formData.landArea));
-      if (formData.distFromOutRRoad !== undefined) data.append("distFromOutRRoad", String(formData.distFromOutRRoad));
+      if (formData.width !== undefined)
+        data.append("width", String(formData.width));
+      if (formData.height !== undefined)
+        data.append("height", String(formData.height));
+      if (formData.length !== undefined)
+        data.append("length", String(formData.length));
+      if (formData.totalArea !== undefined)
+        data.append("totalArea", String(formData.totalArea));
+      if (formData.plotArea !== undefined)
+        data.append("plotArea", String(formData.plotArea));
+      if (formData.landArea !== undefined)
+        data.append("landArea", String(formData.landArea));
+      if (formData.distFromOutRRoad !== undefined)
+        data.append("distFromOutRRoad", String(formData.distFromOutRRoad));
 
       if (formData.unit) data.append("unit", formData.unit);
       if (formData.soilType) data.append("soilType", formData.soilType);
-      if (formData.approachRoad) data.append("approachRoad", formData.approachRoad);
+      if (formData.approachRoad)
+        data.append("approachRoad", formData.approachRoad);
 
-      if (formData.totalfloors) data.append("totalfloors", formData.totalfloors);
-      if (formData.officefloor) data.append("officefloor", formData.officefloor);
+      if (formData.totalfloors)
+        data.append("totalfloors", formData.totalfloors);
+      if (formData.officefloor)
+        data.append("officefloor", formData.officefloor);
       if (formData.yourfloor) data.append("yourfloor", formData.yourfloor);
       if (formData.cabins) data.append("cabins", formData.cabins);
       if (formData.parking) data.append("parking", formData.parking);
       if (formData.washroom) data.append("washroom", formData.washroom);
-      if (formData.availablefor) data.append("availablefor", formData.availablefor);
+
+      if (formData.availablefor)
+        data.append("availablefor", formData.availablefor);
       if (formData.agentNotes) data.append("agentNotes", formData.agentNotes);
       if (formData.landType) data.append("landType", formData.landType);
 
       // Hostel specific
-      if (formData.attachedWashroom) data.append("attachedWashroom", formData.attachedWashroom);
+      if (formData.attachedWashroom)
+        data.append("attachedWashroom", formData.attachedWashroom);
       if (formData.roomType) data.append("roomType", formData.roomType);
-      if (formData.genderPreference) data.append("genderPreference", formData.genderPreference);
-      if (formData.mealIncluded) data.append("mealIncluded", formData.mealIncluded);
-      if (formData.liftAvailable) data.append("liftAvailable", formData.liftAvailable);
-      if (formData.noOfBedrooms !== undefined && formData.noOfBedrooms !== null) {
+      if (formData.genderPreference)
+        data.append("genderPreference", formData.genderPreference);
+      if (formData.mealIncluded)
+        data.append("mealIncluded", formData.mealIncluded);
+      if (formData.liftAvailable)
+        data.append("liftAvailable", formData.liftAvailable);
+      if (
+        formData.noOfBedrooms !== undefined &&
+        formData.noOfBedrooms !== null
+      ) {
         data.append("noOfBedrooms", String(formData.noOfBedrooms));
       }
 
@@ -755,7 +806,8 @@ const PropertyUploadPage: React.FC = () => {
       }
 
       if (response.status === 201 || response.status === 200) {
-        let successMessage = responseData.message || "Property uploaded successfully!";
+        let successMessage =
+          responseData.message || "Property uploaded successfully!";
         setSuccess(successMessage);
 
         // Reset form
@@ -833,38 +885,61 @@ const PropertyUploadPage: React.FC = () => {
         // window.location.reload();
       } else {
         // Handle error responses
-        const errorMessage = responseData.message ||
+        const errorMessage =
+          responseData.message ||
           (responseData.error === "PAYLOAD_TOO_LARGE"
-            ? `Request payload too large. ${responseData.maxSize || "2GB"} maximum.`
+            ? `Request payload too large. ${
+                responseData.maxSize || "2GB"
+              } maximum.`
             : responseData.error === "TOO_MANY_FILES"
-              ? `Too many files. ${responseData.maxFiles || 50} maximum.`
-              : responseData.error === "TOTAL_FILE_SIZE_TOO_LARGE"
-                ? `Total file size too large. ${responseData.maxTotalSize || "2GB"} maximum.`
-                : "Property upload failed. Please try again.");
+            ? `Too many files. ${responseData.maxFiles || 50} maximum.`
+            : responseData.error === "TOTAL_FILE_SIZE_TOO_LARGE"
+            ? `Total file size too large. ${
+                responseData.maxTotalSize || "2GB"
+              } maximum.`
+            : "Property upload failed. Please try again.");
         setError(errorMessage);
       }
     } catch (err: any) {
       console.error("Error uploading property:", err);
-      setError(
-        err.message || "Property upload failed. Please try again."
-      );
+      setError(err.message || "Property upload failed. Please try again.");
     } finally {
       setLoading(false);
     }
   };
 
   // Function to get required fields based on subcategory (excluding amenities)
-  const getRequiredFields = (subCategory: string, isSale?: string): string[] => {
+  const getRequiredFields = (
+    subCategory: string,
+    isSale?: string
+  ): string[] => {
     switch (subCategory) {
       case "Flats":
+        if (isSale === "Rent") {
+          return [
+            "projectName",
+            "propertyPrice",
+            "totalBathrooms",
+            "totalfloors",
+            "yourfloor",
+            "carpetArea",
+            "buildupArea",
+            "ageOfTheProperty",
+            "furnishing",
+            "bhks",
+            "propertyFacing",
+            "independent",
+          ];
+        }
         return [
           "projectName",
           "propertyPrice",
-          "totalBathrooms",
+          "totalBathrooms", //
           "totalfloors",
           "yourfloor",
           "carpetArea",
           "buildupArea",
+          "ageOfTheProperty",
           "constructionStatus",
           "furnishing",
           "bhks",
@@ -873,9 +948,28 @@ const PropertyUploadPage: React.FC = () => {
         ];
 
       case "Builder Floors":
+        if (isSale === "Rent") {
+          return [
+            "projectName",
+            "propertyPrice",
+            "totalBathrooms",
+            "totalfloors",
+            "yourfloor",
+            "carpetArea",
+            "buildupArea",
+            // "constructionStatus",
+            "ageOfTheProperty",
+            "furnishing",
+            "bhks",
+            "propertyFacing",
+            // "reraApproved",
+            "independent",
+          ];
+        }
         return [
           "projectName",
           "propertyPrice",
+          "totalBathrooms",
           "totalfloors",
           "yourfloor",
           "reraApproved",
@@ -889,7 +983,26 @@ const PropertyUploadPage: React.FC = () => {
         ];
 
       case "House Villas":
+        if (isSale === "Rent") {
+          return [
+            "projectName",
+            "totalBathrooms",
+            "propertyPrice",
+            "carpetArea",
+            "buildupArea",
+            "bhks",
+            "propertyFacing",
+            "furnishing",
+            // "constructionStatus",
+            "ageOfTheProperty",
+            // "reraApproved",
+            "totalfloors",
+            "yourfloor",
+            "independent",
+          ];
+        }
         return [
+          "projectName",
           "totalBathrooms",
           "propertyPrice",
           "carpetArea",
@@ -899,12 +1012,23 @@ const PropertyUploadPage: React.FC = () => {
           "furnishing",
           "constructionStatus",
           "ageOfTheProperty",
+          "totalfloors",
+          "yourfloor",
           "reraApproved",
         ];
 
       case "Plots":
+        if (isSale === "Lease") {
+          return [
+            "projectName",
+            "propertyPrice",
+            "length",
+            "width",
+            "propertyFacing",
+          ];
+        }
         return [
-          'projectName',
+          "projectName",
           "propertyPrice",
           "length",
           "width",
@@ -913,12 +1037,25 @@ const PropertyUploadPage: React.FC = () => {
         ];
 
       case "Farmhouses":
+        if (isSale === "Rent") {
+          return [
+            "projectName",
+            "totalBathrooms",
+            "propertyPrice",
+            "plotArea",
+            "carpetArea",
+            "bhks",
+            "furnishing",
+            "propertyFacing",
+            "ageOfTheProperty",
+          ];
+        }
         return [
+          "projectName",
           "totalBathrooms",
           "propertyPrice",
-          "projectName",
-          "length",
-          "width",
+          "plotArea",
+          "carpetArea",
           "bhks",
           "furnishing",
           "propertyFacing",
@@ -931,26 +1068,34 @@ const PropertyUploadPage: React.FC = () => {
           "propertyName",
           "propertyPrice",
           "totalRooms",
-          "propertyFacing",
+          "totalArea",
+          "carpetArea",
           "furnishing",
           "constructionStatus",
           "ageOfTheProperty",
-          'totalArea',
-          'plotArea',
+          "propertyFacing",
         ];
 
       case "Lands":
-        return [
-          "landArea",
-          // "distFromOutRRoad",
-          "landType",
-          "propertyPrice",
-          "soilType",
-          "approachRoad",
-          "fencing",
-        ];
+        return ["propertyPrice", "landArea", "landType", "approachRoad"];
 
       case "Office Spaces":
+        if (isSale === "Rent") {
+          return [
+            "projectName",
+            "propertyPrice",
+            "carpetArea",
+            "buildupArea",
+            "totalfloors",
+            "yourfloor",
+            "cabins",
+            "furnishing",
+            "parking",
+            "washroom",
+            "propertyFacing",
+            "ageOfTheProperty",
+          ];
+        }
         return [
           "projectName",
           "propertyPrice",
@@ -958,13 +1103,13 @@ const PropertyUploadPage: React.FC = () => {
           "buildupArea",
           "totalfloors",
           "yourfloor",
+          "cabins",
           "furnishing",
+          "parking",
+          "washroom",
           "constructionStatus",
           "propertyFacing",
-          "washroom",
           "ageOfTheProperty",
-          "cabins",
-          "parking",
           "reraApproved",
         ];
 
@@ -975,37 +1120,49 @@ const PropertyUploadPage: React.FC = () => {
             "propertyName",
             "noOfBedrooms",
             "propertyPrice",
-            // "description",
+            "attachedWashroom",
+            "genderPreference",
+            "mealIncluded",
+            "totalfloors",
+            "yourfloor",
+            "liftAvailable",
+            "roomType",
+            "carpetArea",
+            "plotArea",
+            "ageOfTheProperty",
+          ];
+        }
+        return [
+          "propertyName",
+          "totalRooms",
+          "propertyPrice",
+          "totalfloors",
+          "carpetArea",
+          "plotArea",
+          "furnishing",
+          "propertyFacing",
+          "ageOfTheProperty",
+          "constructionStatus",
+        ];
+
+      case "Shops Showrooms":
+        if (isSale === "Rent") {
+          return [
+            "propertyName",
+            "propertyPrice",
             "length",
             "width",
             "totalfloors",
             "yourfloor",
             "furnishing",
-            "constructionStatus",
             "propertyFacing",
             "ageOfTheProperty",
-            "attachedWashroom",
-            "roomType",
-            "genderPreference",
-            "mealIncluded",
-            "liftAvailable",
+            "parking",
+            "washroom",
           ];
         }
         return [
           "propertyName",
-          "propertyPrice",
-          "totalRooms",
-          "totalArea",
-          "plotArea",
-          "totalfloors",
-          "furnishing",
-          "constructionStatus",
-          "propertyFacing",
-          "ageOfTheProperty",
-        ];
-
-      case "Shops Showrooms":
-        return [
           "propertyPrice",
           "length",
           "width",
@@ -1060,7 +1217,7 @@ const PropertyUploadPage: React.FC = () => {
     }
 
     // Add view from property for specific categories
-    if (["Farmhouses", "Hotels"].includes(subCategory)) {
+    if (["Hotels"].includes(subCategory)) {
       amenitiesFields.push("viewFromProperty");
     }
 
@@ -1070,27 +1227,27 @@ const PropertyUploadPage: React.FC = () => {
   // Function to render field based on field name
   const renderField = (fieldName: string) => {
     switch (fieldName) {
-      case "title":
-        return (
-          <div key={fieldName}>
-            <label
-              htmlFor={fieldName}
-              className="form-label flex items-center gap-2"
-            >
-              <FontAwesomeIcon icon={faTag} className="text-blue-600" />
-              Property Title
-            </label>
-            <input
-              type="text"
-              id={fieldName}
-              name={fieldName}
-              value={formData.title}
-              onChange={handleInputChange}
-              className="form-input focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
-              placeholder="Enter property title"
-            />
-          </div>
-        );
+      // case "title":
+      //   return (
+      //     <div key={fieldName}>
+      //       <label
+      //         htmlFor={fieldName}
+      //         className="form-label flex items-center gap-2"
+      //       >
+      //         <FontAwesomeIcon icon={faTag} className="text-blue-600" />
+      //         Property Title
+      //       </label>
+      //       <input
+      //         type="text"
+      //         id={fieldName}
+      //         name={fieldName}
+      //         value={formData.title}
+      //         onChange={handleInputChange}
+      //         className="form-input focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
+      //         placeholder="Enter property title"
+      //       />
+      //     </div>
+      //   );
 
       case "description":
         const isHostelRentDesc =
@@ -1111,12 +1268,21 @@ const PropertyUploadPage: React.FC = () => {
               value={formData.description || ""}
               onChange={handleInputChange}
               className="form-input focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
-              placeholder={isHostelRentDesc ? "e.g. 3 BHK flat for rent in premium locations" : "Enter property description"}
+              placeholder={
+                isHostelRentDesc
+                  ? "e.g. 3 BHK flat for rent in premium locations"
+                  : "Enter property description"
+              }
             />
             {isHostelRentDesc && (
               <div className="mt-2 flex items-center gap-2 text-sm text-gray-500">
-                <FontAwesomeIcon icon={faExclamationTriangle} className="text-blue-500" />
-                <span>Property description will auto generate if you are not filled</span>
+                <FontAwesomeIcon
+                  icon={faExclamationTriangle}
+                  className="text-blue-500"
+                />
+                <span>
+                  Property description will auto generate if you are not filled
+                </span>
               </div>
             )}
           </div>
@@ -1162,7 +1328,9 @@ const PropertyUploadPage: React.FC = () => {
               value={formData.propertyName || ""}
               onChange={handleInputChange}
               className="form-input focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
-              placeholder={isHostel ? "e.g. Green Valley PG" : "Enter property name"}
+              placeholder={
+                isHostel ? "e.g. Green Valley PG" : "Enter property name"
+              }
             />
           </div>
         );
@@ -1536,7 +1704,27 @@ const PropertyUploadPage: React.FC = () => {
               htmlFor={fieldName}
               className="ml-2 block text-sm text-gray-900"
             >
-              RERA Approved
+              RERA Approved {formData.reraApproved ? "(Yes)" : ""}
+            </label>
+          </div>
+        );
+
+      case "independent":
+        return (
+          <div key={fieldName} className="flex items-center">
+            <input
+              type="checkbox"
+              id={fieldName}
+              name={fieldName}
+              checked={formData.independent || false}
+              onChange={handleInputChange}
+              className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
+            />
+            <label
+              htmlFor={fieldName}
+              className="ml-2 block text-sm text-gray-900"
+            >
+              Independent {formData.independent ? "(Yes)" : ""}
             </label>
           </div>
         );
@@ -1600,7 +1788,9 @@ const PropertyUploadPage: React.FC = () => {
               value={formData.totalfloors || ""}
               onChange={handleInputChange}
               className="form-input"
-              placeholder={isHostelRentTotalFloors ? "e.g. 3" : "Enter total floors"}
+              placeholder={
+                isHostelRentTotalFloors ? "e.g. 3" : "Enter total floors"
+              }
             />
           </div>
         );
@@ -1620,13 +1810,24 @@ const PropertyUploadPage: React.FC = () => {
               onChange={handleInputChange}
               className="form-input"
             >
-              <option value="">{isHostelRentFloor ? "choose floor" : "Select floor"}</option>
+              <option value="">
+                {isHostelRentFloor ? "choose floor" : "Select floor"}
+              </option>
+
+              {/* 🔥 Extra floors */}
+              <option value="-2">-2</option>
+              <option value="-1">-1</option>
+              <option value="G">G (Ground)</option>
+
               {formData.totalfloors &&
-                Array.from({ length: parseInt(formData.totalfloors) || 0 }, (_, i) => (
-                  <option key={i + 1} value={i + 1}>
-                    {i + 1}
-                  </option>
-                ))}
+                Array.from(
+                  { length: parseInt(formData.totalfloors) || 0 },
+                  (_, i) => (
+                    <option key={i + 1} value={i + 1}>
+                      {i + 1}
+                    </option>
+                  )
+                )}
             </select>
           </div>
         );
@@ -1797,9 +1998,9 @@ const PropertyUploadPage: React.FC = () => {
               onChange={handleInputChange}
               className="form-input"
             >
-              <option value="">Select Road Type</option>
-              <option value="Paved">Paved</option>
-              <option value="Unpaved">Unpaved</option>
+              <option value="">Select Road</option>
+              <option value="Yes">Yes</option>
+              <option value="No">No</option>
             </select>
           </div>
         );
@@ -1890,18 +2091,21 @@ const PropertyUploadPage: React.FC = () => {
         return (
           <div key={fieldName}>
             <label htmlFor={fieldName} className="form-label">
-              Washrooms
+              Washrooms Type
             </label>
-            <input
-              type="number"
+
+            <select
               id={fieldName}
               name={fieldName}
-              min="0"
               value={formData.washroom || ""}
               onChange={handleInputChange}
               className="form-input"
-              placeholder="Number of washrooms"
-            />
+            >
+              <option value="">Select Washroom</option>
+              <option value="Public">Public</option>
+              <option value="Private">Private</option>
+              <option value="Public, Private">Both</option>
+            </select>
           </div>
         );
 
@@ -1949,8 +2153,9 @@ const PropertyUploadPage: React.FC = () => {
               )}
             </label>
             <div
-              className={`grid grid-cols-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7 gap-3 mt-4 transition-opacity duration-300 ${isUnfurnished ? "opacity-50 pointer-events-none" : ""
-                }`}
+              className={`grid grid-cols-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7 gap-3 mt-4 transition-opacity duration-300 ${
+                isUnfurnished ? "opacity-50 pointer-events-none" : ""
+              }`}
             >
               {furnishingAmenitiesIcons.map((amenity) => (
                 <motion.label
@@ -2336,7 +2541,7 @@ const PropertyUploadPage: React.FC = () => {
               </motion.div>
 
               {/* address section */}
-              <motion.div
+              {/* <motion.div
                 className="form-group"
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -2398,8 +2603,8 @@ const PropertyUploadPage: React.FC = () => {
                     {!formData.addressState
                       ? "Select State first"
                       : isLoadingCities
-                        ? "Loading cities..."
-                        : "Select City"}
+                      ? "Loading cities..."
+                      : "Select City"}
                   </option>
                   {cities.map((city) => (
                     <option key={city.name} value={city.name}>
@@ -2428,7 +2633,6 @@ const PropertyUploadPage: React.FC = () => {
                 {formData.addressCity ? (
                   <div className="relative">
                     <div className="relative">
-
                       <input
                         ref={searchLocalityInputRef}
                         type="text"
@@ -2453,14 +2657,14 @@ const PropertyUploadPage: React.FC = () => {
                         </button>
                       )}
                     </div>
-                    {/* Hidden input for form validation */}
+                    {/* Hidden input for form validation 
                     <input
                       type="hidden"
                       name="addressLocality"
                       value={formData.addressLocality}
                       required
                     />
-                    {/* Dropdown list */}
+                    {/* Dropdown list 
                     <AnimatePresence>
                       {showLocalityDropdown && localities.length > 0 && (
                         <motion.div
@@ -2475,13 +2679,15 @@ const PropertyUploadPage: React.FC = () => {
                             <div
                               key={locality}
                               onClick={() => handleSelectLocality(locality)}
-                              className={`px-4 py-3 cursor-pointer hover:bg-gray-50 transition-colors ${index !== localities.length - 1
-                                ? "border-b border-gray-100"
-                                : ""
-                                } ${formData.addressLocality === locality
+                              className={`px-4 py-3 cursor-pointer hover:bg-gray-50 transition-colors ${
+                                index !== localities.length - 1
+                                  ? "border-b border-gray-100"
+                                  : ""
+                              } ${
+                                formData.addressLocality === locality
                                   ? "bg-blue-50"
                                   : ""
-                                }`}
+                              }`}
                             >
                               {locality}
                             </div>
@@ -2513,7 +2719,23 @@ const PropertyUploadPage: React.FC = () => {
                     Select City first
                   </div>
                 )}
-              </motion.div>
+              </motion.div> */}
+
+              <StateCityLocalityPicker
+                value={{
+                  state: formData.addressState,
+                  city: formData.addressCity,
+                  locality: formData.addressLocality,
+                }}
+                onChange={(loc) =>
+                  setFormData((prev) => ({
+                    ...prev,
+                    addressState: loc.state,
+                    addressCity: loc.city,
+                    addressLocality: loc.locality,
+                  }))
+                }
+              />
 
               {/* address section end */}
 
@@ -2589,15 +2811,15 @@ const PropertyUploadPage: React.FC = () => {
                 >
                   {formData.category === "Residential"
                     ? residentialSubCategories.map((sub) => (
-                      <option key={sub} value={sub}>
-                        {sub}
-                      </option>
-                    ))
+                        <option key={sub} value={sub}>
+                          {sub}
+                        </option>
+                      ))
                     : commercialSubCategories.map((sub) => (
-                      <option key={sub} value={sub}>
-                        {sub}
-                      </option>
-                    ))}
+                        <option key={sub} value={sub}>
+                          {sub}
+                        </option>
+                      ))}
                 </select>
               </motion.div>
 
@@ -2642,7 +2864,7 @@ const PropertyUploadPage: React.FC = () => {
                 </select>
               </motion.div>
 
-              <motion.div
+              {/* <motion.div
                 className="form-group"
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -2664,7 +2886,7 @@ const PropertyUploadPage: React.FC = () => {
                   className="form-input focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
                   placeholder="Enter property title"
                 />
-              </motion.div>
+              </motion.div> */}
 
               <motion.div
                 className="lg:col-span-2"
@@ -2692,17 +2914,19 @@ const PropertyUploadPage: React.FC = () => {
 
               {/* Dynamic Fields based on SubCategory */}
               <AnimatePresence>
-                {getRequiredFields(formData.subCategory, formData.isSale).map((field, index) => (
-                  <motion.div
-                    key={field}
-                    className="form-group"
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 1.5 + index * 0.1, duration: 0.5 }}
-                  >
-                    {renderField(field)}
-                  </motion.div>
-                ))}
+                {getRequiredFields(formData.subCategory, formData.isSale).map(
+                  (field, index) => (
+                    <motion.div
+                      key={field}
+                      className="form-group"
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 1.5 + index * 0.1, duration: 0.5 }}
+                    >
+                      {renderField(field)}
+                    </motion.div>
+                  )
+                )}
               </AnimatePresence>
 
               {/* Amenities Sections */}

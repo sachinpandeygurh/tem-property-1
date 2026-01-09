@@ -13,18 +13,24 @@ import PropertyUploadPage from "./components/PropertyUploadPage";
 import AdminPanel from "./components/AdminPanel";
 import { animations, variants } from "./theme";
 import "./App.css";
+import { ProtectedRoute } from "./components/ProtectedRoute";
 
-function NavigationHeader() {
-  const [user, setUser] = useState<any>(null);
+interface NavigationHeaderProps {
+  user: any;
+  setUser: (user: any) => void;
+}
+
+function NavigationHeader({ user, setUser }: NavigationHeaderProps) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const navigate = useNavigate();
 
-  useEffect(() => {
-    const userData = localStorage.getItem("user");
-    if (userData) {
-      setUser(JSON.parse(userData));
-    }
-  }, []);
+  // const [user, setUser] = useState<any>(null);
+  // useEffect(() => {
+  //   const userData = localStorage.getItem("user");
+  //   if (userData) {
+  //     setUser(JSON.parse(userData));
+  //   }
+  // }, []);
 
   // Close mobile menu when clicking outside
   useEffect(() => {
@@ -114,15 +120,17 @@ function NavigationHeader() {
               </button>
             </>
           )}
-          <div className="bg-white">
-            <Link
-              to="/admin"
-              className="btn hidden"
-              onClick={() => setIsMobileMenuOpen(false)}
-            >
-             <img src="/home.png" alt="Home" className="h-5 w-5 bg-white"/>
-            </Link>
-          </div>
+          {user && (
+            <div className="bg-white">
+              <Link
+                to="/admin"
+                className="btn"
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                <img src="/home.png" alt="Home" className="h-5 w-5 bg-white" />
+              </Link>
+            </div>
+          )}
         </div>
       </div>
     </motion.nav>
@@ -130,10 +138,15 @@ function NavigationHeader() {
 }
 
 function App() {
+  const [user, setUser] = useState(() => {
+    const storedUser = localStorage.getItem("user");
+    return storedUser ? JSON.parse(storedUser) : null;
+  });
   return (
     <Router>
       <div className="min-h-screen bg-gray-50">
-        <NavigationHeader />
+        {/* <NavigationHeader /> */}
+        <NavigationHeader user={user} setUser={setUser} />
 
         {/* Main Content */}
         <motion.main
@@ -148,9 +161,23 @@ function App() {
             <Routes>
               <Route path="/" element={<SignupPage />} />
               <Route path="/signup" element={<SignupPage />} />
-              <Route path="/login" element={<LoginPage />} />
-              <Route path="/upload-property" element={<PropertyUploadPage />} />
-              <Route path="/admin" element={<AdminPanel />} />
+              <Route path="/login" element={<LoginPage setUser={setUser} />} />
+              <Route
+                path="/upload-property"
+                element={
+                  <ProtectedRoute>
+                    <PropertyUploadPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/admin"
+                element={
+                  <ProtectedRoute>
+                    <AdminPanel />
+                  </ProtectedRoute>
+                }
+              />
             </Routes>
           </AnimatePresence>
         </motion.main>
