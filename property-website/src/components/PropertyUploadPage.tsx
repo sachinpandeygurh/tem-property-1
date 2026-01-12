@@ -44,34 +44,9 @@ import {
   faSpinner,
   faUpload,
   faImage,
-  // faSearch,
 } from "@fortawesome/free-solid-svg-icons";
 
-// import { State, City, IState, ICity } from "country-state-city";
 import StateCityLocalityPicker from "./StateCityLocalityPicker";
-// // API function for localities only
-// const getLocalities = async (city: string, state?: string, search?: string) => {
-//   try {
-//     const response = await fetch(
-//       "https://nextopson.com/api/v1/dropdown/localities",
-//       {
-//         method: "POST",
-//         headers: {
-//           "Content-Type": "application/json",
-//         },
-//         body: JSON.stringify({ state, city, search }),
-//       }
-//     );
-//     if (!response.ok) {
-//       throw new Error(`HTTP error! status: ${response.status}`);
-//     }
-//     const data = await response.json();
-//     return data;
-//   } catch (error) {
-//     console.error("Error fetching localities:", error);
-//     return [];
-//   }
-// };
 
 interface PropertyFormData {
   // Basic required fields
@@ -227,17 +202,6 @@ const PropertyUploadPage: React.FC = () => {
   const [user, setUser] = useState<any>(null);
   const navigate = useNavigate();
 
-  // Dropdown data states
-  // const [states, setStates] = useState<IState[]>([]);
-  // const [cities, setCities] = useState<ICity[]>([]);
-  // const [localities, setLocalities] = useState<string[]>([]);
-  // const [isLoadingStates, setIsLoadingStates] = useState(false);
-  // const [isLoadingCities, setIsLoadingCities] = useState(false);
-  // const [isLoadingLocalities, setIsLoadingLocalities] = useState(false);
-  // const [searchLocality, setSearchLocality] = useState("");
-  // const [showLocalityDropdown, setShowLocalityDropdown] = useState(false);
-  // const searchLocalityInputRef = useRef<HTMLInputElement>(null);
-  // const localityDropdownRef = useRef<HTMLDivElement>(null);
   // run after clicked on edit button start here
   const location = useLocation();
   const { propertyId } = location.state || {};
@@ -326,10 +290,6 @@ const PropertyUploadPage: React.FC = () => {
             // Images
             images: p.propertyImages?.map((img: any) => img.presignedUrl) || [],
           });
-          // Set search locality to the selected locality when editing
-          // if (p.address?.locality) {
-          //   setSearchLocality(p.address.locality);
-          // }
         }
       } catch (err) {
         console.error("Error fetching property:", err);
@@ -357,119 +317,6 @@ const PropertyUploadPage: React.FC = () => {
       navigate("/login");
     }
   }, [navigate]);
-
-  // // Fetch states on component mount using country-state-city
-  // useEffect(() => {
-  //   const fetchStates = () => {
-  //     setIsLoadingStates(true);
-  //     try {
-  //       // Get all states of India (country code: IN)
-  //       const statesList = State.getStatesOfCountry("IN");
-  //       setStates(statesList);
-  //     } catch (error) {
-  //       console.error("Error fetching states:", error);
-  //     } finally {
-  //       setIsLoadingStates(false);
-  //     }
-  //   };
-  //   fetchStates();
-  // }, []);
-
-  // Track previous state to detect actual changes
-  // const prevStateRef = useRef<string>("");
-  // Track previous city to detect actual changes
-  // const prevCityRef = useRef<string>("");
-
-  // Fetch cities when state changes using country-state-city
-  // useEffect(() => {
-  //   if (!formData.addressState) {
-  //     setCities([]);
-  //     setLocalities([]);
-  //     prevStateRef.current = "";
-  //     return;
-  //   }
-
-  //   // Only fetch cities if state actually changed or if states just loaded
-  //   const stateChanged = prevStateRef.current !== formData.addressState;
-
-  //   const fetchCities = () => {
-  //     setIsLoadingCities(true);
-  //     try {
-  //       // Find the state object to get the state code
-  //       const selectedState = states.find(
-  //         (state) => state.name === formData.addressState
-  //       );
-
-  //       if (selectedState) {
-  //         // Get all cities of the selected state
-  //         const citiesList = City.getCitiesOfState("IN", selectedState.isoCode);
-  //         setCities(citiesList);
-  //       } else {
-  //         setCities([]);
-  //       }
-
-  //       // Only reset city and locality when state actually changed (not on initial load)
-  //       if (stateChanged && prevStateRef.current !== "") {
-  //         setFormData((prev) => ({
-  //           ...prev,
-  //           addressCity: "",
-  //           addressLocality: "",
-  //         }));
-  //         setLocalities([]);
-  //       }
-
-  //       prevStateRef.current = formData.addressState;
-  //     } catch (error) {
-  //       console.error("Error fetching cities:", error);
-  //     } finally {
-  //       setIsLoadingCities(false);
-  //     }
-  //   };
-
-  //   if (states.length > 0) {
-  //     fetchCities();
-  //   }
-  //   // eslint-disable-next-line react-hooks/exhaustive-deps
-  // }, [formData.addressState, states]);
-
-  // Fetch localities when city changes (initial load)
-  // useEffect(() => {
-  //   if (!formData.addressState || !formData.addressCity) {
-  //     setLocalities([]);
-  //     prevCityRef.current = "";
-  //     return;
-  //   }
-
-  //   // Reset search when city changes
-  //   const cityChanged = prevCityRef.current !== formData.addressCity;
-  //   if (cityChanged && prevCityRef.current !== "") {
-  //     setSearchLocality("");
-  //     setFormData((prev) => ({ ...prev, addressLocality: "" }));
-  //     setLocalities([]);
-  //     setShowLocalityDropdown(false);
-  //   }
-  //   prevCityRef.current = formData.addressCity;
-  //   // eslint-disable-next-line react-hooks/exhaustive-deps
-  // }, [formData.addressState, formData.addressCity]);
-
-  // Handle click outside to close dropdown
-  // useEffect(() => {
-  //   const handleClickOutside = (event: MouseEvent) => {
-  //     if (
-  //       localityDropdownRef.current &&
-  //       !localityDropdownRef.current.contains(event.target as Node) &&
-  //       searchLocalityInputRef.current &&
-  //       !searchLocalityInputRef.current.contains(event.target as Node)
-  //     ) {
-  //       setShowLocalityDropdown(false);
-  //     }
-  //   };
-
-  //   document.addEventListener("mousedown", handleClickOutside);
-  //   return () => {
-  //     document.removeEventListener("mousedown", handleClickOutside);
-  //   };
-  // }, []);
 
   const residentialSubCategories = [
     "Flats",
@@ -566,58 +413,6 @@ const PropertyUploadPage: React.FC = () => {
     }
   };
 
-  // // Function to fetch localities
-  // const fetchLocalities = async (searchTerm?: string) => {
-  //   if (!formData.addressState || !formData.addressCity) {
-  //     return;
-  //   }
-
-  //   setIsLoadingLocalities(true);
-  //   try {
-  //     const localitiesList = await getLocalities(
-  //       formData.addressCity,
-  //       formData.addressState,
-  //       searchTerm
-  //     );
-  //     setLocalities(localitiesList);
-  //     setShowLocalityDropdown(true);
-  //   } catch (error) {
-  //     console.error("Error fetching localities:", error);
-  //     setLocalities([]);
-  //   } finally {
-  //     setIsLoadingLocalities(false);
-  //   }
-  // };
-
-  // const handleSearchLocalityChange = (
-  //   e: React.ChangeEvent<HTMLInputElement>
-  // ) => {
-  //   setSearchLocality(e.target.value);
-  // };
-
-  // const handleSearchKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-  //   if (e.key === "Enter") {
-  //     e.preventDefault();
-  //     fetchLocalities(searchLocality);
-  //   }
-  // };
-
-  // const handleSearch = () => {
-  //   fetchLocalities(searchLocality);
-  // };
-
-  // const handleSelectLocality = (locality: string) => {
-  //   setFormData((prev) => ({ ...prev, addressLocality: locality }));
-  //   setSearchLocality(locality);
-  //   setShowLocalityDropdown(false);
-  // };
-
-  // const handleSearchFocus = () => {
-  //   if (formData.addressCity && localities.length > 0) {
-  //     setShowLocalityDropdown(true);
-  //   }
-  // };
-
   const handleImagesChange = useCallback((newImages: UploadedImage[]) => {
     setFormData((prev) => ({ ...prev, images: newImages }));
   }, []);
@@ -678,7 +473,8 @@ const PropertyUploadPage: React.FC = () => {
       if (formData.propertyName)
         data.append("propertyName", formData.propertyName);
 
-      if (formData.totalBathrooms !== undefined)
+      // if (formData.totalBathrooms !== undefined)
+      if (formData.totalBathrooms)
         data.append("totalBathrooms", String(formData.totalBathrooms));
       if (formData.totalRooms !== undefined)
         data.append("totalRooms", String(formData.totalRooms));
@@ -791,7 +587,6 @@ const PropertyUploadPage: React.FC = () => {
       const apiUrl = "https://nextopson.com/temp/api/v1/temp/properties";
       const response = await fetch(apiUrl, {
         method: "POST",
-        // Do NOT set Content-Type header when sending FormData; browser sets it automatically with boundary
         body: data,
       });
 
@@ -1227,28 +1022,6 @@ const PropertyUploadPage: React.FC = () => {
   // Function to render field based on field name
   const renderField = (fieldName: string) => {
     switch (fieldName) {
-      // case "title":
-      //   return (
-      //     <div key={fieldName}>
-      //       <label
-      //         htmlFor={fieldName}
-      //         className="form-label flex items-center gap-2"
-      //       >
-      //         <FontAwesomeIcon icon={faTag} className="text-blue-600" />
-      //         Property Title
-      //       </label>
-      //       <input
-      //         type="text"
-      //         id={fieldName}
-      //         name={fieldName}
-      //         value={formData.title}
-      //         onChange={handleInputChange}
-      //         className="form-input focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
-      //         placeholder="Enter property title"
-      //       />
-      //     </div>
-      //   );
-
       case "description":
         const isHostelRentDesc =
           formData.subCategory === "Hostels" && formData.isSale === "Rent";
@@ -2082,7 +1855,6 @@ const PropertyUploadPage: React.FC = () => {
               <option value="">Select Parking</option>
               <option value="Public">Public</option>
               <option value="Private">Private</option>
-              {/* <option value="Street Parking">Street Parking</option> */}
             </select>
           </div>
         );
@@ -2173,7 +1945,7 @@ const PropertyUploadPage: React.FC = () => {
                     }
                     disabled={isUnfurnished}
                     onChange={(e) => {
-                      if (isUnfurnished) return; // Prevent changes when disabled
+                      if (isUnfurnished) return;
                       const currentAmenities =
                         formData.furnishingAmenities || [];
                       if (e.target.checked) {
@@ -2540,187 +2312,6 @@ const PropertyUploadPage: React.FC = () => {
                 </div>
               </motion.div>
 
-              {/* address section */}
-              {/* <motion.div
-                className="form-group"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.7, duration: 0.5 }}
-              >
-                <label
-                  htmlFor="addressState"
-                  className="form-label flex items-center gap-2"
-                >
-                  <FontAwesomeIcon
-                    icon={faMapMarkerAlt}
-                    className="text-blue-600"
-                  />
-                  State *
-                </label>
-                <select
-                  id="addressState"
-                  name="addressState"
-                  required
-                  value={formData.addressState}
-                  onChange={handleInputChange}
-                  className="form-input focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
-                  disabled={isLoadingStates}
-                >
-                  <option value="">
-                    {isLoadingStates ? "Loading states..." : "Select State"}
-                  </option>
-                  {states.map((state) => (
-                    <option key={state.isoCode} value={state.name}>
-                      {state.name}
-                    </option>
-                  ))}
-                </select>
-              </motion.div>
-
-              <motion.div
-                className="form-group"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.8, duration: 0.5 }}
-              >
-                <label
-                  htmlFor="addressCity"
-                  className="form-label flex items-center gap-2"
-                >
-                  <FontAwesomeIcon icon={faCity} className="text-blue-600" />
-                  City *
-                </label>
-                <select
-                  id="addressCity"
-                  name="addressCity"
-                  required
-                  value={formData.addressCity}
-                  onChange={handleInputChange}
-                  className="form-input focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
-                  disabled={!formData.addressState || isLoadingCities}
-                >
-                  <option value="">
-                    {!formData.addressState
-                      ? "Select State first"
-                      : isLoadingCities
-                      ? "Loading cities..."
-                      : "Select City"}
-                  </option>
-                  {cities.map((city) => (
-                    <option key={city.name} value={city.name}>
-                      {city.name}
-                    </option>
-                  ))}
-                </select>
-              </motion.div>
-
-              <motion.div
-                className="lg:col-span-2 relative"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.9, duration: 0.5 }}
-              >
-                <label
-                  htmlFor="addressLocality"
-                  className="form-label flex items-center gap-2"
-                >
-                  <FontAwesomeIcon
-                    icon={faMapMarkerAlt}
-                    className="text-blue-600"
-                  />
-                  Locality *
-                </label>
-                {formData.addressCity ? (
-                  <div className="relative">
-                    <div className="relative">
-                      <input
-                        ref={searchLocalityInputRef}
-                        type="text"
-                        id="searchLocality"
-                        name="searchLocality"
-                        value={searchLocality}
-                        onChange={handleSearchLocalityChange}
-                        onKeyDown={handleSearchKeyDown}
-                        onFocus={handleSearchFocus}
-                        className="form-input pl-10 pr-10 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
-                        placeholder="Search locality and press Enter..."
-                        disabled={isLoadingLocalities}
-                        required
-                      />
-                      {searchLocality && (
-                        <button
-                          type="button"
-                          onClick={handleSearch}
-                          className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
-                        >
-                          <FontAwesomeIcon icon={faSearch} />
-                        </button>
-                      )}
-                    </div>
-                    {/* Hidden input for form validation 
-                    <input
-                      type="hidden"
-                      name="addressLocality"
-                      value={formData.addressLocality}
-                      required
-                    />
-                    {/* Dropdown list 
-                    <AnimatePresence>
-                      {showLocalityDropdown && localities.length > 0 && (
-                        <motion.div
-                          ref={localityDropdownRef}
-                          initial={{ opacity: 0, y: -10 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          exit={{ opacity: 0, y: -10 }}
-                          transition={{ duration: 0.2 }}
-                          className="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-y-auto"
-                        >
-                          {localities.map((locality, index) => (
-                            <div
-                              key={locality}
-                              onClick={() => handleSelectLocality(locality)}
-                              className={`px-4 py-3 cursor-pointer hover:bg-gray-50 transition-colors ${
-                                index !== localities.length - 1
-                                  ? "border-b border-gray-100"
-                                  : ""
-                              } ${
-                                formData.addressLocality === locality
-                                  ? "bg-blue-50"
-                                  : ""
-                              }`}
-                            >
-                              {locality}
-                            </div>
-                          ))}
-                        </motion.div>
-                      )}
-                      {showLocalityDropdown &&
-                        isLoadingLocalities &&
-                        localities.length === 0 && (
-                          <motion.div
-                            initial={{ opacity: 0, y: -10 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            exit={{ opacity: 0, y: -10 }}
-                            className="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg p-4"
-                          >
-                            <div className="flex items-center justify-center gap-2 text-gray-500">
-                              <FontAwesomeIcon
-                                icon={faSpinner}
-                                className="animate-spin"
-                              />
-                              <span>Loading localities...</span>
-                            </div>
-                          </motion.div>
-                        )}
-                    </AnimatePresence>
-                  </div>
-                ) : (
-                  <div className="text-gray-500 text-sm py-2">
-                    Select City first
-                  </div>
-                )}
-              </motion.div> */}
-
               <StateCityLocalityPicker
                 value={{
                   state: formData.addressState,
@@ -2863,30 +2454,6 @@ const PropertyUploadPage: React.FC = () => {
                   )}
                 </select>
               </motion.div>
-
-              {/* <motion.div
-                className="form-group"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 1.4, duration: 0.5 }}
-              >
-                <label
-                  htmlFor="title"
-                  className="form-label flex items-center gap-2"
-                >
-                  <FontAwesomeIcon icon={faTag} className="text-blue-600" />
-                  Property Title
-                </label>
-                <input
-                  type="text"
-                  id="title"
-                  name="title"
-                  value={formData.title || ""}
-                  onChange={handleInputChange}
-                  className="form-input focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
-                  placeholder="Enter property title"
-                />
-              </motion.div> */}
 
               <motion.div
                 className="lg:col-span-2"
