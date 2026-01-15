@@ -7,6 +7,7 @@ import { getLocalities } from "../api/dropdown";
 const StateCityLocalityPicker: React.FC<PickerProps> = ({
   value,
   onChange,
+  errorFields = [],
 }) => {
   const [states, setStates] = useState<any[]>([]);
   const [cities, setCities] = useState<any[]>([]);
@@ -78,7 +79,8 @@ const StateCityLocalityPicker: React.FC<PickerProps> = ({
         onChange={(e) =>
           onChange({ state: e.target.value, city: "", locality: "" })
         }
-        className="form-input"
+        className={`form-input ${errorFields.includes("addressState") ? "border-red-500 ring-1 ring-red-500" : ""
+          }`}
       >
         <option value="">Select State</option>
         {states.map((s) => (
@@ -95,7 +97,8 @@ const StateCityLocalityPicker: React.FC<PickerProps> = ({
         onChange={(e) =>
           onChange({ ...value, city: e.target.value, locality: "" })
         }
-        className="form-input"
+        className={`form-input ${errorFields.includes("addressCity") ? "border-red-500 ring-1 ring-red-500" : ""
+          }`}
       >
         <option value="">
           {!value.state ? "Select State first" : "Select City"}
@@ -122,7 +125,8 @@ const StateCityLocalityPicker: React.FC<PickerProps> = ({
                 }
               }}
               placeholder="Search locality"
-              className="form-input pr-10"
+              className={`form-input pr-10 ${errorFields.includes("addressLocality") ? "border-red-500 ring-1 ring-red-500" : ""
+                }`}
             />
 
             {/* Search Button */}

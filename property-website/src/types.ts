@@ -7,4 +7,5 @@ export interface LocationValue {
 export interface PickerProps {
   value: LocationValue;
   onChange: (value: LocationValue) => void;
+  errorFields?: string[];
 }

@@ -57,16 +57,16 @@ interface PropertyFormData {
   addressLocality: string;
   category: "Residential" | "Commercial";
   subCategory:
-    | "Flats"
-    | "Builder Floors"
-    | "House Villas"
-    | "Plots"
-    | "Farmhouses"
-    | "Hotels"
-    | "Lands"
-    | "Office Spaces"
-    | "Hostels"
-    | "Shops Showrooms";
+  | "Flats"
+  | "Builder Floors"
+  | "House Villas"
+  | "Plots"
+  | "Farmhouses"
+  | "Hotels"
+  | "Lands"
+  | "Office Spaces"
+  | "Hostels"
+  | "Shops Showrooms";
   title?: string;
   description?: string;
   isSale?: "Sell" | "Rent" | "Lease";
@@ -113,7 +113,7 @@ interface PropertyFormData {
   workingWithAgent?: boolean;
   furnishingAmenities?: string[];
   landType?: "agricultural" | "commercial" | "industrial";
-  independent?: boolean;
+  independent?: boolean | null;
 
   // Hostel-specific fields
   attachedWashroom?: string | null;
@@ -183,7 +183,7 @@ const PropertyUploadPage: React.FC = () => {
     workingWithAgent: false,
     furnishingAmenities: [],
     landType: undefined,
-    independent: false,
+    independent: null,
 
     // Hostel-specific fields
     attachedWashroom: null,
@@ -200,6 +200,7 @@ const PropertyUploadPage: React.FC = () => {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [user, setUser] = useState<any>(null);
+  const [validationErrors, setValidationErrors] = useState<string[]>([]);
   const navigate = useNavigate();
 
   // run after clicked on edit button start here
@@ -369,6 +370,7 @@ const PropertyUploadPage: React.FC = () => {
     >
   ) => {
     const { name, value, type } = e.target;
+    setValidationErrors((prev) => prev.filter((f) => f !== name));
 
     setFormData((prev) => ({
       ...prev,
@@ -387,12 +389,12 @@ const PropertyUploadPage: React.FC = () => {
             name === "plotArea" ||
             name === "landArea" ||
             name === "distFromOutRRoad"
-          ? value === ""
-            ? undefined
-            : isNaN(Number(value))
-            ? undefined
-            : Number(value)
-          : value,
+            ? value === ""
+              ? undefined
+              : isNaN(Number(value))
+                ? undefined
+                : Number(value)
+            : value,
     }));
 
     // Reset subcategory when category changes
@@ -434,9 +436,47 @@ const PropertyUploadPage: React.FC = () => {
         return;
       }
 
+      // Dynamic required field validation
+      setValidationErrors([]);
+      const errors: string[] = [];
+
       // Validate required fields
       if (!formData.propertyPrice || formData.propertyPrice <= 0) {
-        setError("Property price is required and must be greater than 0");
+        errors.push("propertyPrice");
+      } else if (formData.propertyPrice < 1000) {
+        errors.push("propertyPrice");
+      }
+
+      const requiredFields = getRequiredFields(
+        formData.subCategory,
+        formData.isSale
+      );
+
+      // Check basic location fields
+      if (!formData.addressState) errors.push("addressState");
+      if (!formData.addressCity) errors.push("addressCity");
+      if (!formData.addressLocality) errors.push("addressLocality");
+
+      for (const field of requiredFields) {
+        const val = (formData as any)[field];
+        if (val === undefined || val === null || val === "" || (Array.isArray(val) && val.length === 0)) {
+          errors.push(field);
+        }
+      }
+
+      if (errors.length > 0) {
+        setValidationErrors(errors);
+
+        // Show the first error message
+        const firstField = errors[0];
+        if (firstField === "propertyPrice" && formData.propertyPrice && formData.propertyPrice > 0 && formData.propertyPrice < 1000) {
+          setError("Price must be at least 1,000/-");
+        } else {
+          const readableName = firstField
+            .replace(/([A-Z])/g, " $1")
+            .replace(/^./, (str) => str.toUpperCase());
+          setError(`${readableName} is required`);
+        }
         setLoading(false);
         return;
       }
@@ -606,6 +646,7 @@ const PropertyUploadPage: React.FC = () => {
         setSuccess(successMessage);
 
         // Reset form
+        setValidationErrors([]);
         setFormData({
           propertyId: propertyId,
           userId: formData.userId,
@@ -660,7 +701,7 @@ const PropertyUploadPage: React.FC = () => {
           workingWithAgent: false,
           furnishingAmenities: [],
           landType: undefined,
-          independent: false,
+          independent: null,
 
           // Hostel-specific fields
           attachedWashroom: null,
@@ -683,16 +724,14 @@ const PropertyUploadPage: React.FC = () => {
         const errorMessage =
           responseData.message ||
           (responseData.error === "PAYLOAD_TOO_LARGE"
-            ? `Request payload too large. ${
-                responseData.maxSize || "2GB"
-              } maximum.`
+            ? `Request payload too large. ${responseData.maxSize || "2GB"
+            } maximum.`
             : responseData.error === "TOO_MANY_FILES"
-            ? `Too many files. ${responseData.maxFiles || 50} maximum.`
-            : responseData.error === "TOTAL_FILE_SIZE_TOO_LARGE"
-            ? `Total file size too large. ${
-                responseData.maxTotalSize || "2GB"
-              } maximum.`
-            : "Property upload failed. Please try again.");
+              ? `Too many files. ${responseData.maxFiles || 50} maximum.`
+              : responseData.error === "TOTAL_FILE_SIZE_TOO_LARGE"
+                ? `Total file size too large. ${responseData.maxTotalSize || "2GB"
+                } maximum.`
+                : "Property upload failed. Please try again.");
         setError(errorMessage);
       }
     } catch (err: any) {
@@ -708,272 +747,123 @@ const PropertyUploadPage: React.FC = () => {
     subCategory: string,
     isSale?: string
   ): string[] => {
+    const basicFields = ["addressState", "addressCity", "addressLocality"];
     switch (subCategory) {
       case "Flats":
-        if (isSale === "Rent") {
-          return [
-            "projectName",
-            "propertyPrice",
-            "totalBathrooms",
-            "totalfloors",
-            "yourfloor",
-            "carpetArea",
-            "buildupArea",
-            "ageOfTheProperty",
-            "furnishing",
-            "bhks",
-            "propertyFacing",
-            "independent",
-          ];
-        }
-        return [
-          "projectName",
-          "propertyPrice",
-          "totalBathrooms", //
-          "totalfloors",
-          "yourfloor",
-          "carpetArea",
-          "buildupArea",
-          "ageOfTheProperty",
-          "constructionStatus",
-          "furnishing",
-          "bhks",
-          "propertyFacing",
-          "reraApproved",
-        ];
-
       case "Builder Floors":
-        if (isSale === "Rent") {
-          return [
-            "projectName",
-            "propertyPrice",
-            "totalBathrooms",
-            "totalfloors",
-            "yourfloor",
-            "carpetArea",
-            "buildupArea",
-            // "constructionStatus",
-            "ageOfTheProperty",
-            "furnishing",
-            "bhks",
-            "propertyFacing",
-            // "reraApproved",
-            "independent",
-          ];
-        }
         return [
+          ...basicFields,
           "projectName",
-          "propertyPrice",
           "totalBathrooms",
+          "propertyPrice",
+          "carpetArea",
+          "bhks",
+          "furnishing",
+          "constructionStatus",
+          "propertyFacing",
+          "ageOfTheProperty",
           "totalfloors",
           "yourfloor",
-          "reraApproved",
-          "ageOfTheProperty",
-          "propertyFacing",
-          "constructionStatus",
-          "furnishing",
-          "bhks",
-          "carpetArea",
-          "buildupArea",
+          "independent",
         ];
 
       case "House Villas":
-        if (isSale === "Rent") {
-          return [
-            "projectName",
-            "totalBathrooms",
-            "propertyPrice",
-            "carpetArea",
-            "buildupArea",
-            "bhks",
-            "propertyFacing",
-            "furnishing",
-            // "constructionStatus",
-            "ageOfTheProperty",
-            // "reraApproved",
-            "totalfloors",
-            "yourfloor",
-            "independent",
-          ];
-        }
         return [
-          "projectName",
+          ...basicFields,
           "totalBathrooms",
           "propertyPrice",
           "carpetArea",
           "buildupArea",
           "bhks",
-          "propertyFacing",
           "furnishing",
           "constructionStatus",
+          "propertyFacing",
           "ageOfTheProperty",
           "totalfloors",
+          "independent",
           "yourfloor",
-          "reraApproved",
         ];
 
       case "Plots":
-        if (isSale === "Lease") {
-          return [
-            "projectName",
-            "propertyPrice",
-            "length",
-            "width",
-            "propertyFacing",
-          ];
-        }
-        return [
-          "projectName",
-          "propertyPrice",
-          "length",
-          "width",
-          "propertyFacing",
-          "reraApproved",
-        ];
+        return [...basicFields, "propertyPrice", "totalArea", "propertyFacing"];
 
       case "Farmhouses":
-        if (isSale === "Rent") {
-          return [
-            "projectName",
-            "totalBathrooms",
-            "propertyPrice",
-            "plotArea",
-            "carpetArea",
-            "bhks",
-            "furnishing",
-            "propertyFacing",
-            "ageOfTheProperty",
-          ];
-        }
         return [
-          "projectName",
-          "totalBathrooms",
+          ...basicFields,
           "propertyPrice",
           "plotArea",
           "carpetArea",
-          "bhks",
-          "furnishing",
-          "propertyFacing",
-          "ageOfTheProperty",
-          "reraApproved",
-        ];
-
-      case "Hotels":
-        return [
-          "propertyName",
-          "propertyPrice",
-          "totalRooms",
-          "totalArea",
-          "carpetArea",
-          "furnishing",
-          "constructionStatus",
-          "ageOfTheProperty",
+          "viewFromProperty",
           "propertyFacing",
         ];
-
-      case "Lands":
-        return ["propertyPrice", "landArea", "landType", "approachRoad"];
 
       case "Office Spaces":
-        if (isSale === "Rent") {
-          return [
-            "projectName",
-            "propertyPrice",
-            "carpetArea",
-            "buildupArea",
-            "totalfloors",
-            "yourfloor",
-            "cabins",
-            "furnishing",
-            "parking",
-            "washroom",
-            "propertyFacing",
-            "ageOfTheProperty",
-          ];
-        }
         return [
-          "projectName",
+          ...basicFields,
           "propertyPrice",
           "carpetArea",
           "buildupArea",
-          "totalfloors",
-          "yourfloor",
-          "cabins",
-          "furnishing",
-          "parking",
-          "washroom",
-          "constructionStatus",
-          "propertyFacing",
-          "ageOfTheProperty",
-          "reraApproved",
-        ];
-
-      case "Hostels":
-        // If isSale is Rent, show additional fields
-        if (isSale === "Rent") {
-          return [
-            "propertyName",
-            "noOfBedrooms",
-            "propertyPrice",
-            "attachedWashroom",
-            "genderPreference",
-            "mealIncluded",
-            "totalfloors",
-            "yourfloor",
-            "liftAvailable",
-            "roomType",
-            "carpetArea",
-            "plotArea",
-            "ageOfTheProperty",
-          ];
-        }
-        return [
-          "propertyName",
-          "totalRooms",
-          "propertyPrice",
-          "totalfloors",
-          "carpetArea",
-          "plotArea",
-          "furnishing",
           "propertyFacing",
           "ageOfTheProperty",
           "constructionStatus",
         ];
 
       case "Shops Showrooms":
-        if (isSale === "Rent") {
-          return [
-            "propertyName",
-            "propertyPrice",
-            "length",
-            "width",
-            "totalfloors",
-            "yourfloor",
-            "furnishing",
-            "propertyFacing",
-            "ageOfTheProperty",
-            "parking",
-            "washroom",
-          ];
-        }
         return [
-          "propertyName",
+          ...basicFields,
           "propertyPrice",
           "length",
           "width",
-          "totalfloors",
-          "yourfloor",
-          "furnishing",
-          "constructionStatus",
           "propertyFacing",
           "ageOfTheProperty",
-          "parking",
-          "reraApproved",
-          "washroom",
+          "constructionStatus",
+        ];
+
+      case "Hotels":
+        return [
+          ...basicFields,
+          "totalRooms",
+          "propertyPrice",
+          "carpetArea",
+          "plotArea",
+          "furnishing",
+          "constructionStatus",
+          "ageOfTheProperty",
+          "propertyFacing",
+          "viewFromProperty",
+          "amenities",
+        ];
+
+      case "Lands":
+        return [
+          ...basicFields,
+          "propertyPrice",
+          "landArea",
+          "landType",
+          "approachRoad",
+        ];
+
+      case "Hostels":
+        return [
+          ...basicFields,
+          "propertyName",
+          "noOfBedrooms",
+          "totalRooms",
+          "propertyPrice",
+          "attachedWashroom",
+          "genderPreference",
+          "mealIncluded",
+          "totalfloors",
+          "yourfloor",
+          "liftAvailable",
+          "roomType",
+          "carpetArea",
+          "plotArea",
+          "furnishing",
         ];
 
       default:
-        return ["propertyName", "propertyPrice"];
+        return [...basicFields];
     }
   };
 
@@ -1021,6 +911,13 @@ const PropertyUploadPage: React.FC = () => {
 
   // Function to render field based on field name
   const renderField = (fieldName: string) => {
+    const requiredFields = getRequiredFields(
+      formData.subCategory,
+      formData.isSale
+    );
+    const isRequired = requiredFields.includes(fieldName);
+    const requiredAsterisk = isRequired ? <span className="text-red-500 ml-1">*</span> : null;
+
     switch (fieldName) {
       case "description":
         const isHostelRentDesc =
@@ -1032,7 +929,7 @@ const PropertyUploadPage: React.FC = () => {
               className="form-label flex items-center gap-2"
             >
               <FontAwesomeIcon icon={faTag} className="text-blue-600" />
-              Property Description
+              Property Description {requiredAsterisk}
             </label>
             <textarea
               id={fieldName}
@@ -1069,7 +966,7 @@ const PropertyUploadPage: React.FC = () => {
               className="form-label flex items-center gap-2"
             >
               <FontAwesomeIcon icon={faBuilding} className="text-blue-600" />
-              Project Name
+              Project Name {requiredAsterisk}
             </label>
             <input
               type="text"
@@ -1092,7 +989,7 @@ const PropertyUploadPage: React.FC = () => {
               className="form-label flex items-center gap-2"
             >
               <FontAwesomeIcon icon={faHome} className="text-blue-600" />
-              {isHostel ? "PG / Hotel Name" : "Property Name"} *
+              {isHostel ? "PG / Hotel Name" : "Property Name"} {requiredAsterisk}
             </label>
             <input
               type="text"
@@ -1100,7 +997,7 @@ const PropertyUploadPage: React.FC = () => {
               name={fieldName}
               value={formData.propertyName || ""}
               onChange={handleInputChange}
-              className="form-input focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
+              className={`form-input focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 ${validationErrors.includes(fieldName) ? "border-red-500 ring-1 ring-red-500" : ""}`}
               placeholder={
                 isHostel ? "e.g. Green Valley PG" : "Enter property name"
               }
@@ -1118,17 +1015,18 @@ const PropertyUploadPage: React.FC = () => {
               className="form-label flex items-center gap-2"
             >
               <FontAwesomeIcon icon={faTag} className="text-blue-600" />
-              {isHostelRent ? "Price (bed/month) (₹)" : "Price (₹)"} *
+              {isHostelRent ? "Price (bed/month) (₹)" : "Price (₹)"}{" "}
+              {requiredAsterisk}
             </label>
             <input
               type="number"
               id={fieldName}
               name={fieldName}
               required
-              min="1"
+              min="1000"
               value={formData.propertyPrice || ""}
               onChange={handleInputChange}
-              className="form-input focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
+              className={`form-input focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 ${validationErrors.includes(fieldName) ? "border-red-500 ring-1 ring-red-500" : ""}`}
               placeholder={isHostelRent ? "e.g. 5000" : "Enter price"}
             />
           </div>
@@ -1142,7 +1040,7 @@ const PropertyUploadPage: React.FC = () => {
               className="form-label flex items-center gap-2"
             >
               <FontAwesomeIcon icon={faBath} className="text-blue-600" />
-              Bathrooms
+              Bathrooms {requiredAsterisk}
             </label>
             <input
               type="number"
@@ -1151,7 +1049,7 @@ const PropertyUploadPage: React.FC = () => {
               min="0"
               value={formData.totalBathrooms || ""}
               onChange={handleInputChange}
-              className="form-input focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
+              className={`form-input focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 ${validationErrors.includes(fieldName) ? "border-red-500 ring-1 ring-red-500" : ""}`}
               placeholder="Number of bathrooms"
             />
           </div>
@@ -1165,7 +1063,7 @@ const PropertyUploadPage: React.FC = () => {
               className="form-label flex items-center gap-2"
             >
               <FontAwesomeIcon icon={faBed} className="text-blue-600" />
-              Rooms
+              Rooms {requiredAsterisk}
             </label>
             <input
               type="number"
@@ -1174,7 +1072,7 @@ const PropertyUploadPage: React.FC = () => {
               min="0"
               value={formData.totalRooms || ""}
               onChange={handleInputChange}
-              className="form-input focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
+              className={`form-input focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 ${validationErrors.includes(fieldName) ? "border-red-500 ring-1 ring-red-500" : ""}`}
               placeholder="Number of rooms"
             />
           </div>
@@ -1188,7 +1086,7 @@ const PropertyUploadPage: React.FC = () => {
               className="form-label flex items-center gap-2"
             >
               <FontAwesomeIcon icon={faBed} className="text-blue-600" />
-              Cabins
+              Cabins {requiredAsterisk}
             </label>
             <input
               type="number"
@@ -1197,7 +1095,7 @@ const PropertyUploadPage: React.FC = () => {
               min="0"
               value={formData.cabins || ""}
               onChange={handleInputChange}
-              className="form-input focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
+              className={`form-input focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 ${validationErrors.includes(fieldName) ? "border-red-500 ring-1 ring-red-500" : ""}`}
               placeholder="Number of Cabins"
             />
           </div>
@@ -1211,7 +1109,7 @@ const PropertyUploadPage: React.FC = () => {
               className="form-label flex items-center gap-2"
             >
               <FontAwesomeIcon icon={faRuler} className="text-blue-600" />
-              Carpet Area (sq ft)
+              Carpet Area (sq ft) {requiredAsterisk}
             </label>
             <input
               type="number"
@@ -1221,7 +1119,7 @@ const PropertyUploadPage: React.FC = () => {
               step="0.01"
               value={formData.carpetArea || ""}
               onChange={handleInputChange}
-              className="form-input focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
+              className={`form-input focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 ${validationErrors.includes(fieldName) ? "border-red-500 ring-1 ring-red-500" : ""}`}
               placeholder="Enter carpet area"
             />
           </div>
@@ -1235,7 +1133,7 @@ const PropertyUploadPage: React.FC = () => {
               className="form-label flex items-center gap-2"
             >
               <FontAwesomeIcon icon={faRuler} className="text-blue-600" />
-              Built-up Area (sq ft)
+              Built-up Area (sq ft) {requiredAsterisk}
             </label>
             <input
               type="number"
@@ -1245,7 +1143,7 @@ const PropertyUploadPage: React.FC = () => {
               step="0.01"
               value={formData.buildupArea || ""}
               onChange={handleInputChange}
-              className="form-input focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
+              className={`form-input focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 ${validationErrors.includes(fieldName) ? "border-red-500 ring-1 ring-red-500" : ""}`}
               placeholder="Enter built-up area"
             />
           </div>
@@ -1255,14 +1153,14 @@ const PropertyUploadPage: React.FC = () => {
         return (
           <div key={fieldName}>
             <label htmlFor={fieldName} className="form-label">
-              BHKs
+              BHKs {requiredAsterisk}
             </label>
             <select
               id={fieldName}
               name={fieldName}
               value={formData.bhks || ""}
               onChange={handleInputChange}
-              className="form-input"
+              className={`form-input ${validationErrors.includes(fieldName) ? "border-red-500 ring-1 ring-red-500" : ""}`}
             >
               <option value="">Select BHKs</option>
               <option value="1 BHK">1 BHK</option>
@@ -1278,14 +1176,14 @@ const PropertyUploadPage: React.FC = () => {
         return (
           <div key={fieldName}>
             <label htmlFor={fieldName} className="form-label">
-              Furnishing
+              Furnishing {requiredAsterisk}
             </label>
             <select
               id={fieldName}
               name={fieldName}
               value={formData.furnishing || ""}
               onChange={handleInputChange}
-              className="form-input"
+              className={`form-input ${validationErrors.includes(fieldName) ? "border-red-500 ring-1 ring-red-500" : ""}`}
             >
               <option value="">Select Furnishing</option>
               <option value="Semi Furnished">Semi Furnished</option>
@@ -1299,14 +1197,14 @@ const PropertyUploadPage: React.FC = () => {
         return (
           <div key={fieldName}>
             <label htmlFor={fieldName} className="form-label">
-              Construction Status
+              Construction Status {requiredAsterisk}
             </label>
             <select
               id={fieldName}
               name={fieldName}
               value={formData.constructionStatus || ""}
               onChange={handleInputChange}
-              className="form-input"
+              className={`form-input ${validationErrors.includes(fieldName) ? "border-red-500 ring-1 ring-red-500" : ""}`}
             >
               <option value="">Select Status</option>
               <option value="Ready to Move">Ready to Move</option>
@@ -1320,14 +1218,14 @@ const PropertyUploadPage: React.FC = () => {
         return (
           <div key={fieldName}>
             <label htmlFor={fieldName} className="form-label">
-              Property Facing
+              Property Facing {requiredAsterisk}
             </label>
             <select
               id={fieldName}
               name={fieldName}
               value={formData.propertyFacing || ""}
               onChange={handleInputChange}
-              className="form-input"
+              className={`form-input ${validationErrors.includes(fieldName) ? "border-red-500 ring-1 ring-red-500" : ""}`}
             >
               <option value="">Select Facing</option>
               <option value="North">North</option>
@@ -1346,14 +1244,14 @@ const PropertyUploadPage: React.FC = () => {
         return (
           <div key={fieldName}>
             <label htmlFor={fieldName} className="form-label">
-              Age of Property
+              Age of Property {requiredAsterisk}
             </label>
             <select
               id={fieldName}
               name={fieldName}
               value={formData.ageOfTheProperty || ""}
               onChange={handleInputChange}
-              className="form-input"
+              className={`form-input ${validationErrors.includes(fieldName) ? "border-red-500 ring-1 ring-red-500" : ""}`}
             >
               <option value="">Select Age</option>
               <option value="0-5 years">0-5 years</option>
@@ -1484,21 +1382,47 @@ const PropertyUploadPage: React.FC = () => {
 
       case "independent":
         return (
-          <div key={fieldName} className="flex items-center">
-            <input
-              type="checkbox"
-              id={fieldName}
-              name={fieldName}
-              checked={formData.independent || false}
-              onChange={handleInputChange}
-              className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
-            />
-            <label
-              htmlFor={fieldName}
-              className="ml-2 block text-sm text-gray-900"
-            >
-              Independent {formData.independent ? "(Yes)" : ""}
+          <div key={fieldName}>
+            <label className="form-label block mb-2">
+              Independent {requiredAsterisk}
             </label>
+            <div className="flex gap-4">
+              <label className="flex items-center cursor-pointer">
+                <input
+                  type="radio"
+                  name={fieldName}
+                  value="true"
+                  checked={formData.independent === true}
+                  onChange={() =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      independent: true,
+                    }))
+                  }
+                  className="h-4 w-4 text-blue-600"
+                />
+                <span className="ml-2 text-gray-700">Yes</span>
+              </label>
+              <label className="flex items-center cursor-pointer">
+                <input
+                  type="radio"
+                  name={fieldName}
+                  value="false"
+                  checked={formData.independent === false}
+                  onChange={() =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      independent: false,
+                    }))
+                  }
+                  className="h-4 w-4 text-blue-600"
+                />
+                <span className="ml-2 text-gray-700">No</span>
+              </label>
+            </div>
+            {validationErrors.includes(fieldName) && (
+              <p className="text-red-500 text-xs mt-1">Please select an option</p>
+            )}
           </div>
         );
 
@@ -1508,7 +1432,7 @@ const PropertyUploadPage: React.FC = () => {
         return (
           <div key={fieldName}>
             <label htmlFor={fieldName} className="form-label">
-              Length {isHostelRentLength ? "(sq.ft)" : "(ft)"} *
+              Length {isHostelRentLength ? "(sq.ft)" : "(ft)"} {requiredAsterisk}
             </label>
             <input
               type="number"
@@ -1518,7 +1442,7 @@ const PropertyUploadPage: React.FC = () => {
               step="0.01"
               value={formData.length || ""}
               onChange={handleInputChange}
-              className="form-input"
+              className={`form-input ${validationErrors.includes(fieldName) ? "border-red-500 ring-1 ring-red-500" : ""}`}
               placeholder={isHostelRentLength ? "e.g. 10" : "Enter length"}
             />
           </div>
@@ -1530,7 +1454,7 @@ const PropertyUploadPage: React.FC = () => {
         return (
           <div key={fieldName}>
             <label htmlFor={fieldName} className="form-label">
-              Width {isHostelRentWidth ? "(sq.ft)" : "(ft)"} *
+              Width {isHostelRentWidth ? "(sq.ft)" : "(ft)"} {requiredAsterisk}
             </label>
             <input
               type="number"
@@ -1540,7 +1464,7 @@ const PropertyUploadPage: React.FC = () => {
               step="0.01"
               value={formData.width || ""}
               onChange={handleInputChange}
-              className="form-input"
+              className={`form-input ${validationErrors.includes(fieldName) ? "border-red-500 ring-1 ring-red-500" : ""}`}
               placeholder={isHostelRentWidth ? "e.g. 10" : "Enter width"}
             />
           </div>
@@ -1552,7 +1476,7 @@ const PropertyUploadPage: React.FC = () => {
         return (
           <div key={fieldName}>
             <label htmlFor={fieldName} className="form-label">
-              {isHostelRentTotalFloors ? "Total Floor" : "Total Floors"} *
+              {isHostelRentTotalFloors ? "Total Floor" : "Total Floors"} {requiredAsterisk}
             </label>
             <input
               type="text"
@@ -1560,7 +1484,7 @@ const PropertyUploadPage: React.FC = () => {
               name={fieldName}
               value={formData.totalfloors || ""}
               onChange={handleInputChange}
-              className="form-input"
+              className={`form-input ${validationErrors.includes(fieldName) ? "border-red-500 ring-1 ring-red-500" : ""}`}
               placeholder={
                 isHostelRentTotalFloors ? "e.g. 3" : "Enter total floors"
               }
@@ -1574,14 +1498,14 @@ const PropertyUploadPage: React.FC = () => {
         return (
           <div key={fieldName}>
             <label htmlFor={fieldName} className="form-label">
-              {isHostelRentFloor ? "Room Floor" : "Property Floor"}
+              {isHostelRentFloor ? "Room Floor" : "Property Floor"} {requiredAsterisk}
             </label>
             <select
               id={fieldName}
               name={fieldName}
               value={formData.yourfloor || ""}
               onChange={handleInputChange}
-              className="form-input"
+              className={`form-input ${validationErrors.includes(fieldName) ? "border-red-500 ring-1 ring-red-500" : ""}`}
             >
               <option value="">
                 {isHostelRentFloor ? "choose floor" : "Select floor"}
@@ -1676,7 +1600,7 @@ const PropertyUploadPage: React.FC = () => {
         return (
           <div key={fieldName}>
             <label htmlFor={fieldName} className="form-label">
-              Land Area (acre)
+              Land Area (acre) {requiredAsterisk}
             </label>
             <input
               type="number"
@@ -1686,7 +1610,7 @@ const PropertyUploadPage: React.FC = () => {
               step="0.01"
               value={formData.landArea || ""}
               onChange={handleInputChange}
-              className="form-input"
+              className={`form-input ${validationErrors.includes(fieldName) ? "border-red-500 ring-1 ring-red-500" : ""}`}
               placeholder="Enter land area"
             />
           </div>
@@ -1706,7 +1630,7 @@ const PropertyUploadPage: React.FC = () => {
               step="0.01"
               value={formData.distFromOutRRoad || ""}
               onChange={handleInputChange}
-              className="form-input"
+              className={`form-input ${validationErrors.includes(fieldName) ? "border-red-500 ring-1 ring-red-500" : ""}`}
               placeholder="Enter distance"
             />
           </div>
@@ -1723,7 +1647,7 @@ const PropertyUploadPage: React.FC = () => {
               name={fieldName}
               value={formData.soilType || ""}
               onChange={handleInputChange}
-              className="form-input"
+              className={`form-input ${validationErrors.includes(fieldName) ? "border-red-500 ring-1 ring-red-500" : ""}`}
             >
               <option value="">Select Soil Type</option>
               <option value="Sandy">Sandy</option>
@@ -1741,14 +1665,14 @@ const PropertyUploadPage: React.FC = () => {
         return (
           <div key={fieldName}>
             <label htmlFor={fieldName} className="form-label">
-              Land Type
+              Land Type {requiredAsterisk}
             </label>
             <select
               id={fieldName}
               name={fieldName}
               value={formData.landType || ""}
               onChange={handleInputChange}
-              className="form-input"
+              className={`form-input ${validationErrors.includes(fieldName) ? "border-red-500 ring-1 ring-red-500" : ""}`}
             >
               <option value="">Select Land Type</option>
               <option value="agricultural">Agricultural</option>
@@ -1762,14 +1686,14 @@ const PropertyUploadPage: React.FC = () => {
         return (
           <div key={fieldName}>
             <label htmlFor={fieldName} className="form-label">
-              Approach Road
+              Approach Road {requiredAsterisk}
             </label>
             <select
               id={fieldName}
               name={fieldName}
               value={formData.approachRoad || ""}
               onChange={handleInputChange}
-              className="form-input"
+              className={`form-input ${validationErrors.includes(fieldName) ? "border-red-500 ring-1 ring-red-500" : ""}`}
             >
               <option value="">Select Road</option>
               <option value="Yes">Yes</option>
@@ -1789,7 +1713,7 @@ const PropertyUploadPage: React.FC = () => {
               name={fieldName}
               value={formData.fencing || ""}
               onChange={handleInputChange}
-              className="form-input"
+              className={`form-input ${validationErrors.includes(fieldName) ? "border-red-500 ring-1 ring-red-500" : ""}`}
             >
               <option value="">Select Fencing</option>
               <option value="Yes">Yes</option>
@@ -1803,7 +1727,7 @@ const PropertyUploadPage: React.FC = () => {
         return (
           <div key={fieldName}>
             <label htmlFor={fieldName} className="form-label">
-              Total Area (sq ft)
+              Total Area (sq ft) {requiredAsterisk}
             </label>
             <input
               type="number"
@@ -1813,7 +1737,7 @@ const PropertyUploadPage: React.FC = () => {
               step="0.01"
               value={formData.totalArea || ""}
               onChange={handleInputChange}
-              className="form-input"
+              className={`form-input ${validationErrors.includes(fieldName) ? "border-red-500 ring-1 ring-red-500" : ""}`}
               placeholder="Enter total area"
             />
           </div>
@@ -1823,7 +1747,7 @@ const PropertyUploadPage: React.FC = () => {
         return (
           <div key={fieldName}>
             <label htmlFor={fieldName} className="form-label">
-              Plot Area (sq ft)
+              Plot Area (sq ft) {requiredAsterisk}
             </label>
             <input
               type="number"
@@ -1833,7 +1757,7 @@ const PropertyUploadPage: React.FC = () => {
               step="0.01"
               value={formData.plotArea || ""}
               onChange={handleInputChange}
-              className="form-input"
+              className={`form-input ${validationErrors.includes(fieldName) ? "border-red-500 ring-1 ring-red-500" : ""}`}
               placeholder="Enter plot area"
             />
           </div>
@@ -1850,7 +1774,7 @@ const PropertyUploadPage: React.FC = () => {
               name={fieldName}
               value={formData.parking || ""}
               onChange={handleInputChange}
-              className="form-input"
+              className={`form-input ${validationErrors.includes(fieldName) ? "border-red-500 ring-1 ring-red-500" : ""}`}
             >
               <option value="">Select Parking</option>
               <option value="Public">Public</option>
@@ -1871,7 +1795,7 @@ const PropertyUploadPage: React.FC = () => {
               name={fieldName}
               value={formData.washroom || ""}
               onChange={handleInputChange}
-              className="form-input"
+              className={`form-input ${validationErrors.includes(fieldName) ? "border-red-500 ring-1 ring-red-500" : ""}`}
             >
               <option value="">Select Washroom</option>
               <option value="Public">Public</option>
@@ -1925,9 +1849,8 @@ const PropertyUploadPage: React.FC = () => {
               )}
             </label>
             <div
-              className={`grid grid-cols-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7 gap-3 mt-4 transition-opacity duration-300 ${
-                isUnfurnished ? "opacity-50 pointer-events-none" : ""
-              }`}
+              className={`grid grid-cols-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7 gap-3 mt-4 transition-opacity duration-300 ${isUnfurnished ? "opacity-50 pointer-events-none" : ""
+                }`}
             >
               {furnishingAmenitiesIcons.map((amenity) => (
                 <motion.label
@@ -2318,14 +2241,23 @@ const PropertyUploadPage: React.FC = () => {
                   city: formData.addressCity,
                   locality: formData.addressLocality,
                 }}
-                onChange={(loc) =>
+                errorFields={validationErrors}
+                onChange={(loc) => {
+                  setValidationErrors((prev) =>
+                    prev.filter(
+                      (f) =>
+                        f !== "addressState" &&
+                        f !== "addressCity" &&
+                        f !== "addressLocality"
+                    )
+                  );
                   setFormData((prev) => ({
                     ...prev,
                     addressState: loc.state,
                     addressCity: loc.city,
                     addressLocality: loc.locality,
-                  }))
-                }
+                  }));
+                }}
               />
 
               {/* address section end */}
@@ -2402,15 +2334,15 @@ const PropertyUploadPage: React.FC = () => {
                 >
                   {formData.category === "Residential"
                     ? residentialSubCategories.map((sub) => (
-                        <option key={sub} value={sub}>
-                          {sub}
-                        </option>
-                      ))
+                      <option key={sub} value={sub}>
+                        {sub}
+                      </option>
+                    ))
                     : commercialSubCategories.map((sub) => (
-                        <option key={sub} value={sub}>
-                          {sub}
-                        </option>
-                      ))}
+                      <option key={sub} value={sub}>
+                        {sub}
+                      </option>
+                    ))}
                 </select>
               </motion.div>
 
